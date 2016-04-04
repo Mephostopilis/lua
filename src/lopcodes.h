@@ -166,12 +166,12 @@ typedef enum {
 /*----------------------------------------------------------------------
 name		args	description
 ------------------------------------------------------------------------*/
-OP_MOVE,       /*	A B	    R(A) := R(B)					*/
-OP_LOADK,      /*	A Bx	R(A) := Kst(Bx)					*/
+OP_MOVE,       /*	A B	    R(A) := R(B)					    */   /* */
+OP_LOADK,      /*	A Bx	R(A) := Kst(Bx)					    */
 OP_LOADKX,     /*	A 	    R(A) := Kst(extra arg)				*/
-OP_LOADBOOL,   /*	A B C	R(A) := (Bool)B; if (C) pc++			*/
-OP_LOADNIL,    /*	A B	    R(A), R(A+1), ..., R(A+B) := nil		*/
-OP_GETUPVAL,   /*	A B	    R(A) := UpValue[B]				*/
+OP_LOADBOOL,   /*	A B C	R(A) := (Bool)B; if (C) pc++		*/
+OP_LOADNIL,    /*	A B	    R(A), R(A+1), ..., R(A+B) := nil	*/
+OP_GETUPVAL,   /*	A B	    R(A) := UpValue[B]				    */
 
 OP_GETTABUP,   /*	A B C	R(A) := UpValue[B][RK(C)]			*/
 OP_GETTABLE,   /*	A B C	R(A) := R(B)[RK(C)]				*/

@@ -45,7 +45,7 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define KGC_NORMAL	0
 #define KGC_EMERGENCY	1	/* gc was forced by an allocation failure */
 
-
+/* 用来存储短字符串*/
 typedef struct stringtable {
   TString **hash;
   int nuse;  /* number of elements */
@@ -107,17 +107,17 @@ typedef struct CallInfo {
 ** 'global state', shared by all threads of this state
 */
 typedef struct global_State {
-  lua_Alloc frealloc;  /* function to reallocate memory */
-  void *ud;         /* auxiliary data to 'frealloc' */
-  l_mem totalbytes;  /* number of bytes currently allocated - GCdebt */
-  l_mem GCdebt;  /* bytes allocated not yet compensated by the collector */
-  lu_mem GCmemtrav;  /* memory traversed by the GC */
-  lu_mem GCestimate;  /* an estimate of the non-garbage memory in use */
-  stringtable strt;  /* hash table for strings */
+  lua_Alloc frealloc;     /* function to reallocate memory */
+  void *ud;               /* auxiliary data to 'frealloc' */
+  l_mem totalbytes;       /* number of bytes currently allocated - GCdebt */ 
+  l_mem GCdebt;           /* bytes allocated not yet compensated by the collector */ /* 这个字段还是看不出来用来干什么的。*/
+  lu_mem GCmemtrav;       /* memory traversed by the GC */                           /* 内存遍历是怎么实现的还不知道*/
+  lu_mem GCestimate;      /* an estimate of the non-garbage memory in use */         /* */
+  stringtable strt;       /* hash table for strings */
   TValue l_registry;
-  unsigned int seed;  /* randomized seed for hashes */
+  unsigned int seed;      /* randomized seed for hashes */
   lu_byte currentwhite;
-  lu_byte gcstate;  /* state of garbage collector */
+  lu_byte gcstate;  /* state of garbage collector */                                 /* gc状态*/
   lu_byte gckind;  /* kind of GC running */
   lu_byte gcrunning;  /* true if GC is running */
   GCObject *allgc;  /* list of all collectable objects */
@@ -135,7 +135,7 @@ typedef struct global_State {
   int gcpause;  /* size of pause between successive GCs */
   int gcstepmul;  /* GC 'granularity' */
   lua_CFunction panic;  /* to be called in unprotected errors */
-  struct lua_State *mainthread;
+  struct lua_State *mainthread;                                                          /* 所有都是从这里开始*/
   const lua_Number *version;  /* pointer to version number */
   TString *memerrmsg;  /* memory-error message */
   TString *tmname[TM_N];  /* array with tag-method names */
