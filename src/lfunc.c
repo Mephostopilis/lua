@@ -31,11 +31,11 @@ CClosure *luaF_newCclosure (lua_State *L, int n) {
 
 
 LClosure *luaF_newLclosure (lua_State *L, int n) {
-  GCObject *o = luaC_newobj(L, LUA_TLCL, sizeLclosure(n));
-  LClosure *c = gco2lcl(o);
+  GCObject *o = luaC_newobj(L, LUA_TLCL, sizeLclosure(n));   /* 由于LC是gc对象，所以用luaC_newobj分配，而这里里也是简单分配内存，并且初始化tag*/
+  LClosure *c = gco2lcl(o);                                  /* 转成LClosure，而p是proto，nupvalues是用*/
   c->p = NULL;
   c->nupvalues = cast_byte(n);
-  while (n--) c->upvals[n] = NULL;
+  while (n--) c->upvals[n] = NULL;                           /* upvalues只有一个*/
   return c;
 }
 
@@ -48,8 +48,8 @@ void luaF_initupvals (lua_State *L, LClosure *cl) {
     UpVal *uv = luaM_new(L, UpVal);
     uv->refcount = 1;
     uv->v = &uv->u.value;  /* make it closed */
-    setnilvalue(uv->v);
-    cl->upvals[i] = uv;
+    setnilvalue(uv->v);    /* 赋值为空，上面为关闭，应该是主要为了回收*/
+    cl->upvals[i] = uv;    /* 就只有一个*/
   }
 }
 

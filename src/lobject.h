@@ -9,23 +9,24 @@
 #define lobject_h
 
 
-#include <stdarg.h>
+/* 变参头文件 */
+#include <stdarg.h>   
 
 
-#include "llimits.h"
-#include "lua.h"
+#include "llimits.h"  /* 此文件包含limits文件 */
+#include "lua.h"      /* 标准对外错做 */
 
 
 /*
 ** Extra tags for non-values
 */
-#define LUA_TPROTO	LUA_NUMTAGS		/* function prototypes */
-#define LUA_TDEADKEY	(LUA_NUMTAGS+1)		/* removed keys in tables */
+#define LUA_TPROTO	     LUA_NUMTAGS		/* function prototypes */     /* 9*/
+#define LUA_TDEADKEY	(LUA_NUMTAGS+1)		/* removed keys in tables */  /* 10*/
 
 /*
 ** number of all possible tags (including LUA_TNONE but excluding DEADKEY)
 */
-#define LUA_TOTALTAGS	(LUA_TPROTO + 2)
+#define LUA_TOTALTAGS	(LUA_TPROTO + 2)                                  /* 11*/
 
 
 /*
@@ -35,6 +36,7 @@
 ** bit 6: whether value is collectable
 */
 
+/* LUA_TFUNCTION 定义在lua.h头文件里，因为这里别人是需要调用的 */
 
 /*
 ** LUA_TFUNCTION variants:
@@ -62,6 +64,8 @@
 /* Bit mark for collectable types */
 #define BIT_ISCOLLECTABLE	(1 << 6)
 
+
+/* 通过调用ctb就是标记此对象为可以回收的*/
 /* mark a tag as collectable */
 #define ctb(t)			((t) | BIT_ISCOLLECTABLE)
 
@@ -71,6 +75,11 @@
 */
 typedef struct GCObject GCObject;
 
+/* 假如我自己设计一个虚拟机，那么主要是执行，与垃圾回收。
+** 执行我先不说，
+** 垃圾回收：1.当新创建一个对象的时候，你肯定需要保存对他们的引用。这时候你看到GCObject的定义，你知道了。
+** 当你写lua代码时候每创建一个对象的时候，vm只需要从头遍历一次就可以了，不过这个还是太慢，在插入的时候不知道有什么优化没有
+*/
 
 /*
 ** Common Header for all collectable objects (in macro form, to be
@@ -95,6 +104,11 @@ struct GCObject {
 */
 
 /*
+** 下面有解释，这是对lua的所有的数据类型。
+** 但是我为什么没有找到function，string，table的呢，他们就是那个GCObject，你将会在lstring里重新看到string
+*/
+
+/*
 ** Union of all Lua values
 */
 typedef union Value {
@@ -106,9 +120,12 @@ typedef union Value {
   lua_Number n;    /* float numbers */
 } Value;
 
-
+/
 #define TValuefields	Value value_; int tt_
 
+/*
+** 这里就是基本类型，无论是全局变量，还是local，都是用这个分配内存的的。
+*/
 
 typedef struct lua_TValue {
   TValuefields;
@@ -116,28 +133,36 @@ typedef struct lua_TValue {
 
 
 
+/*
+** 基本类型nil
+*/
 /* macro defining a nil value */
-#define NILCONSTANT	{NULL}, LUA_TNIL
+#define NILCONSTANT	{NULL}, LUA_TNIL  
 
-
+/*
+** 返回value_,也就是真正的数据类型
+*/
 #define val_(o)		((o)->value_)
 
 
+/*
+** raw type tag 定义在lua.h里面，通过变量tt_
+*/
 /* raw type tag of a TValue */
 #define rttype(o)	((o)->tt_)
 
 /* tag with no variants (bits 0-3) */
-#define novariant(x)	((x) & 0x0F)
+#define novariant(x)	((x) & 0x0F) /* 只取后4位，用来判断是什么类型，不用判断variant*/
 
 /* type tag of a TValue (bits 0-3 for tags + variant bits 4-5) */
-#define ttype(o)	(rttype(o) & 0x3F)
+#define ttype(o)	(rttype(o) & 0x3F)  /* 1 << 6 - 1,取后五位*/
 
 /* type tag of a TValue with no variants (bits 0-3) */
 #define ttnov(o)	(novariant(rttype(o)))
 
 
 /* Macros to test type */
-#define checktag(o,t)		(rttype(o) == (t))
+#define checktag(o,t)		(rttype(o) == (t))               /* 判断类型*/
 #define checktype(o,t)		(ttnov(o) == (t))
 #define ttisnumber(o)		checktype((o), LUA_TNUMBER)
 #define ttisfloat(o)		checktag((o), LUA_TNUMFLT)
@@ -156,21 +181,21 @@ typedef struct lua_TValue {
 #define ttislcf(o)		checktag((o), LUA_TLCF)
 #define ttisfulluserdata(o)	checktag((o), ctb(LUA_TUSERDATA))
 #define ttisthread(o)		checktag((o), ctb(LUA_TTHREAD))
-#define ttisdeadkey(o)		checktag((o), LUA_TDEADKEY)
+#define ttisdeadkey(o)		checktag((o), LUA_TDEADKEY)          /* LUA_TDEADKEY不知道怎么用，用来标记什么*/
 
 
 /* Macros to access values */
-#define ivalue(o)	check_exp(ttisinteger(o), val_(o).i)
+#define ivalue(o)	check_exp(ttisinteger(o), val_(o).i)    /* 访问整数*/
 #define fltvalue(o)	check_exp(ttisfloat(o), val_(o).n)
 #define nvalue(o)	check_exp(ttisnumber(o), \
 	(ttisinteger(o) ? cast_num(ivalue(o)) : fltvalue(o)))
 #define gcvalue(o)	check_exp(iscollectable(o), val_(o).gc)
 #define pvalue(o)	check_exp(ttislightuserdata(o), val_(o).p)
-#define tsvalue(o)	check_exp(ttisstring(o), gco2ts(val_(o).gc))
-#define uvalue(o)	check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))
-#define clvalue(o)	check_exp(ttisclosure(o), gco2cl(val_(o).gc))
-#define clLvalue(o)	check_exp(ttisLclosure(o), gco2lcl(val_(o).gc))
-#define clCvalue(o)	check_exp(ttisCclosure(o), gco2ccl(val_(o).gc))
+#define tsvalue(o)	check_exp(ttisstring(o), gco2ts(val_(o).gc))       /* gc*/
+#define uvalue(o)	check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))  /* gc*/
+#define clvalue(o)	check_exp(ttisclosure(o), gco2cl(val_(o).gc))      /* gc*/
+#define clLvalue(o)	check_exp(ttisLclosure(o), gco2lcl(val_(o).gc))    /* gc*/
+#define clCvalue(o)	check_exp(ttisCclosure(o), gco2ccl(val_(o).gc))    /* gc*/
 #define fvalue(o)	check_exp(ttislcf(o), val_(o).f)
 #define hvalue(o)	check_exp(ttistable(o), gco2t(val_(o).gc))
 #define bvalue(o)	check_exp(ttisboolean(o), val_(o).b)
@@ -290,25 +315,29 @@ typedef struct lua_TValue {
 ** =======================================================
 */
 
-
+/* 这个StkId类型主要用来index
+*/
 typedef TValue *StkId;  /* index to stack elements */
 
 
 
-
+/* 
+** 这个字符串类型真他妈的有很多东西
+** 
+*/
 /*
 ** Header for string value; string bytes follow the end of this structure
 ** (aligned according to 'UTString'; see next).
 */
 typedef struct TString {
-  CommonHeader;
-  lu_byte extra;  /* reserved words for short strings; "has hash" for longs */
+  CommonHeader;    /* 凡是gc对象，如果你要重新定义，那么就是CommonHeader肯定是要重新加入的 */
+  lu_byte extra;   /* reserved words for short strings; "has hash" for longs */
   lu_byte shrlen;  /* length for short strings */
-  unsigned int hash;
+  unsigned int hash;  /* 真正要获取这个字符串的时候就获取这个变量*/
   union {
-    size_t lnglen;  /* length for long strings */
+    size_t lnglen;          /* length for long strings */
     struct TString *hnext;  /* linked list for hash table */
-  } u;
+  } u;                      /* 为什么这里会有这个hnext，因为对于短字符串用一个lstringtable,这个类型*/
 } TString;
 
 
@@ -338,7 +367,9 @@ typedef union UTString {
 /* get string length from 'TValue *o' */
 #define vslen(o)	tsslen(tsvalue(o))
 
-
+/*
+** 卧槽，我都忘记还有一个userdata数据类型，真他妈的
+*/
 /*
 ** Header for userdata; memory area follows the end of this structure
 ** (aligned according to 'UUdata'; see next).
@@ -346,9 +377,9 @@ typedef union UTString {
 typedef struct Udata {
   CommonHeader;
   lu_byte ttuv_;  /* user value's tag */
-  struct Table *metatable;
+  struct Table *metatable;       
   size_t len;  /* number of bytes */
-  union Value user_;  /* user value */
+  union Value user_;  /* user value */  /*可能包含着一个lua的值*/
 } Udata;
 
 
@@ -384,9 +415,9 @@ typedef union UUdata {
 ** Description of an upvalue for function prototypes
 */
 typedef struct Upvaldesc {
-  TString *name;  /* upvalue name (for debug information) */
+  TString *name;    /* upvalue name (for debug information) */
   lu_byte instack;  /* whether it is in stack (register) */
-  lu_byte idx;  /* index of upvalue (in stack or in outer function's list) */
+  lu_byte idx;      /* index of upvalue (in stack or in outer function's list) */
 } Upvaldesc;
 
 
@@ -405,11 +436,11 @@ typedef struct LocVar {
 ** Function Prototypes
 */
 typedef struct Proto {
-  CommonHeader;
+  CommonHeader;       /* 用来垃圾回收，我 就不说了*/
   lu_byte numparams;  /* number of fixed parameters */
   lu_byte is_vararg;  /* 2: declared vararg; 1: uses vararg */
   lu_byte maxstacksize;  /* number of registers needed by this function */
-  int sizeupvalues;  /* size of 'upvalues' */
+  int sizeupvalues;  /* size of 'upvalues' */ /* upvalue */
   int sizek;  /* size of 'k' */
   int sizecode;
   int sizelineinfo;
@@ -440,22 +471,30 @@ typedef struct UpVal UpVal;
 ** Closures
 */
 
+/* 为什么gclist主要用来干嘛的
+*/
 #define ClosureHeader \
 	CommonHeader; lu_byte nupvalues; GCObject *gclist
 
+/* C闭包
+*/
 typedef struct CClosure {
   ClosureHeader;
   lua_CFunction f;
   TValue upvalue[1];  /* list of upvalues */
 } CClosure;
 
-
+/* lua闭包
+*/
 typedef struct LClosure {
   ClosureHeader;
   struct Proto *p;
   UpVal *upvals[1];  /* list of upvalues */
 } LClosure;
 
+/*
+** 真正的闭包类型
+*/
 
 typedef union Closure {
   CClosure c;
@@ -474,10 +513,10 @@ typedef union Closure {
 
 typedef union TKey {
   struct {
-    TValuefields;
-    int next;  /* for chaining (offset for next node) */
+    TValuefields;   /* 这就是TValue */
+    int next;       /* for chaining (offset for next node) */
   } nk;
-  TValue tvk;
+  TValue tvk; 
 } TKey;
 
 
@@ -493,9 +532,12 @@ typedef struct Node {
   TKey i_key;
 } Node;
 
+/*
+** 感觉表的实现并没有多少很难，倒是那个Proto这个数据类型真他妈的多
+*/
 
 typedef struct Table {
-  CommonHeader;
+  CommonHeader;   /* 垃圾回收 */
   lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int sizearray;  /* size of 'array' array */

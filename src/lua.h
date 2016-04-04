@@ -71,7 +71,7 @@ typedef struct lua_State lua_State;
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
 
-#define LUA_NUMTAGS		9
+#define LUA_NUMTAGS		9               /* 这个TAG不知道用来干什么 */
 
 
 
@@ -103,6 +103,11 @@ typedef LUA_KCONTEXT lua_KContext;
 ** Type for C functions registered with Lua
 */
 typedef int (*lua_CFunction) (lua_State *L);
+
+
+/*
+** 这个函数指针不知道干嘛的
+*/
 
 /*
 ** Type for continuation functions

@@ -8,8 +8,8 @@
 #define llimits_h
 
 
-#include <limits.h>
-#include <stddef.h>
+#include <limits.h>  /* C头文件，定义了数字类型的最大值与最小值*/
+#include <stddef.h>  /* 定义标准宏与*/
 
 
 #include "lua.h"
@@ -70,7 +70,7 @@ typedef union {
   void *s;
   lua_Integer i;
   long l;
-} L_Umaxalign;
+} L_Umaxalign;        /* */
 #endif
 
 
