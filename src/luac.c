@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
  int i=doargs(argc,argv);
  argc-=i; argv+=i;
  if (argc<=0) usage("no input files given");
- L=luaL_newstate();
+ L=luaL_newstate();                                                  /* 创建一个新newstate*/
  if (L==NULL) fatal("cannot create state: not enough memory");
  lua_pushcfunction(L,&pmain);
  lua_pushinteger(L,argc);
