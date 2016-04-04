@@ -120,7 +120,7 @@ typedef union Value {
   lua_Number n;    /* float numbers */
 } Value;
 
-/
+
 #define TValuefields	Value value_; int tt_
 
 /*
