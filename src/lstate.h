@@ -64,10 +64,10 @@ typedef struct stringtable {
 */
 typedef struct CallInfo {
   StkId func;  /* function index in the stack */
-  StkId	top;  /* top for this function */
+  StkId	top;   /* top for this function */
   struct CallInfo *previous, *next;  /* dynamic call link */
   union {
-    struct {  /* only for Lua functions */
+    struct {       /* only for Lua functions */
       StkId base;  /* base for this function */
       const Instruction *savedpc;
     } l;
