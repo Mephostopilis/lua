@@ -86,15 +86,15 @@ typedef struct CallInfo {
 /*
 ** Bits in CallInfo status
 */
-#define CIST_OAH	(1<<0)	/* original value of 'allowhook' */
-#define CIST_LUA	(1<<1)	/* call is running a Lua function */
+#define CIST_OAH	(1<<0)	  /* original value of 'allowhook' */
+#define CIST_LUA	(1<<1)	  /* call is running a Lua function */
 #define CIST_HOOKED	(1<<2)	/* call is running a debug hook */
 #define CIST_FRESH	(1<<3)	/* call is running on a fresh invocation
                                    of luaV_execute */
 #define CIST_YPCALL	(1<<4)	/* call is a yieldable protected call */
-#define CIST_TAIL	(1<<5)	/* call was tail called */
+#define CIST_TAIL	(1<<5)	  /* call was tail called */
 #define CIST_HOOKYIELD	(1<<6)	/* last hook called yielded */
-#define CIST_LEQ	(1<<7)  /* using __lt for __le */
+#define CIST_LEQ	(1<<7)    /* using __lt for __le */
 
 #define isLua(ci)	((ci)->callstatus & CIST_LUA)
 
@@ -117,29 +117,29 @@ typedef struct global_State {
   TValue l_registry;
   unsigned int seed;      /* randomized seed for hashes */
   lu_byte currentwhite;
-  lu_byte gcstate;  /* state of garbage collector */                                 /* gc状态*/
-  lu_byte gckind;  /* kind of GC running */
-  lu_byte gcrunning;  /* true if GC is running */
-  GCObject *allgc;  /* list of all collectable objects */
+  lu_byte gcstate;     /* state of garbage collector */                                 /* gc状态*/
+  lu_byte gckind;      /* kind of GC running */
+  lu_byte gcrunning;   /* true if GC is running */
+  GCObject *allgc;     /* list of all collectable objects */
   GCObject **sweepgc;  /* current position of sweep in list */
-  GCObject *finobj;  /* list of collectable objects with finalizers */
-  GCObject *gray;  /* list of gray objects */
-  GCObject *grayagain;  /* list of objects to be traversed atomically */
-  GCObject *weak;  /* list of tables with weak values */
-  GCObject *ephemeron;  /* list of ephemeron tables (weak keys) */
-  GCObject *allweak;  /* list of all-weak tables */
-  GCObject *tobefnz;  /* list of userdata to be GC */
-  GCObject *fixedgc;  /* list of objects not to be collected */
+  GCObject *finobj;    /* list of collectable objects with finalizers */
+  GCObject *gray;      /* list of gray objects */
+  GCObject *grayagain; /* list of objects to be traversed atomically */
+  GCObject *weak;      /* list of tables with weak values */
+  GCObject *ephemeron; /* list of ephemeron tables (weak keys) */
+  GCObject *allweak;   /* list of all-weak tables */
+  GCObject *tobefnz;   /* list of userdata to be GC */
+  GCObject *fixedgc;   /* list of objects not to be collected */
   struct lua_State *twups;  /* list of threads with open upvalues */
   unsigned int gcfinnum;  /* number of finalizers to call in each GC step */
-  int gcpause;  /* size of pause between successive GCs */
-  int gcstepmul;  /* GC 'granularity' */
-  lua_CFunction panic;  /* to be called in unprotected errors */
+  int gcpause;         /* size of pause between successive GCs */
+  int gcstepmul;       /* GC 'granularity' */
+  lua_CFunction panic; /* to be called in unprotected errors */
   struct lua_State *mainthread;                                                          /* 所有都是从这里开始*/
   const lua_Number *version;  /* pointer to version number */
   TString *memerrmsg;  /* memory-error message */
   TString *tmname[TM_N];  /* array with tag-method names */
-  struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
+  struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */                 /* basic types only this*/
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
 } global_State;
 
