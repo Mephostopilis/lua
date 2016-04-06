@@ -999,7 +999,9 @@ static int panic (lua_State *L) {
   return 0;  /* return to Lua to abort */
 }
 
-
+/*
+** 
+*/
 LUALIB_API lua_State *luaL_newstate (void) {
   lua_State *L = lua_newstate(l_alloc, NULL);
   if (L) lua_atpanic(L, &panic);
