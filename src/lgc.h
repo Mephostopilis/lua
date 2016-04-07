@@ -37,13 +37,13 @@
 ** Possible states of the Garbage Collector
 */
 #define GCSpropagate	0
-#define GCSatomic	1
-#define GCSswpallgc	2
+#define GCSatomic	    1
+#define GCSswpallgc	    2
 #define GCSswpfinobj	3
 #define GCSswptobefnz	4
-#define GCSswpend	5
-#define GCScallfin	6
-#define GCSpause	7
+#define GCSswpend	    5
+#define GCScallfin	    6
+#define GCSpause	    7
 
 
 #define issweepphase(g)  \

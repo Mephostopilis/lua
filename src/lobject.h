@@ -26,7 +26,7 @@
 /*
 ** number of all possible tags (including LUA_TNONE but excluding DEADKEY)
 */
-#define LUA_TOTALTAGS	(LUA_TPROTO + 2)                                  /* 11*/
+#define LUA_TOTALTAGS	(LUA_TPROTO + 2)                                /* 11*/
 
 
 /*
@@ -60,7 +60,9 @@
 #define LUA_TNUMFLT	(LUA_TNUMBER | (0 << 4))  /* float numbers */
 #define LUA_TNUMINT	(LUA_TNUMBER | (1 << 4))  /* integer numbers */
 
-
+/*
+** tt_ is 32bit
+*/
 /* Bit mark for collectable types */
 #define BIT_ISCOLLECTABLE	(1 << 6)
 
@@ -162,43 +164,43 @@ typedef struct lua_TValue {
 
 
 /* Macros to test type */
-#define checktag(o,t)		(rttype(o) == (t))               /* 判断类型*/
+#define checktag(o,t)		  (rttype(o) == (t))               /* 判断类型*/
 #define checktype(o,t)		(ttnov(o) == (t))
-#define ttisnumber(o)		checktype((o), LUA_TNUMBER)
-#define ttisfloat(o)		checktag((o), LUA_TNUMFLT)
-#define ttisinteger(o)		checktag((o), LUA_TNUMINT)
-#define ttisnil(o)		checktag((o), LUA_TNIL)
-#define ttisboolean(o)		checktag((o), LUA_TBOOLEAN)
+#define ttisnumber(o)		   checktype((o), LUA_TNUMBER)
+#define ttisfloat(o)		   checktag((o), LUA_TNUMFLT)
+#define ttisinteger(o)		 checktag((o), LUA_TNUMINT)
+#define ttisnil(o)		     checktag((o), LUA_TNIL)
+#define ttisboolean(o)		 checktag((o), LUA_TBOOLEAN)
 #define ttislightuserdata(o)	checktag((o), LUA_TLIGHTUSERDATA)
-#define ttisstring(o)		checktype((o), LUA_TSTRING)
-#define ttisshrstring(o)	checktag((o), ctb(LUA_TSHRSTR))
+#define ttisstring(o)		  checktype((o), LUA_TSTRING)
+#define ttisshrstring(o)	checktag((o), ctb(LUA_TSHRSTR))  /* string is gc */
 #define ttislngstring(o)	checktag((o), ctb(LUA_TLNGSTR))
-#define ttistable(o)		checktag((o), ctb(LUA_TTABLE))
+#define ttistable(o)		  checktag((o), ctb(LUA_TTABLE))
 #define ttisfunction(o)		checktype(o, LUA_TFUNCTION)
 #define ttisclosure(o)		((rttype(o) & 0x1F) == LUA_TFUNCTION)
-#define ttisCclosure(o)		checktag((o), ctb(LUA_TCCL))
+#define ttisCclosure(o)		checktag((o), ctb(LUA_TCCL))    /**/
 #define ttisLclosure(o)		checktag((o), ctb(LUA_TLCL))
-#define ttislcf(o)		checktag((o), LUA_TLCF)
+#define ttislcf(o)		    checktag((o), LUA_TLCF)
 #define ttisfulluserdata(o)	checktag((o), ctb(LUA_TUSERDATA))
-#define ttisthread(o)		checktag((o), ctb(LUA_TTHREAD))
+#define ttisthread(o)		  checktag((o), ctb(LUA_TTHREAD))
 #define ttisdeadkey(o)		checktag((o), LUA_TDEADKEY)          /* LUA_TDEADKEY不知道怎么用，用来标记什么*/
 
 
 /* Macros to access values */
-#define ivalue(o)	check_exp(ttisinteger(o), val_(o).i)    /* 访问整数*/
+#define ivalue(o)	  check_exp(ttisinteger(o), val_(o).i)    /* 访问整数*/
 #define fltvalue(o)	check_exp(ttisfloat(o), val_(o).n)
-#define nvalue(o)	check_exp(ttisnumber(o), \
+#define nvalue(o)	  check_exp(ttisnumber(o), \
 	(ttisinteger(o) ? cast_num(ivalue(o)) : fltvalue(o)))
 #define gcvalue(o)	check_exp(iscollectable(o), val_(o).gc)
-#define pvalue(o)	check_exp(ttislightuserdata(o), val_(o).p)
+#define pvalue(o)	  check_exp(ttislightuserdata(o), val_(o).p)
 #define tsvalue(o)	check_exp(ttisstring(o), gco2ts(val_(o).gc))       /* gc*/
-#define uvalue(o)	check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))  /* gc*/
+#define uvalue(o)	  check_exp(ttisfulluserdata(o), gco2u(val_(o).gc))  /* gc*/
 #define clvalue(o)	check_exp(ttisclosure(o), gco2cl(val_(o).gc))      /* gc*/
 #define clLvalue(o)	check_exp(ttisLclosure(o), gco2lcl(val_(o).gc))    /* gc*/
 #define clCvalue(o)	check_exp(ttisCclosure(o), gco2ccl(val_(o).gc))    /* gc*/
-#define fvalue(o)	check_exp(ttislcf(o), val_(o).f)
-#define hvalue(o)	check_exp(ttistable(o), gco2t(val_(o).gc))
-#define bvalue(o)	check_exp(ttisboolean(o), val_(o).b)
+#define fvalue(o)	  check_exp(ttislcf(o), val_(o).f)
+#define hvalue(o)	  check_exp(ttistable(o), gco2t(val_(o).gc))
+#define bvalue(o)	  check_exp(ttisboolean(o), val_(o).b)
 #define thvalue(o)	check_exp(ttisthread(o), gco2th(val_(o).gc))
 /* a dead value may get the 'gc' field, but cannot access its contents */
 #define deadvalue(o)	check_exp(ttisdeadkey(o), cast(void *, val_(o).gc))
@@ -436,26 +438,26 @@ typedef struct LocVar {
 ** Function Prototypes
 */
 typedef struct Proto {
-  CommonHeader;       /* 用来垃圾回收，我 就不说了*/
-  lu_byte numparams;  /* number of fixed parameters */
-  lu_byte is_vararg;  /* 2: declared vararg; 1: uses vararg */
-  lu_byte maxstacksize;  /* number of registers needed by this function */
-  int sizeupvalues;  /* size of 'upvalues' */ /* upvalue */
-  int sizek;  /* size of 'k' */
+  CommonHeader;         /* 用来垃圾回收，我 就不说了*/
+  lu_byte numparams;    /* number of fixed parameters */
+  lu_byte is_vararg;    /* 2: declared vararg; 1: uses vararg */
+  lu_byte maxstacksize; /* number of registers needed by this function */
+  int sizeupvalues;     /* size of 'upvalues' */ /* upvalue */
+  int sizek;            /* size of 'k' */
   int sizecode;
   int sizelineinfo;
-  int sizep;  /* size of 'p' */
+  int sizep;            /* size of 'p' */
   int sizelocvars;
-  int linedefined;  /* debug information  */
+  int linedefined;      /* debug information  */
   int lastlinedefined;  /* debug information  */
   TValue *k;  /* constants used by the function */
-  Instruction *code;  /* opcodes */
-  struct Proto **p;  /* functions defined inside the function */
-  int *lineinfo;  /* map from opcodes to source lines (debug information) */
-  LocVar *locvars;  /* information about local variables (debug information) */
+  Instruction *code;    /* opcodes */
+  struct Proto **p;     /* functions defined inside the function */
+  int *lineinfo;        /* map from opcodes to source lines (debug information) */
+  LocVar *locvars;      /* information about local variables (debug information) */
   Upvaldesc *upvalues;  /* upvalue information */
   struct LClosure *cache;  /* last-created closure with this prototype */
-  TString  *source;  /* used for debug information */
+  TString  *source;     /* used for debug information */
   GCObject *gclist;
 } Proto;
 

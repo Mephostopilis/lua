@@ -17,10 +17,13 @@
 #define sizeLclosure(n)	(cast(int, sizeof(LClosure)) + \
                          cast(int, sizeof(TValue *)*((n)-1)))
 
-
+/* twups not know is what value */
 /* test whether thread is in 'twups' list */
 #define isintwups(L)	(L->twups != L)
 
+/*
+** UpVal how to refrenced
+*/
 
 /*
 ** maximum number of upvalues in a closure (both C and Lua). (Value
