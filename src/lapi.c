@@ -331,7 +331,7 @@ LUA_API int lua_compare (lua_State *L, int index1, int index2, int op) {
       default: api_check(L, 0, "invalid option");
     }
   }
-  lua_unlock(L)
+  lua_unlock(L);
   return i;
 }
 
