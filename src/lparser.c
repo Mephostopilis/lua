@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 ** $Id: lparser.c,v 2.149 2015/11/02 16:09:30 roberto Exp $
 ** Lua Parser
 ** See Copyright Notice in lua.h
@@ -164,8 +164,8 @@ static int registerlocalvar (LexState *ls, TString *varname) {
   int oldsize = f->sizelocvars;
   luaM_growvector(ls->L, f->locvars, fs->nlocvars, f->sizelocvars,
                   LocVar, SHRT_MAX, "local variables");
-  while (oldsize < f->sizelocvars) f->locvars[oldsize++].varname = NULL;  /* ÐÂÔö¼ÓµÄÇå¿Õ*/
-  f->locvars[fs->nlocvars].varname = varname;                             /* ¸øÄÇ¸öÖµ*/
+  while (oldsize < f->sizelocvars) f->locvars[oldsize++].varname = NULL;  /* æ–°å¢žåŠ çš„æ¸…ç©º*/
+  f->locvars[fs->nlocvars].varname = varname;                             /* ç»™é‚£ä¸ªå€¼*/
   luaC_objbarrier(ls->L, f, varname);
   return fs->nlocvars++;
 }
@@ -786,8 +786,8 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
     adjustlocalvars(ls, 1);
   }
   parlist(ls);
-  checknext(ls, ')');     /* Ê×ÏÈcheck£¬È»ºóluaX_next*/
-  statlist(ls);           /* Ö±µ½endToken*/
+  checknext(ls, ')');     /* é¦–å…ˆcheckï¼Œç„¶åŽluaX_next*/
+  statlist(ls);           /* ç›´åˆ°endToken*/
   new_fs.f->lastlinedefined = ls->linenumber;
   check_match(ls, TK_END, TK_FUNCTION, line);
   codeclosure(ls, e);
@@ -1623,7 +1623,7 @@ static void mainfunc (LexState *ls, FuncState *fs) {
 
 LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
                        Dyndata *dyd, const char *name, int firstchar) {
-	LexState lexstate;   /*¼ÇÂ¼µ±Ç°×´Ì¬*/
+	LexState lexstate;   /*è®°å½•å½“å‰çŠ¶æ€*/
   FuncState funcstate;
   LClosure *cl = luaF_newLclosure(L, 1);  /* create main closure */
   setclLvalue(L, L->top, cl);  /* anchor it (to avoid being collected) */

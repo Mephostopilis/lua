@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 ** $Id: llex.h,v 1.78 2014/10/29 15:38:24 roberto Exp $
 ** Lexical Analyzer
 ** See Copyright Notice in lua.h
@@ -46,7 +46,7 @@ typedef union {
   TString *ts;
 } SemInfo;  /* semantics information */
 
-/*tokenÓÃÀ´±íÊ¾´ËtokenÊÇÊ²Ã´£¬SemInfo¾ßÌåÊÇÊ²Ã´ÄÚÈİ*/
+/*tokenç”¨æ¥è¡¨ç¤ºæ­¤tokenæ˜¯ä»€ä¹ˆï¼ŒSemInfoå…·ä½“æ˜¯ä»€ä¹ˆå†…å®¹*/
 
 typedef struct Token {
   int token;

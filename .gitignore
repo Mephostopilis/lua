@@ -48,7 +48,7 @@
 /src/lua13/luac13/x64
 /src/lua13/x64
 /src/lua13/ipch
-
+!/src/lua13/Debug/main.lua
 
 *.suo
 *.sdf
