@@ -45,7 +45,9 @@ int luaS_eqlngstr (TString *a, TString *b) {
      (memcmp(getstr(a), getstr(b), len) == 0));  /* equal contents */
 }
 
-
+/*
+** hash alg
+*/
 unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   unsigned int h = seed ^ cast(unsigned int, l);
   size_t step = (l >> LUAI_HASHLIMIT) + 1;
@@ -73,7 +75,7 @@ void luaS_resize (lua_State *L, int newsize) {
   stringtable *tb = &G(L)->strt;
   if (newsize > tb->size) {  /* grow table if needed */
     luaM_reallocvector(L, tb->hash, tb->size, newsize, TString *);
-    for (i = tb->size; i < newsize; i++)
+    for (i = tb->size; i < newsize; i++)  /* only reset */
       tb->hash[i] = NULL;
   }
   for (i = 0; i < tb->size; i++) {  /* rehash */
@@ -210,6 +212,9 @@ TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
   }
 }
 
+/*
+**
+*/
 
 /*
 ** Create or reuse a zero-terminated string, first checking in the
