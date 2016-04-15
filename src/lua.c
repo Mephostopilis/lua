@@ -551,6 +551,13 @@ static int handle_luainit (lua_State *L) {
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);
   char **argv = (char **)lua_touserdata(L, 2);
+  char *tmp[8] = { 0 };
+  for (size_t i = 0; i < argc; i++)
+  {
+	  tmp[i] = argv[i];
+  }
+  argv[argc] = "D:\\git\\lua\\src\\lua13\\Debug\\main.lua";
+  argc += 1;
   int script;
   int args = collectargs(argv, &script);
   luaL_checkversion(L);  /* check that interpreter has correct version */
