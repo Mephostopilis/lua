@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: ldo.c,v 2.150 2015/11/19 19:16:22 roberto Exp $
 ** Stack and Call structure of Lua
 ** See Copyright Notice in lua.h
@@ -741,7 +741,7 @@ int luaD_pcall (lua_State *L, Pfunc func, void *u,
 struct SParser {  /* data to 'f_parser' */
   ZIO *z;
   Mbuffer buff;  /* dynamic structure used by the scanner */
-  Dyndata dyd;  /* dynamic structures used by the parser */
+  Dyndata dyd;   /* dynamic structures used by the parser */
   const char *mode;
   const char *name;
 };

@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: lparser.c,v 2.149 2015/11/02 16:09:30 roberto Exp $
 ** Lua Parser
 ** See Copyright Notice in lua.h
@@ -164,16 +164,16 @@ static int registerlocalvar (LexState *ls, TString *varname) {
   int oldsize = f->sizelocvars;
   luaM_growvector(ls->L, f->locvars, fs->nlocvars, f->sizelocvars,
                   LocVar, SHRT_MAX, "local variables");
-  while (oldsize < f->sizelocvars) f->locvars[oldsize++].varname = NULL;
-  f->locvars[fs->nlocvars].varname = varname;
+  while (oldsize < f->sizelocvars) f->locvars[oldsize++].varname = NULL;  /* 新增加的清空*/
+  f->locvars[fs->nlocvars].varname = varname;                             /* 给那个值*/
   luaC_objbarrier(ls->L, f, varname);
   return fs->nlocvars++;
 }
 
 
 static void new_localvar (LexState *ls, TString *name) {
-  FuncState *fs = ls->fs;
-  Dyndata *dyd = ls->dyd;
+  FuncState *fs = ls->fs; 
+  Dyndata *dyd = ls->dyd; /* */
   int reg = registerlocalvar(ls, name);
   checklimit(fs, dyd->actvar.n + 1 - fs->firstlocal,
                   MAXVARS, "local variables");
@@ -786,8 +786,8 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
     adjustlocalvars(ls, 1);
   }
   parlist(ls);
-  checknext(ls, ')');
-  statlist(ls);
+  checknext(ls, ')');     /* 首先check，然后luaX_next*/
+  statlist(ls);           /* 直到endToken*/
   new_fs.f->lastlinedefined = ls->linenumber;
   check_match(ls, TK_END, TK_FUNCTION, line);
   codeclosure(ls, e);
@@ -1623,7 +1623,7 @@ static void mainfunc (LexState *ls, FuncState *fs) {
 
 LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
                        Dyndata *dyd, const char *name, int firstchar) {
-  LexState lexstate;
+	LexState lexstate;   /*记录当前状态*/
   FuncState funcstate;
   LClosure *cl = luaF_newLclosure(L, 1);  /* create main closure */
   setclLvalue(L, L->top, cl);  /* anchor it (to avoid being collected) */

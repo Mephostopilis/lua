@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 ** $Id: lopcodes.h,v 1.148 2014/10/25 11:50:46 roberto Exp $
 ** Opcodes for Lua virtual machine
 ** See Copyright Notice in lua.h
@@ -41,14 +41,14 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define SIZE_A		8
 #define SIZE_Ax		(SIZE_C + SIZE_B + SIZE_A)  /* 26bit*/
 
-#define SIZE_OP		6                           /* ¼ÓÉÏÄã¾ÍÊÇ32Î»*/
+#define SIZE_OP		6                           /* åŠ ä¸Šä½ å°±æ˜¯32ä½*/
 
-#define POS_OP		0                           /* ×î¿ªÊ¼6bitÊÇOP*/
-#define POS_A		(POS_OP + SIZE_OP)          /* È¥µô6bit£¬½ÓÏÂÀ´µÄ8bitÊÇA*/
-#define POS_C		(POS_A + SIZE_A)            /* ½ÓÏÂÏÂÀ´9bitÊÇC*/
-#define POS_B		(POS_C + SIZE_C)            /* ×îºó9bitÊÇB*/
-#define POS_Bx		POS_C                       /* Èç¹ûÊÇBx£¬ÄÇÃ´¾ÍÊÇÖ±½Ó´ÓC¿ªÊ¼*/
-#define POS_Ax		POS_A                       /* Èç¹ûÊÇ´ÓAx¿ªÊ¼£¬ÄÇÃ´¾ÍÊÇÖ±½Ó´ÓAx¿ªÊ¼*/
+#define POS_OP		0                           /* æœ€å¼€å§‹6bitæ˜¯OP*/
+#define POS_A		(POS_OP + SIZE_OP)          /* å»æ‰6bitï¼Œæ¥ä¸‹æ¥çš„8bitæ˜¯A*/
+#define POS_C		(POS_A + SIZE_A)            /* æ¥ä¸‹ä¸‹æ¥9bitæ˜¯C*/
+#define POS_B		(POS_C + SIZE_C)            /* æœ€å9bitæ˜¯B*/
+#define POS_Bx		POS_C                       /* å¦‚æœæ˜¯Bxï¼Œé‚£ä¹ˆå°±æ˜¯ç›´æ¥ä»Cå¼€å§‹*/
+#define POS_Ax		POS_A                       /* å¦‚æœæ˜¯ä»Axå¼€å§‹ï¼Œé‚£ä¹ˆå°±æ˜¯ç›´æ¥ä»Axå¼€å§‹*/
 
 
 /*
@@ -58,7 +58,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 */
 #if SIZE_Bx < LUAI_BITSINT-1
 #define MAXARG_Bx        ((1<<SIZE_Bx)-1)
-#define MAXARG_sBx        (MAXARG_Bx>>1)         /* 'sBx' is signed */ /*·ûºÅµÄ×î´óÖµ*/
+#define MAXARG_sBx        (MAXARG_Bx>>1)         /* 'sBx' is signed */ /*ç¬¦å·çš„æœ€å¤§å€¼*/
 #else
 #define MAXARG_Bx         MAX_INT
 #define MAXARG_sBx        MAX_INT
@@ -71,22 +71,22 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #endif
 
 
-#define MAXARG_A        ((1<<SIZE_A)-1)  /* ÕâÊÇÎŞ·ûºÅÕûÊıµÄ×î´óÖµ*/
+#define MAXARG_A        ((1<<SIZE_A)-1)  /* è¿™æ˜¯æ— ç¬¦å·æ•´æ•°çš„æœ€å¤§å€¼*/
 #define MAXARG_B        ((1<<SIZE_B)-1)
 #define MAXARG_C        ((1<<SIZE_C)-1)
 
 
 /* creates a mask with 'n' 1 bits at position 'p' */
-#define MASK1(n,p)	((~((~(Instruction)0)<<(n)))<<(p))   /* ±ÈÈçËµ£¬ÎÒÒªAÄÄÀïÈ«ÊÇ1£¬MASK(SIZE_A, POS_A)£¬µÃµ½00000000000000000011111111000000£¬ÖÁÓÚÓĞÊ²Ã´ÓÃ£¬ÎÒÒ²²»ÖªµÀ*/
+#define MASK1(n,p)	((~((~(Instruction)0)<<(n)))<<(p))   /* æ¯”å¦‚è¯´ï¼Œæˆ‘è¦Aå“ªé‡Œå…¨æ˜¯1ï¼ŒMASK(SIZE_A, POS_A)ï¼Œå¾—åˆ°00000000000000000011111111000000ï¼Œè‡³äºæœ‰ä»€ä¹ˆç”¨ï¼Œæˆ‘ä¹Ÿä¸çŸ¥é“*/
 
 /* creates a mask with 'n' 0 bits at position 'p' */
-#define MASK0(n,p)	(~MASK1(n,p))                        /* ÓëÉÏÃæµÄ²Ù×÷Ïà·´£¬Äã×Ô¼º¿´×Å°ì*/
+#define MASK0(n,p)	(~MASK1(n,p))                        /* ä¸ä¸Šé¢çš„æ“ä½œç›¸åï¼Œä½ è‡ªå·±çœ‹ç€åŠ*/
 
 /*
 ** the following macros help to manipulate instructions
 */
 
-#define GET_OPCODE(i)	(cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))  /* µÃµ½Ò»¸ö32bitÎŞ·ûºÅÕûÊı*/
+#define GET_OPCODE(i)	(cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))  /* å¾—åˆ°ä¸€ä¸ª32bitæ— ç¬¦å·æ•´æ•°*/
 #define SET_OPCODE(i,o)	((i) = (((i)&MASK0(SIZE_OP,POS_OP)) | \
 		((cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
 
@@ -94,7 +94,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define setarg(i,v,pos,size)	((i) = (((i)&MASK0(size,pos)) | \
                 ((cast(Instruction, v)<<pos)&MASK1(size,pos))))
 
-#define GETARG_A(i)	getarg(i, POS_A, SIZE_A)                  /* µÃµ½32bitÎŞ·ûºÅÕûÊı*/
+#define GETARG_A(i)	getarg(i, POS_A, SIZE_A)                  /* å¾—åˆ°32bitæ— ç¬¦å·æ•´æ•°*/
 #define SETARG_A(i,v)	setarg(i, v, POS_A, SIZE_A)
 
 #define GETARG_B(i)	getarg(i, POS_B, SIZE_B)
@@ -112,7 +112,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define GETARG_sBx(i)	(GETARG_Bx(i)-MAXARG_sBx)
 #define SETARG_sBx(i,b)	SETARG_Bx((i),cast(unsigned int, (b)+MAXARG_sBx))
 
-/* Ò»ÏµÁĞ´´½¨Ö¸Áî */
+/* ä¸€ç³»åˆ—åˆ›å»ºæŒ‡ä»¤ */
 #define CREATE_ABC(o,a,b,c)	((cast(Instruction, o)<<POS_OP) | (cast(Instruction, a)<<POS_A) \
 			| (cast(Instruction, b)<<POS_B) \
 			| (cast(Instruction, c)<<POS_C))
