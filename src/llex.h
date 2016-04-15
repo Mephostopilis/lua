@@ -49,7 +49,7 @@ typedef union {
 /*token用来表示此token是什么，SemInfo具体是什么内容*/
 
 typedef struct Token {
-  int token;
+  int token;               /*RESERVED*/
   SemInfo seminfo;
 } Token;
 
