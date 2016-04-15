@@ -12,6 +12,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "lua.h"
 
@@ -331,7 +332,7 @@ LUA_API int lua_compare (lua_State *L, int index1, int index2, int op) {
       default: api_check(L, 0, "invalid option");
     }
   }
-  lua_unlock(L)
+  lua_unlock(L);
   return i;
 }
 
@@ -535,6 +536,8 @@ LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
   lua_lock(L);
   if (n == 0) {
     setfvalue(L->top, fn);   /*L->topÊÇTValue*/
+	//assert(L->top - L->stack == 1);
+	printf("%d", L->top - L->stack);
   }
   else {
     CClosure *cl;

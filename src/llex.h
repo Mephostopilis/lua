@@ -48,7 +48,7 @@ typedef union {
 
 
 typedef struct Token {
-  int token;
+  int token;               /*RESERVED*/
   SemInfo seminfo;
 } Token;
 
@@ -65,11 +65,11 @@ typedef struct LexState {
   struct lua_State *L;
   ZIO *z;  /* input stream */
   Mbuffer *buff;  /* buffer for tokens */
-  Table *h;  /* to avoid collection/reuse strings */
+  Table *h;             /* to avoid collection/reuse strings */
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
-  TString *source;  /* current source name */
-  TString *envn;  /* environment variable name */
-  char decpoint;  /* locale decimal point */
+  TString *source;      /* current source name */
+  TString *envn;        /* environment variable name */
+  char decpoint;        /* locale decimal point */
 } LexState;
 
 

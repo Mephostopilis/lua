@@ -166,6 +166,8 @@ static int pmain(lua_State* L)
 {
  int argc=(int)lua_tointeger(L,1);
  char** argv=(char**)lua_touserdata(L,2);
+ char *tmp[8] = { "D:\\Ember\\Documents\\github\\lua\\src\\lua\\x64\\Debug\\a.lua" };
+ argv = tmp;
  const Proto* f;
  int i;
  if (!lua_checkstack(L,argc)) fatal("too many input files");
@@ -192,7 +194,16 @@ static int pmain(lua_State* L)
 int main(int argc, char* argv[])
 {
  lua_State* L;
- int i=doargs(argc,argv);
+ lua_assert(argc <= 8);
+ char* tmp[8];
+ for (size_t i = 0; i < argc; i++)
+ {
+	 tmp[i] = argv[i];
+ }
+ tmp[argc] = "a.lua";
+ argc += 1;
+ int i = doargs(argc, tmp);
+ //int i=doargs(argc,argv);
  argc-=i; argv+=i;
  if (argc<=0) usage("no input files given");
  L=luaL_newstate();                                                  /* 创建一个新newstate*/

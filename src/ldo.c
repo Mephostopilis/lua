@@ -714,12 +714,12 @@ LUA_API int lua_yieldk (lua_State *L, int nresults, lua_KContext ctx,
 int luaD_pcall (lua_State *L, Pfunc func, void *u,
                 ptrdiff_t old_top, ptrdiff_t ef) {
   int status;
-  CallInfo *old_ci = L->ci;
+  CallInfo *old_ci = L->ci;                /* ´æ´¢ÉÏÒ»´Îci*/
   lu_byte old_allowhooks = L->allowhook;
   unsigned short old_nny = L->nny;
   ptrdiff_t old_errfunc = L->errfunc;
   L->errfunc = ef;
-  status = luaD_rawrunprotected(L, func, u);
+  status = luaD_rawrunprotected(L, func, u);              /* func == p_call*/
   if (status != LUA_OK) {  /* an error occurred? */
     StkId oldtop = restorestack(L, old_top);
     luaF_close(L, oldtop);  /* close possible pending closures */

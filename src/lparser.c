@@ -432,7 +432,7 @@ static void movegotosout (FuncState *fs, BlockCnt *bl) {
 
 
 static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isloop) {
-  bl->isloop = isloop;
+   bl->isloop = isloop;
   bl->nactvar = fs->nactvar;
   bl->firstlabel = fs->ls->dyd->label.n;
   bl->firstgoto = fs->ls->dyd->gt.n;
