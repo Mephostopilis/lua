@@ -45,9 +45,7 @@ int luaS_eqlngstr (TString *a, TString *b) {
      (memcmp(getstr(a), getstr(b), len) == 0));  /* equal contents */
 }
 
-/*
-** hash alg
-*/
+
 unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   unsigned int h = seed ^ cast(unsigned int, l);
   size_t step = (l >> LUAI_HASHLIMIT) + 1;
@@ -56,11 +54,9 @@ unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   return h;
 }
 
-/*
-** longstr extra field mark, if you can 
-*/
+
 unsigned int luaS_hashlongstr (TString *ts) {
-  lua_assert(ts->tt == LUA_TLNGSTR);             /* check是否是长字符串*/
+  lua_assert(ts->tt == LUA_TLNGSTR);
   if (ts->extra == 0) {  /* no hash? */
     ts->hash = luaS_hash(getstr(ts), ts->u.lnglen, ts->hash);
     ts->extra = 1;  /* now it has its hash */
@@ -77,7 +73,7 @@ void luaS_resize (lua_State *L, int newsize) {
   stringtable *tb = &G(L)->strt;
   if (newsize > tb->size) {  /* grow table if needed */
     luaM_reallocvector(L, tb->hash, tb->size, newsize, TString *);
-    for (i = tb->size; i < newsize; i++)  /* only reset */
+    for (i = tb->size; i < newsize; i++)
       tb->hash[i] = NULL;
   }
   for (i = 0; i < tb->size; i++) {  /* rehash */
@@ -139,18 +135,15 @@ static TString *createstrobj (lua_State *L, size_t l, int tag, unsigned int h) {
   GCObject *o;
   size_t totalsize;  /* total size of TString object */
   totalsize = sizelstring(l);
-  o = luaC_newobj(L, tag, totalsize);         /* gc创建这些可以回收的对象，所以下面要把gc看*/
+  o = luaC_newobj(L, tag, totalsize);
   ts = gco2ts(o);
   ts->hash = h;
-  ts->extra = 0;         /* 短字符串保留为0*/
+  ts->extra = 0;
   getstr(ts)[l] = '\0';  /* ending 0 */
   return ts;
 }
 
-/*
-** extra for longstr, so only they asking he 
-*/ 
-/* 长字符只是简单的补充lnglen*/
+
 TString *luaS_createlngstrobj (lua_State *L, size_t l) {
   TString *ts = createstrobj(L, l, LUA_TLNGSTR, G(L)->seed);
   ts->u.lnglen = l;
@@ -174,10 +167,10 @@ void luaS_remove (lua_State *L, TString *ts) {
 static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   TString *ts;
   global_State *g = G(L);
-  unsigned int h = luaS_hash(str, l, g->seed);               /* 这个hash值可以细看*/
-  TString **list = &g->strt.hash[lmod(h, g->strt.size)];     /* 短字符串会存在g->strt这个stringtable里面*/
+  unsigned int h = luaS_hash(str, l, g->seed);
+  TString **list = &g->strt.hash[lmod(h, g->strt.size)];
   lua_assert(str != NULL);  /* otherwise 'memcmp'/'memcpy' are undefined */
-  for (ts = *list; ts != NULL; ts = ts->u.hnext) {    /* 迭代这个列表*/
+  for (ts = *list; ts != NULL; ts = ts->u.hnext) {
     if (l == ts->shrlen &&
         (memcmp(str, getstr(ts), l * sizeof(char)) == 0)) {
       /* found! */
@@ -186,12 +179,11 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
       return ts;
     }
   }
-  /* 如果不存在，那么创建一个新的，我发现短字符串，能重用就重用，不是内存会无限增长，什么时候回收*/
-  if (g->strt.nuse >= g->strt.size && g->strt.size <= MAX_INT/2) { /*扩容*/
+  if (g->strt.nuse >= g->strt.size && g->strt.size <= MAX_INT/2) {
     luaS_resize(L, g->strt.size * 2);
     list = &g->strt.hash[lmod(h, g->strt.size)];  /* recompute with new size */
   }
-  ts = createstrobj(L, l, LUA_TSHRSTR, h);  /* LUA_TSHRSTR is tag*/
+  ts = createstrobj(L, l, LUA_TSHRSTR, h);
   memcpy(getstr(ts), str, l * sizeof(char));
   ts->shrlen = cast_byte(l);
   ts->u.hnext = *list;
@@ -206,20 +198,17 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
 */
 TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
   if (l <= LUAI_MAXSHORTLEN)  /* short string? */
-    return internshrstr(L, str, l);         /* 产生短字符串*/
-  else {                                    /* 产生长字符串*/
+    return internshrstr(L, str, l);
+  else {
     TString *ts;
     if (l >= (MAX_SIZE - sizeof(TString))/sizeof(char))
-      luaM_toobig(L);                      /* 这里主要是分配方案，gc主要是回收方案*/
-    ts = luaS_createlngstrobj(L, l);       /* 长字符串会gc，但是不会存储在&g->strt里面，如果53*2个cache */
+      luaM_toobig(L);
+    ts = luaS_createlngstrobj(L, l);
     memcpy(getstr(ts), str, l * sizeof(char));
     return ts;
   }
 }
 
-/*
-**
-*/
 
 /*
 ** Create or reuse a zero-terminated string, first checking in the
@@ -237,7 +226,7 @@ TString *luaS_new (lua_State *L, const char *str) {
   }
   /* normal route */
   for (j = STRCACHE_M - 1; j > 0; j--)
-    p[j] = p[j - 1];  /* move out last element */  /* 这个设计会把每一次只缓存两次*/
+    p[j] = p[j - 1];  /* move out last element */
   /* new element is first in the list */
   p[0] = luaS_newlstr(L, str, strlen(str));
   return p[0];

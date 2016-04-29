@@ -4,9 +4,6 @@
 ** See Copyright Notice in lua.h
 */
 
-/*
-** 这里所有操作都是针对UTString的
-*/
 #ifndef lstring_h
 #define lstring_h
 
@@ -15,10 +12,10 @@
 #include "lstate.h"
 
 
-#define sizelstring(l)  (sizeof(union UTString) + ((l) + 1) * sizeof(char)) /* 获取字符串长度*/
+#define sizelstring(l)  (sizeof(union UTString) + ((l) + 1) * sizeof(char))
 
-#define sizeludata(l)	(sizeof(union UUdata) + (l))           /* 这个不知道*/
-#define sizeudata(u)	sizeludata((u)->len)                   /* 获取userdata的长度*/
+#define sizeludata(l)	(sizeof(union UUdata) + (l))
+#define sizeudata(u)	sizeludata((u)->len)
 
 #define luaS_newliteral(L, s)	(luaS_newlstr(L, "" s, \
                                  (sizeof(s)/sizeof(char))-1))
@@ -36,8 +33,8 @@
 #define eqshrstr(a,b)	check_exp((a)->tt == LUA_TSHRSTR, (a) == (b))
 
 
-LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);    /* 产生hash*/
-LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);                              /* */
+LUAI_FUNC unsigned int luaS_hash (const char *str, size_t l, unsigned int seed);
+LUAI_FUNC unsigned int luaS_hashlongstr (TString *ts);
 LUAI_FUNC int luaS_eqlngstr (TString *a, TString *b);
 LUAI_FUNC void luaS_resize (lua_State *L, int newsize);
 LUAI_FUNC void luaS_clearcache (global_State *g);

@@ -150,6 +150,8 @@
 /* }================================================================== */
 
 
+
+
 /*
 ** {==================================================================
 ** Configuration for Paths.
@@ -678,7 +680,6 @@
 @@ LUA_USE_APICHECK turns on several consistency checks on the C API.
 ** Define it as a help when debugging C code.
 */
-#define LUA_USE_APICHECK
 #if defined(LUA_USE_APICHECK)
 #include <assert.h>
 #define luai_apicheck(l,e)	assert(e)

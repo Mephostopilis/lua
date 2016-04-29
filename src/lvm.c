@@ -772,17 +772,17 @@ void luaV_execute (lua_State *L) {
   base = ci->u.l.base;  /* local copy of function's base */
   /* main loop of interpreter */
   for (;;) {
-    Instruction i = *(ci->u.l.savedpc++);  
+    Instruction i = *(ci->u.l.savedpc++);
     StkId ra;
     if (L->hookmask & (LUA_MASKLINE | LUA_MASKCOUNT))
       Protect(luaG_traceexec(L));
     /* WARNING: several calls may realloc the stack and invalidate 'ra' */
-    ra = RA(i);                          /* achive a*/
+    ra = RA(i);
     lua_assert(base == ci->u.l.base);
     lua_assert(base <= L->top && L->top < L->stack + L->stacksize);
     vmdispatch (GET_OPCODE(i)) {
       vmcase(OP_MOVE) {
-        setobjs2s(L, ra, RB(i)); /* a := b */
+        setobjs2s(L, ra, RB(i));
         vmbreak;
       }
       vmcase(OP_LOADK) {

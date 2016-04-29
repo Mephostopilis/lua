@@ -551,23 +551,6 @@ static int handle_luainit (lua_State *L) {
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);
   char **argv = (char **)lua_touserdata(L, 2);
-  char *tmp[8] = { 0 };
-  for (size_t i = 0; i < argc; i++)
-  {
-	  tmp[i] = argv[i];
-  }
-  int idx = strlen(tmp[0]);
-  idx--;
-  while (tmp[0][idx] != '\\')
-  {
-	  idx--;
-  }
-  char *path = tmp[0];
-  char cat[255] = { 0 };
-  memcpy(cat, tmp[0], idx + 1);
-  sprintf(cat + idx+1, "../../../../test.lua");
-  argv[argc] = cat;
-  argc += 1;
   int script;
   int args = collectargs(argv, &script);
   luaL_checkversion(L);  /* check that interpreter has correct version */
@@ -582,7 +565,7 @@ static int pmain (lua_State *L) {
     lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   }
-  luaL_openlibs(L);  /* open standard libraries */
+  //luaL_openlibs(L);  /* open standard libraries */
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   if (!(args & has_E)) {  /* no option '-E'? */
     if (handle_luainit(L) != LUA_OK)  /* run LUA_INIT */

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ** $Id: lapi.c,v 2.257 2015/11/02 18:48:07 roberto Exp $
 ** Lua API
 ** See Copyright Notice in lua.h
@@ -12,7 +12,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "lua.h"
 
@@ -164,9 +163,7 @@ LUA_API int lua_absindex (lua_State *L, int idx) {
          : cast_int(L->top - L->ci->func) + idx;
 }
 
-/*
-** this api make me find 
-*/
+
 LUA_API int lua_gettop (lua_State *L) {
   return cast_int(L->top - (L->ci->func + 1));
 }
@@ -535,9 +532,7 @@ LUA_API const char *lua_pushfstring (lua_State *L, const char *fmt, ...) {
 LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
   lua_lock(L);
   if (n == 0) {
-    setfvalue(L->top, fn);   /*L->top��TValue*/
-	//assert(L->top - L->stack == 1);
-	printf("%d", L->top - L->stack);
+    setfvalue(L->top, fn);
   }
   else {
     CClosure *cl;

@@ -71,7 +71,7 @@ typedef struct lua_State lua_State;
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
 
-#define LUA_NUMTAGS		9               /* Õâ¸öTAG²»ÖªµÀÓÃÀ´¸ÉÊ²Ã´ */
+#define LUA_NUMTAGS		9
 
 
 
@@ -103,11 +103,6 @@ typedef LUA_KCONTEXT lua_KContext;
 ** Type for C functions registered with Lua
 */
 typedef int (*lua_CFunction) (lua_State *L);
-
-
-/*
-** Õâ¸öº¯ÊýÖ¸Õë²»ÖªµÀ¸ÉÂïµÄ
-*/
 
 /*
 ** Type for continuation functions
@@ -214,7 +209,6 @@ LUA_API const void     *(lua_topointer) (lua_State *L, int idx);
 #define LUA_OPBNOT	13
 
 LUA_API void  (lua_arith) (lua_State *L, int op);
-
 
 #define LUA_OPEQ	0
 #define LUA_OPLT	1

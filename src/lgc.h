@@ -37,13 +37,13 @@
 ** Possible states of the Garbage Collector
 */
 #define GCSpropagate	0
-#define GCSatomic	    1
-#define GCSswpallgc	    2
+#define GCSatomic	1
+#define GCSswpallgc	2
 #define GCSswpfinobj	3
 #define GCSswptobefnz	4
-#define GCSswpend	    5
-#define GCScallfin	    6
-#define GCSpause	    7
+#define GCSswpend	5
+#define GCScallfin	6
+#define GCSpause	7
 
 
 #define issweepphase(g)  \
@@ -67,7 +67,7 @@
 #define resetbits(x,m)		((x) &= cast(lu_byte, ~(m)))
 #define setbits(x,m)		((x) |= (m))
 #define testbits(x,m)		((x) & (m))
-#define bitmask(b)		    (1<<(b))
+#define bitmask(b)		(1<<(b))
 #define bit2mask(b1,b2)		(bitmask(b1) | bitmask(b2))
 #define l_setbit(x,b)		setbits(x, bitmask(b))
 #define resetbit(x,b)		resetbits(x, bitmask(b))
@@ -84,7 +84,7 @@
 #define WHITEBITS	bit2mask(WHITE0BIT, WHITE1BIT)
 
 
-#define iswhite(x)      testbits((x)->marked, WHITEBITS)  /*有两种白色标记，是其中的一种就对了*/
+#define iswhite(x)      testbits((x)->marked, WHITEBITS)
 #define isblack(x)      testbit((x)->marked, BLACKBIT)
 #define isgray(x)  /* neither white nor black */  \
 	(!testbits((x)->marked, WHITEBITS | bitmask(BLACKBIT)))
@@ -124,7 +124,7 @@
 	luaC_barrierback_(L,p) : cast_void(0))
 
 #define luaC_objbarrier(L,p,o) (  \
-	(isblack(p) && iswhite(o)) ?  \
+	(isblack(p) && iswhite(o)) ? \
 	luaC_barrier_(L,obj2gco(p),obj2gco(o)) : cast_void(0))
 
 #define luaC_upvalbarrier(L,uv) ( \
