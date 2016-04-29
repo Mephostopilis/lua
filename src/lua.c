@@ -556,7 +556,17 @@ static int pmain (lua_State *L) {
   {
 	  tmp[i] = argv[i];
   }
-  argv[argc] = "D:\\git\\lua\\src\\lua13\\Debug\\main.lua";
+  int idx = strlen(tmp[0]);
+  idx--;
+  while (tmp[0][idx] != '\\')
+  {
+	  idx--;
+  }
+  char *path = tmp[0];
+  char cat[255] = { 0 };
+  memcpy(cat, tmp[0], idx + 1);
+  sprintf(cat + idx+1, "../../../../test.lua");
+  argv[argc] = cat;
   argc += 1;
   int script;
   int args = collectargs(argv, &script);

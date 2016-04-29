@@ -135,7 +135,7 @@ l_noret luaD_throw (lua_State *L, int errcode) {
 
 int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
   unsigned short oldnCcalls = L->nCcalls;
-  struct lua_longjmp lj;
+  struct lua_longjmp lj;      /* lua_longjmp只是一个结构体，所以previous只能是一个深度设计*/
   lj.status = LUA_OK;
   lj.previous = L->errorJmp;  /* chain new error handler */
   L->errorJmp = &lj;

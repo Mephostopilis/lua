@@ -84,7 +84,7 @@
 #define WHITEBITS	bit2mask(WHITE0BIT, WHITE1BIT)
 
 
-#define iswhite(x)      testbits((x)->marked, WHITEBITS)
+#define iswhite(x)      testbits((x)->marked, WHITEBITS)  /*有两种白色标记，是其中的一种就对了*/
 #define isblack(x)      testbit((x)->marked, BLACKBIT)
 #define isgray(x)  /* neither white nor black */  \
 	(!testbits((x)->marked, WHITEBITS | bitmask(BLACKBIT)))
