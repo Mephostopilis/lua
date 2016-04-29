@@ -64,8 +64,8 @@ typedef struct stringtable {
 */
 typedef struct CallInfo {
   StkId func;  /* function index in the stack */
-  StkId	top;   /* top for this function */
-  struct CallInfo *previous, *next;  /* dynamic call link */
+  StkId	top;   /* top for this function */          /* stack space limit */
+  struct CallInfo *previous, *next;  /* dynamic call link */ /* call stack and oporate data stack */
   union {
     struct {       /* only for Lua functions */
       StkId base;  /* base for this function */
@@ -88,10 +88,10 @@ typedef struct CallInfo {
 */
 #define CIST_OAH	  (1<<0)	  /* original value of 'allowhook' */
 #define CIST_LUA	  (1<<1)	  /* call is running a Lua function */
-#define CIST_HOOKED	(1<<2)	/* call is running a debug hook */
-#define CIST_FRESH	(1<<3)	/* call is running on a fresh invocation
+#define CIST_HOOKED	(1<<2)	  /* call is running a debug hook */
+#define CIST_FRESH	(1<<3)	  /* call is running on a fresh invocation
                                    of luaV_execute */
-#define CIST_YPCALL	(1<<4)	/* call is a yieldable protected call */
+#define CIST_YPCALL	(1<<4)	  /* call is a yieldable protected call */
 #define CIST_TAIL	  (1<<5)	  /* call was tail called */
 #define CIST_HOOKYIELD	(1<<6)	/* last hook called yielded */
 #define CIST_LEQ	  (1<<7)    /* using __lt for __le */
@@ -151,13 +151,13 @@ struct lua_State {
   CommonHeader;
   unsigned short nci;  /* number of items in 'ci' list */
   lu_byte status;
-  StkId top;  /* first free slot in the stack */
+  StkId top;           /* first free slot in the stack */
   global_State *l_G;
-  CallInfo *ci;  /* call info for current function */
+  CallInfo *ci;        /* call info for current function */
   const Instruction *oldpc;  /* last pc traced */
-  StkId stack_last;  /* last free slot in the stack */
-  StkId stack;  /* stack base */
-  UpVal *openupval;  /* list of open upvalues in this stack */
+  StkId stack_last;    /* last free slot in the stack */
+  StkId stack;         /* stack base */
+  UpVal *openupval;    /* list of open upvalues in this stack */
   GCObject *gclist;
   struct lua_State *twups;  /* list of threads with open upvalues */
   struct lua_longjmp *errorJmp;  /* current error recover point */
@@ -167,7 +167,7 @@ struct lua_State {
   int stacksize;
   int basehookcount;
   int hookcount;
-  unsigned short nny;  /* number of non-yieldable calls in stack */
+  unsigned short nny;      /* number of non-yieldable calls in stack */
   unsigned short nCcalls;  /* number of nested C calls */
   lu_byte hookmask;
   lu_byte allowhook;
@@ -206,6 +206,8 @@ union GCUnion {
 #define gco2th(o)  check_exp((o)->tt == LUA_TTHREAD, &((cast_u(o))->th))
 
 
+/* between them and GCUnion as bridage */
+/* such as TString, TUData -> GCObject*/
 /* macro to convert a Lua object into a GCObject */
 #define obj2gco(v) \
 	check_exp(novariant((v)->tt) < LUA_TDEADKEY, (&(cast_u(v)->gc)))

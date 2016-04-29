@@ -157,7 +157,7 @@ typedef struct lua_TValue {
 #define novariant(x)	((x) & 0x0F) /* 只取后4位，用来判断是什么类型，不用判断variant*/
 
 /* type tag of a TValue (bits 0-3 for tags + variant bits 4-5) */
-#define ttype(o)	(rttype(o) & 0x3F)  /* 1 << 6 - 1,取后五位*/
+#define ttype(o)	(rttype(o) & 0x3F)  /* 1 << 7 - 1,取后五位*/
 
 /* type tag of a TValue with no variants (bits 0-3) */
 #define ttnov(o)	(novariant(rttype(o)))
@@ -234,7 +234,7 @@ typedef struct lua_TValue {
 #define chgivalue(obj,x) \
   { TValue *io=(obj); lua_assert(ttisinteger(io)); val_(io).i=(x); }
 
-#define setnilvalue(obj) settt_(obj, LUA_TNIL)
+#define setnilvalue(obj) settt_(luaS_createlngstrobjobj, LUA_TNIL)
 
 #define setfvalue(obj,x) \
   { TValue *io=(obj); val_(io).f=(x); settt_(io, LUA_TLCF); }
@@ -284,7 +284,7 @@ typedef struct lua_TValue {
 
 
 #define setobj(L,obj1,obj2) \
-	{ TValue *io1=(obj1); *io1 = *(obj2); \
+	{ TValue *io1=(obj1); *io1 = *luaS_createlngstrobj(obj2); \
 	  (void)L; checkliveness(L,io1); }
 
 
@@ -305,7 +305,7 @@ typedef struct lua_TValue {
 #define setobj2n	setobj
 #define setsvalue2n	setsvalue
 
-/* to table (define it as an expression to be used in macros) */
+/* to table (define it as an expluaS_createlngstrobjression to be used in macros) */
 #define setobj2t(L,o1,o2)  ((void)L, *(o1)=*(o2), checkliveness(L,(o1)))
 
 
@@ -315,7 +315,7 @@ typedef struct lua_TValue {
 ** {======================================================
 ** types and prototypes
 ** =======================================================
-*/
+*/luaS_createlngstrobj
 
 /* 这个StkId类型主要用来index
 */
@@ -450,7 +450,7 @@ typedef struct Proto {
   int sizelocvars;
   int linedefined;      /* debug information  */
   int lastlinedefined;  /* debug information  */
-  TValue *k;  /* constants used by the function */
+  TValue *k;            /* constants used by the function */
   Instruction *code;    /* opcodes */
   struct Proto **p;     /* functions defined inside the function */
   int *lineinfo;        /* map from opcodes to source lines (debug information) */
@@ -518,7 +518,7 @@ typedef union TKey {
     TValuefields;   /* 这就是TValue */
     int next;       /* for chaining (offset for next node) */
   } nk;
-  TValue tvk; 
+  TValue tvk;       /* tvk */
 } TKey;
 
 
@@ -531,7 +531,7 @@ typedef union TKey {
 
 typedef struct Node {
   TValue i_val;
-  TKey i_key;
+  TKey   i_key;
 } Node;
 
 /*
@@ -539,15 +539,15 @@ typedef struct Node {
 */
 
 typedef struct Table {
-  CommonHeader;   /* 垃圾回收 */
-  lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
-  lu_byte lsizenode;  /* log2 of size of 'node' array */
+  CommonHeader;            /* 垃圾回收 */
+  lu_byte flags;           /* 1<<p means tagmethod(p) is not present */
+  lu_byte lsizenode;       /* log2 of size of 'node' array */
   unsigned int sizearray;  /* size of 'array' array */
-  TValue *array;  /* array part */
+  TValue *array;           /* array part */
   Node *node;
-  Node *lastfree;  /* any free position is before this position */
+  Node *lastfree;          /* any free position is before this position */
   struct Table *metatable;
-  GCObject *gclist;
+  GCObject *gclist;        /* this is*/
 } Table;
 
 
