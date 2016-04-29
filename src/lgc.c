@@ -106,6 +106,9 @@ static void reallymarkobject (global_State *g, GCObject *o);
 */
 #define gnodelast(h)	gnode(h, cast(size_t, sizenode(h)))
 
+/*
+** this is gclist is next, who, i finaly see this is clear.
+*/
 
 /*
 ** link collectable object 'o' into list pointed by 'p'
@@ -155,7 +158,7 @@ static int iscleared (global_State *g, const TValue *o) {
 void luaC_barrier_ (lua_State *L, GCObject *o, GCObject *v) {
   global_State *g = G(L);
   lua_assert(isblack(o) && iswhite(v) && !isdead(g, v) && !isdead(g, o));
-  if (keepinvariant(g))  /* must keep invariant? */
+  if (keepinvariant(g))      /* must keep invariant? */ /* in mark phase, so reallymarkobject */
     reallymarkobject(g, v);  /* restore invariant */
   else {  /* sweep phase */
     lua_assert(issweepphase(g));
@@ -193,7 +196,7 @@ void luaC_upvalbarrier_ (lua_State *L, UpVal *uv) {
 
 void luaC_fix (lua_State *L, GCObject *o) {
   global_State *g = G(L);
-  lua_assert(g->allgc == o);  /* object must be 1st in 'allgc' list! */
+  lua_assert(g->allgc == o);  /* object must be 1st ilin 'allgc' list! */
   white2gray(o);              /* they will be gray forever */
   g->allgc = o->next;         /* remove object from 'allgc' list */
   o->next = g->fixedgc;       /* link it to 'fixedgc' list */
@@ -225,6 +228,9 @@ GCObject *luaC_newobj (lua_State *L, int tt, size_t sz) {
 ** =======================================================
 */
 
+/*
+** 1.mark gray,if you visit it's refrences, so it's mark is black and it's location is in gclist
+*/
 
 /*
 ** mark an object. Userdata, strings, and closed upvalues are visited
@@ -560,7 +566,7 @@ static void propagatemark (global_State *g) {
   lu_mem size;
   GCObject *o = g->gray;
   lua_assert(isgray(o));
-  gray2black(o);
+  gray2black(o);         /* this is black, begain remove from gray list*/
   switch (o->tt) {
     case LUA_TTABLE: {
       Table *h = gco2t(o);
@@ -734,11 +740,11 @@ static GCObject **sweeplist (lua_State *L, GCObject **p, lu_mem count);
 static GCObject **sweeplist (lua_State *L, GCObject **p, lu_mem count) {
   global_State *g = G(L);
   int ow = otherwhite(g);
-  int white = luaC_white(g);  /* current white */
+  int white = luaC_white(g);  /* current white */ /* white is last other */
   while (*p != NULL && count-- > 0) {
     GCObject *curr = *p;
     int marked = curr->marked;
-    if (isdeadm(ow, marked)) {  /* is 'curr' dead? */
+    if (isdeadm(ow, marked)) {  /* is 'curr' dead? */ /* isdeadm alg flp */
       *p = curr->next;  /* remove 'curr' from list */
       freeobj(L, curr);  /* erase 'curr' */
     }
@@ -847,7 +853,7 @@ static int runafewfinalizers (lua_State *L) {
   lua_assert(!g->tobefnz || g->gcfinnum > 0);
   for (i = 0; g->tobefnz && i < g->gcfinnum; i++)
     GCTM(L, 1);  /* call one finalizer */
-  g->gcfinnum = (!g->tobefnz) ? 0  /* nothing more to finalize? */
+  g->gcfinnum = (!g->tobefnz) ? 0       /* nothing more to finalize? */
                     : g->gcfinnum * 2;  /* else call a few more next time */
   return i;
 }
@@ -961,7 +967,7 @@ static int entersweep (lua_State *L) {
   global_State *g = G(L);
   int n = 0;
   g->gcstate = GCSswpallgc;
-  lua_assert(g->sweepgc == NULL);
+  lua_assert(g->sweepgc == NULL);  /* when GCSatomic enter GCSswpallgc,change state and sweepgc*/
   g->sweepgc = sweeptolive(L, &g->allgc, &n);
   return n;
 }
@@ -989,8 +995,8 @@ static l_mem atomic (lua_State *L) {
   GCObject *grayagain = g->grayagain;  /* save original list */
   lua_assert(g->ephemeron == NULL && g->weak == NULL);
   lua_assert(!iswhite(g->mainthread));
-  g->gcstate = GCSinsideatomic;
-  g->GCmemtrav = 0;  /* start counting work */
+  g->gcstate = GCSinsideatomic;   /* don't rupt */
+  g->GCmemtrav = 0;  /* start counting work */ /* this is tmp var */
   markobject(g, L);  /* mark running thread */
   /* registry and global metatables may be changed by API */
   markvalue(g, &g->l_registry);
@@ -1023,12 +1029,14 @@ static l_mem atomic (lua_State *L) {
   clearvalues(g, g->weak, origweak);
   clearvalues(g, g->allweak, origall);
   luaS_clearcache(g);
-  g->currentwhite = cast_byte(otherwhite(g));  /* flip current white */
+  g->currentwhite = cast_byte(otherwhite(g));  /* flip current white */ /* this is flip*/
   work += g->GCmemtrav;  /* complete counting */
   return work;  /* estimate of memory marked by 'atomic' */
 }
 
-
+/*
+** simple flip next step
+*/
 static lu_mem sweepstep (lua_State *L, global_State *g,
                          int nextstate, GCObject **nextlist) {
   if (g->sweepgc) {
@@ -1065,7 +1073,7 @@ static lu_mem singlestep (lua_State *L) {
     case GCSatomic: {
       lu_mem work;
       int sw;
-      propagateall(g);  /* make sure gray list is empty */
+      propagateall(g);   /* make sure gray list is empty */
       work = atomic(L);  /* work is what was traversed by 'atomic' */
       sw = entersweep(L);
       g->GCestimate = gettotalbytes(g);  /* first estimate */;

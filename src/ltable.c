@@ -488,18 +488,18 @@ TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   luaC_barrierback(L, t, key);
   lua_assert(ttisnil(gval(mp)));
   return gval(mp);
-}
+}findindex
 
 
 /*
 ** search function for integers
 */
 const TValue *luaH_getint (Table *t, lua_Integer key) {
-  /* (1 <= key && key <= t->sizearray) */
+  /* (1 <= key && key <= t->sizearray) */ /* why design,1, 2, 3, 4, 5, -1, -2, -3, -4, -5 */
   if (l_castS2U(key) - 1 < t->sizearray)
     return &t->array[key - 1];
   else {
-    Node *n = hashint(t, key);
+    Node *n = hashint(t, key);  /* hash */
     for (;;) {  /* check whether 'key' is somewhere in the chain */
       if (ttisinteger(gkey(n)) && ivalue(gkey(n)) == key)
         return gval(n);  /* that's it */
@@ -642,7 +642,7 @@ int luaH_getn (Table *t) {
   unsigned int j = t->sizearray;
   if (j > 0 && ttisnil(&t->array[j - 1])) {
     /* there is a boundary in the array part: (binary) search for it */
-    unsigned int i = 0;
+                             
     while (j - i > 1) {
       unsigned int m = (i+j)/2;
       if (ttisnil(&t->array[m - 1])) j = m;

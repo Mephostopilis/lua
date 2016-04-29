@@ -67,7 +67,7 @@
 #define resetbits(x,m)		((x) &= cast(lu_byte, ~(m)))
 #define setbits(x,m)		((x) |= (m))
 #define testbits(x,m)		((x) & (m))
-#define bitmask(b)		(1<<(b))
+#define bitmask(b)		    (1<<(b))
 #define bit2mask(b1,b2)		(bitmask(b1) | bitmask(b2))
 #define l_setbit(x,b)		setbits(x, bitmask(b))
 #define resetbit(x,b)		resetbits(x, bitmask(b))
@@ -124,7 +124,7 @@
 	luaC_barrierback_(L,p) : cast_void(0))
 
 #define luaC_objbarrier(L,p,o) (  \
-	(isblack(p) && iswhite(o)) ? \
+	(isblack(p) && iswhite(o)) ?  \
 	luaC_barrier_(L,obj2gco(p),obj2gco(o)) : cast_void(0))
 
 #define luaC_upvalbarrier(L,uv) ( \

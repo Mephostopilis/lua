@@ -56,7 +56,9 @@ unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   return h;
 }
 
-
+/*
+** longstr extra field mark, if you can 
+*/
 unsigned int luaS_hashlongstr (TString *ts) {
   lua_assert(ts->tt == LUA_TLNGSTR);             /* check是否是长字符串*/
   if (ts->extra == 0) {  /* no hash? */
@@ -145,6 +147,9 @@ static TString *createstrobj (lua_State *L, size_t l, int tag, unsigned int h) {
   return ts;
 }
 
+/*
+** extra for longstr, so only they asking he 
+*/ 
 /* 长字符只是简单的补充lnglen*/
 TString *luaS_createlngstrobj (lua_State *L, size_t l) {
   TString *ts = createstrobj(L, l, LUA_TLNGSTR, G(L)->seed);
