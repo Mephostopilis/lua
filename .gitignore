@@ -40,6 +40,16 @@
 /src/lua/luac/x64
 /src/lua/x64
 /src/lua/ipch
+/src/lua13/Debug
+/src/lua13/lua13/Debug
+/src/lua13/luac13/Debug
+/src/lua13/lua13/x64
+/src/lua13/lua13/x64
+/src/lua13/luac13/x64
+/src/lua13/x64
+/src/lua13/ipch
+!/src/lua13/Debug/main.lua
 
 *.suo
 *.sdf
+

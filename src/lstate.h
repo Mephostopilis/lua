@@ -109,8 +109,8 @@ typedef struct CallInfo {
 typedef struct global_State {
   lua_Alloc frealloc;     /* function to reallocate memory */
   void *ud;               /* auxiliary data to 'frealloc' */
-  l_mem totalbytes;       /* number of bytes currently allocated - GCdebt */ 
-  l_mem GCdebt;           /* bytes allocated not yet compensated by the collector */ /* 这个字段还是看不出来用来干什么的。*/
+  l_mem totalbytes;       /* number of bytes currently allocated - GCdebt */         /* 当前已经*/
+  l_mem GCdebt;           /* bytes allocated not yet compensated by the collector */ /* 向系统欠的账还没有偿还的，也就是应用程序已经分配内存还没有free的*/
   lu_mem GCmemtrav;       /* memory traversed by the GC */                           /* 内存遍历是怎么实现的还不知道*/
   lu_mem GCestimate;      /* an estimate of the non-garbage memory in use */         /* */
   stringtable strt;       /* hash table for strings */

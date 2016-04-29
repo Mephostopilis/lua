@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: llex.c,v 2.95 2015/11/19 19:16:22 roberto Exp $
 ** Lexical Analyzer
 ** See Copyright Notice in lua.h
@@ -73,7 +73,7 @@ void luaX_init (lua_State *L) {
   luaC_fix(L, obj2gco(e));  /* never collect this name */
   for (i=0; i<NUM_RESERVED; i++) {
     TString *ts = luaS_new(L, luaX_tokens[i]);
-    luaC_fix(L, obj2gco(ts));  /* reserved words are never collected */
+    luaC_fix(L, obj2gco(ts));    /* reserved words are never collected */
     ts->extra = cast_byte(i+1);  /* reserved word */
   }
 }
@@ -580,8 +580,8 @@ static int llex (LexState *ls, SemInfo *seminfo) {
 void luaX_next (LexState *ls) {
   ls->lastline = ls->linenumber;
   if (ls->lookahead.token != TK_EOS) {  /* is there a look-ahead token? */
-    ls->t = ls->lookahead;  /* use this one */
-    ls->lookahead.token = TK_EOS;  /* and discharge it */
+    ls->t = ls->lookahead;              /* use this one */
+    ls->lookahead.token = TK_EOS;       /* and discharge it */
   }
   else
     ls->t.token = llex(ls, &ls->t.seminfo);  /* read next token */

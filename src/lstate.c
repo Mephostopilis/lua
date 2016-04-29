@@ -165,6 +165,7 @@ static void stack_init (lua_State *L1, lua_State *L) {
   setnilvalue(L1->top++);  /* 'function' entry for this 'ci' */
   ci->top = L1->top + LUA_MINSTACK;
   L1->ci = ci;
+  assert(L1->ci->top - (L1->ci->func + 1) == LUA_MINSTACK);
 }
 
 
@@ -204,6 +205,7 @@ static void f_luaopen (lua_State *L, void *ud) {
   global_State *g = G(L);
   UNUSED(ud);
   stack_init(L, L);  /* init stack */
+  assert(L->top - L->stack == 1);
   init_registry(L, g);
   luaS_init(L);
   luaT_init(L);

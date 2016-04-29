@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua13", "lua13\lua13.vcxproj", "{FAE53F7E-6979-4B47-A250-0383E75184E0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "luac13", "luac13\luac13.vcxproj", "{F0000282-7042-436E-8988-5E42AC0965E1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FAE53F7E-6979-4B47-A250-0383E75184E0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FAE53F7E-6979-4B47-A250-0383E75184E0}.Debug|Win32.Build.0 = Debug|Win32
+		{FAE53F7E-6979-4B47-A250-0383E75184E0}.Release|Win32.ActiveCfg = Release|Win32
+		{FAE53F7E-6979-4B47-A250-0383E75184E0}.Release|Win32.Build.0 = Release|Win32
+		{F0000282-7042-436E-8988-5E42AC0965E1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F0000282-7042-436E-8988-5E42AC0965E1}.Debug|Win32.Build.0 = Debug|Win32
+		{F0000282-7042-436E-8988-5E42AC0965E1}.Release|Win32.ActiveCfg = Release|Win32
+		{F0000282-7042-436E-8988-5E42AC0965E1}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
