@@ -12,7 +12,7 @@
 
 
 #define sizeCclosure(n)	(cast(int, sizeof(CClosure)) + \
-                         cast(int, sizeof(TValue)*((n)-1)))
+                         cast(int, sizeof(TValue)*((n)-1)))  /*之所以-1，是因为CClosure里已经有一个*/
 
 #define sizeLclosure(n)	(cast(int, sizeof(LClosure)) + \
                          cast(int, sizeof(TValue *)*((n)-1)))
@@ -36,7 +36,7 @@ struct UpVal {
   TValue *v;  /* points to stack or to its own value */
   lu_mem refcount;  /* reference counter */
   union {
-    struct {  /* (when open) */
+    struct {        /* (when open) */
       UpVal *next;  /* linked list */
       int touched;  /* mark to avoid cycles with dead threads */
     } open;

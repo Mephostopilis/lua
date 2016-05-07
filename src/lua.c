@@ -530,6 +530,7 @@ static int runargs (lua_State *L, char **argv, int n) {
 
 
 static int handle_luainit (lua_State *L) {
+	const char * a = "abc""abc";
   const char *name = "=" LUA_INITVARVERSION;
   const char *init = getenv(name + 1);
   if (init == NULL) {
@@ -551,6 +552,9 @@ static int handle_luainit (lua_State *L) {
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);
   char **argv = (char **)lua_touserdata(L, 2);
+  argc++;
+  argv = realloc(argv, sizeof(char*)*argc);
+  argv[argc - 1] = "D:\\Ember\\Documents\\github\\lua\\src\\lua\\x64\\Debug\\a.lua";
   int script;
   int args = collectargs(argv, &script);
   luaL_checkversion(L);  /* check that interpreter has correct version */
@@ -589,6 +593,16 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
+static int c2(lua_State *L) {
+	printf("*************");
+}
+
+static int c1(lua_State *L) {
+	int argc = luaL_optinteger(L, 1, 0);
+	char ** argv = (char**)lua_touserdata(L, 2);
+	lua_pushcfunction(L, c2);
+	lua_pcall(L, 0, 0, 0);
+}
 
 int main (int argc, char **argv) {
   int status, result;
@@ -598,8 +612,10 @@ int main (int argc, char **argv) {
     return EXIT_FAILURE;
   }
   lua_pushcfunction(L, &pmain);  /* to call 'pmain' in protected mode */
+  //lua_pushcfunction(L, c1);
   lua_pushinteger(L, argc);  /* 1st argument */
   lua_pushlightuserdata(L, argv); /* 2nd argument */
+  int n = lua_gettop(L);
   status = lua_pcall(L, 2, 1, 0);  /* do the call */
   result = lua_toboolean(L, -1);  /* get result */
   report(L, status);

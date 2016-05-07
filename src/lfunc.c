@@ -45,11 +45,11 @@ LClosure *luaF_newLclosure (lua_State *L, int n) {
 void luaF_initupvals (lua_State *L, LClosure *cl) {
   int i;
   for (i = 0; i < cl->nupvalues; i++) {
-    UpVal *uv = luaM_new(L, UpVal);
+    UpVal *uv = luaM_new(L, UpVal);   /* no gc*/
     uv->refcount = 1;
     uv->v = &uv->u.value;  /* make it closed */
     setnilvalue(uv->v);
-    cl->upvals[i] = uv;
+    cl->upvals[i] = uv;   /* asign*/
   }
 }
 
