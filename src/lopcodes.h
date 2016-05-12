@@ -37,7 +37,7 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 */
 #define SIZE_C		9
 #define SIZE_B		9
-#define SIZE_Bx		(SIZE_C + SIZE_B)
+#define SIZE_Bx		  
 #define SIZE_A		8
 #define SIZE_Ax		(SIZE_C + SIZE_B + SIZE_A)
 
@@ -279,8 +279,8 @@ enum OpArgMask {
 LUAI_DDEC const lu_byte luaP_opmodes[NUM_OPCODES];
 
 #define getOpMode(m)	(cast(enum OpMode, luaP_opmodes[m] & 3))
-#define getBMode(m)	(cast(enum OpArgMask, (luaP_opmodes[m] >> 4) & 3))
-#define getCMode(m)	(cast(enum OpArgMask, (luaP_opmodes[m] >> 2) & 3))
+#define getBMode(m)  	(cast(enum OpArgMask, (luaP_opmodes[m] >> 4) & 3))
+#define getCMode(m)	    (cast(enum OpArgMask, (luaP_opmodes[m] >> 2) & 3))
 #define testAMode(m)	(luaP_opmodes[m] & (1 << 6))
 #define testTMode(m)	(luaP_opmodes[m] & (1 << 7))
 
