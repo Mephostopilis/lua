@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: lapi.c,v 2.257 2015/11/02 18:48:07 roberto Exp $
 ** Lua API
 ** See Copyright Notice in lua.h
@@ -56,12 +56,14 @@ const char lua_ident[] =
 #define api_checkstackindex(l, i, o)  \
 	api_check(l, isstackindex(i, o), "index not in the stack")
 
-
+/*
+** 从索引到地址的转换
+*/
 static TValue *index2addr (lua_State *L, int idx) {
   CallInfo *ci = L->ci;
   if (idx > 0) {
-    TValue *o = ci->func + idx;
-    api_check(L, idx <= ci->top - (ci->func + 1), "unacceptable index");
+    TValue *o = ci->func + idx;  /*从这行代码看，可以看出，vm执行是根据base，而自己操作确实*/
+    api_check(L, idx <= ci->top - (ci->func + 1), "unacceptable index"); /* 索引应该在*/
     if (o >= L->top) return NONVALIDVALUE;
     else return o;
   }

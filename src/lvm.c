@@ -815,7 +815,8 @@ void luaV_execute (lua_State *L) {
         vmbreak;
       }
       vmcase(OP_GETTABUP) {
-        TValue *upval = cl->upvals[GETARG_B(i)]->v;
+		int b = GETARG_B(i);
+        TValue *upval = cl->upvals[b]->v; /*把全局作为第一个上值*/
         TValue *rc = RKC(i);
         gettableProtected(L, upval, rc, ra);
         vmbreak;
