@@ -35,9 +35,10 @@
 /src/lua/Debug
 /src/lua/lua/Debug
 /src/lua/luac/Debug
-/src/lua/lua/x64
+/src/lua/llua/Debug
 /src/lua/lua/x64
 /src/lua/luac/x64
+/src/lua/llua/x64
 /src/lua/x64
 /src/lua/ipch
 /src/lua13/Debug
