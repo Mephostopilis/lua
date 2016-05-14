@@ -201,7 +201,6 @@ static void init_registry (lua_State *L, global_State *g) {
 ** ('g->version' != NULL flags that the state was completely build)
 */
 static void f_luaopen (lua_State *L, void *ud) {
-	//luaD_throw(L, LUA_ERRRUN);
   global_State *g = G(L);
   UNUSED(ud);
   stack_init(L, L);  /* init stack */

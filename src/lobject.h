@@ -44,14 +44,14 @@
 */
 
 /* Variant tags for functions */
-#define LUA_TLCL	(LUA_TFUNCTION | (0 << 4))  /* Lua closure */     /*6*/
-#define LUA_TLCF	(LUA_TFUNCTION | (1 << 4))  /* light C function *//*22*/
-#define LUA_TCCL	(LUA_TFUNCTION | (2 << 4))  /* C closure */       /*38*/
+#define LUA_TLCL	(LUA_TFUNCTION | (0 << 4))  /* Lua closure */
+#define LUA_TLCF	(LUA_TFUNCTION | (1 << 4))  /* light C function */
+#define LUA_TCCL	(LUA_TFUNCTION | (2 << 4))  /* C closure */
 
 
 /* Variant tags for strings */
-#define LUA_TSHRSTR	(LUA_TSTRING | (0 << 4))  /* short strings */      /*4*/
-#define LUA_TLNGSTR	(LUA_TSTRING | (1 << 4))  /* long strings */       /*20*/
+#define LUA_TSHRSTR	(LUA_TSTRING | (0 << 4))  /* short strings */
+#define LUA_TLNGSTR	(LUA_TSTRING | (1 << 4))  /* long strings */
 
 
 /* Variant tags for numbers */

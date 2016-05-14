@@ -56,9 +56,9 @@
 */
 #define lislalpha(c)	testprop(c, MASK(ALPHABIT))
 #define lislalnum(c)	testprop(c, (MASK(ALPHABIT) | MASK(DIGITBIT)))
-#define lisdigit(c)	    testprop(c, MASK(DIGITBIT))
-#define lisspace(c)	    testprop(c, MASK(SPACEBIT))
-#define lisprint(c)	    testprop(c, MASK(PRINTBIT))
+#define lisdigit(c)	testprop(c, MASK(DIGITBIT))
+#define lisspace(c)	testprop(c, MASK(SPACEBIT))
+#define lisprint(c)	testprop(c, MASK(PRINTBIT))
 #define lisxdigit(c)	testprop(c, MASK(XDIGITBIT))
 
 /*
@@ -82,9 +82,9 @@ LUAI_DDEC const lu_byte luai_ctype_[UCHAR_MAX + 2];
 
 #define lislalpha(c)	(isalpha(c) || (c) == '_')
 #define lislalnum(c)	(isalnum(c) || (c) == '_')
-#define lisdigit(c)	    (isdigit(c))
-#define lisspace(c)	    (isspace(c))
-#define lisprint(c)	    (isprint(c))
+#define lisdigit(c)	(isdigit(c))
+#define lisspace(c)	(isspace(c))
+#define lisprint(c)	(isprint(c))
 #define lisxdigit(c)	(isxdigit(c))
 
 #define ltolower(c)	(tolower(c))

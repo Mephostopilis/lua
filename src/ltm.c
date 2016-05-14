@@ -85,8 +85,8 @@ const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
 
 void luaT_callTM (lua_State *L, const TValue *f, const TValue *p1,
                   const TValue *p2, TValue *p3, int hasres) {
-  ptrdiff_t result = savestack(L, p3);  /*存储是为了恢复，为甚么要存储，假如当前数据栈超过最高栈，但是执行tm，可以利用extra_stack.*/
-  StkId func = L->top;                  /*后面的函数都不用检测栈*/
+  ptrdiff_t result = savestack(L, p3);
+  StkId func = L->top;
   setobj2s(L, func, f);  /* push function (assume EXTRA_STACK) */
   setobj2s(L, func + 1, p1);  /* 1st argument */
   setobj2s(L, func + 2, p2);  /* 2nd argument */

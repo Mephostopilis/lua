@@ -360,7 +360,7 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
       n = (*f)(L);  /* do the actual call */
       lua_lock(L);
       api_checknelems(L, n);
-      luaD_poscall(L, ci, L->top - n, n); /*凡是vm调用就是会调用这个函数*/
+      luaD_poscall(L, ci, L->top - n, n);
       return 1;
     }
     case LUA_TLCL: {  /* Lua function: prepare its call */
@@ -448,7 +448,7 @@ static int moveresults (lua_State *L, const TValue *firstResult, StkId res,
 int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
   StkId res;
   int wanted = ci->nresults;
-  if (L->hookmask & (LUA_MASKRET | LUA_MASKLINE)) {  /* 这里不管，就是调试用的*/
+  if (L->hookmask & (LUA_MASKRET | LUA_MASKLINE)) {
     if (L->hookmask & LUA_MASKRET) {
       ptrdiff_t fr = savestack(L, firstResult);  /* hook may change stack */
       luaD_hook(L, LUA_HOOKRET, -1);
