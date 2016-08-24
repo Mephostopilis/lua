@@ -32,24 +32,21 @@
 *.dSYM/
 
 # folder
-/src/lua/Debug
-/src/lua/lua/Debug
-/src/lua/luac/Debug
-/src/lua/llua/Debug
-/src/lua/lua/x64
-/src/lua/luac/x64
-/src/lua/llua/x64
-/src/lua/x64
-/src/lua/ipch
-/src/lua13/Debug
-/src/lua13/lua13/Debug
-/src/lua13/luac13/Debug
-/src/lua13/lua13/x64
-/src/lua13/lua13/x64
-/src/lua13/luac13/x64
-/src/lua13/x64
-/src/lua13/ipch
-!/src/lua13/Debug/main.lua
+/src/vs15/Debug
+/src/vs15/ipch
+/src/vs15/lua/Debug
+/src/vs15/luac/Debug
+/src/vs15/x64
+/src/vs15/lua/x64
+/src/vs15/luac/x64
+
+/src/vs13/Debug
+/src/vs13/ipch
+/src/vs13/lua/Debug
+/src/vs13/luac/Debug
+/src/vs13/x64
+/src/vs13/lua/x64
+/src/vs13/luac/x64
 
 *.suo
 *.sdf
