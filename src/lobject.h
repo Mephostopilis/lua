@@ -384,9 +384,9 @@ typedef union UUdata {
 ** Description of an upvalue for function prototypes
 */
 typedef struct Upvaldesc {
-  TString *name;  /* upvalue name (for debug information) */
+  TString *name;    /* upvalue name (for debug information) */
   lu_byte instack;  /* whether it is in stack (register) */
-  lu_byte idx;  /* index of upvalue (in stack or in outer function's list) */
+  lu_byte idx;      /* index of upvalue (in stack or in outer function's list) */
 } Upvaldesc;
 
 
@@ -410,7 +410,7 @@ typedef struct Proto {
   lu_byte is_vararg;  /* 2: declared vararg; 1: uses vararg */
   lu_byte maxstacksize;  /* number of registers needed by this function */
   int sizeupvalues;  /* size of 'upvalues' */
-  int sizek;  /* size of 'k' */
+  int sizek;         /* size of 'k' */
   int sizecode;
   int sizelineinfo;
   int sizep;  /* size of 'p' */
