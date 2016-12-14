@@ -32,26 +32,22 @@
 *.dSYM/
 
 # folder
+/src/vs15/ipch
 /src/vs15/Debug
 /src/vs15/Release
-/src/vs15/ipch
-/src/vs15/lua/Debug
-/src/vs15/luac/Debug
-/src/vs15/test/Debug
-/src/vs15/llua/Debug
 /src/vs15/x64
+/src/vs15/lua/Debug
 /src/vs15/lua/x64
+/src/vs15/luac/Debug
 /src/vs15/luac/x64
-/src/vs15/test/x64
-/src/vs15/llua/x64
 
 /src/vs13/Debug
 /src/vs13/ipch
-/src/vs13/lua/Debug
-/src/vs13/luac/Debug
 /src/vs13/x64
-/src/vs13/lua/x64
-/src/vs13/luac/x64
+/src/vs13/lua13/Debug
+/src/vs13/lua13/x64
+/src/vs13/luac13/Debug
+/src/vs13/luac13/x64
 
 *.suo
 *.sdf
