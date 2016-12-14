@@ -33,6 +33,7 @@
 
 # folder
 /src/vs15/Debug
+/src/vs15/Release
 /src/vs15/ipch
 /src/vs15/lua/Debug
 /src/vs15/luac/Debug

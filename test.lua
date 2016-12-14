@@ -1,7 +1,21 @@
-local a = 1
-local b = 2
-local c = a + b
-local function test( ... )
+local a = "abc"
+local b = "def"
+local c = "msn"
+a = a .. b .. c
+
+local function function_name(a, b, ... )
 	-- body
-	print("test")
-end 
+	return a + b
+end
+
+for i=1,10 do
+	print(i)
+end
+
+for i,v in ipairs(table_name) do
+	print(i,v)
+end
+
+for k,v in pairs(table_name) do
+	print(k,v)
+end
