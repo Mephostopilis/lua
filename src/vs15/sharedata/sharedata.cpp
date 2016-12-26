@@ -1,16 +1,20 @@
+#include "sharedata.h"
 #include "csv.h"
+
+#include <cstdlib>
+#include <cstdio>
+#include <map>
 
 #ifdef __cplusplus
 extern "C" {
 #endif // 
 #include <lua.h>
 #include <lauxlib.h>
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+//#ifdef __cplusplus
+//}
+//#endif // __cplusplus
 
-#include <cstdlib>
-#include <map>
+
 
 bool is_integer(std::string str) {
 	bool res = false;
@@ -90,17 +94,23 @@ lget(lua_State *L) {
 	}
 }
 
+static int
+ltest(lua_State *L) {
+	printf("test");
+	return 0;
+}
 
-#ifdef __cplusplus
-extern "C" {
-#endif // 
-int
+//#ifdef __cplusplus
+//extern "C" {
+//#endif // 
+SHAREDATA_API int
 luaopen_sharedata(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{"alloc", lalloc},
 		{"free", lfree},
 		{"get", lget },
+		{"test", ltest},
 		{NULL, NULL}
 	};
 
