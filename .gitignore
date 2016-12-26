@@ -42,6 +42,7 @@
 /src/vs15/luac/x64
 /src/vs15/llua/x64
 /src/vs15/sharedata/x64
+/src/vs15/xlua/x64
 
 /src/vs13/Debug
 /src/vs13/ipch
