@@ -4,17 +4,14 @@
 #include <cstdlib>
 #include <cstdio>
 #include <map>
+#include <cstring>
+#include <new>
 
 #ifdef __cplusplus
 extern "C" {
 #endif // 
 #include <lua.h>
 #include <lauxlib.h>
-//#ifdef __cplusplus
-//}
-//#endif // __cplusplus
-
-
 
 bool is_integer(std::string str) {
 	bool res = false;
@@ -47,6 +44,8 @@ static int
 lalloc(lua_State *L) {
 	if (inst == NULL) {
 		inst = (struct sharedata *)malloc(sizeof(*inst));
+		memset(inst, 0, sizeof(*inst));
+		strhtable *strh = new (inst) strhtable(111);
 	}
 	lua_pushlightuserdata(L, inst);
 	return 1;
@@ -65,8 +64,8 @@ lfree(lua_State *L) {
 static int
 linit(lua_State *L) {
 	struct sharedata *sd = (struct sharedata *)lua_touserdata(L, 1);
-	csv<uint32_t, 1, nullptr_t> *sysmail = new csv<uint32_t, 1, nullptr_t>(&sd->strt, "D:\\Ember\\Documents\\github\\crazy\\module\\host\\config\\sysmail.xlsx", 1, 3, 4);
-	csv<uint32_t, 1, nullptr_t> *task = new csv<uint32_t, 1, nullptr_t>(&sd->strt, "D:\\Ember\\Documents\\github\\crazy\\module\\host\\config\\task.xlsx", 1, 3, 4);
+	csv<uint32_t, 1, nullptr_t> *sysmail = new csv<uint32_t, 1, nullptr_t>(&sd->strt, "D:\\Ember\\Documents\\github\\crazy\\module\\host\\config\\sysmail.csv", 1, 3, 4);
+	csv<uint32_t, 1, nullptr_t> *task = new csv<uint32_t, 1, nullptr_t>(&sd->strt, "D:\\Ember\\Documents\\github\\crazy\\module\\host\\config\\task.csv", 1, 3, 4);
 	sd->sysmail = sysmail;
 	sd->task = task;
 
@@ -100,15 +99,13 @@ ltest(lua_State *L) {
 	return 0;
 }
 
-//#ifdef __cplusplus
-//extern "C" {
-//#endif // 
 SHAREDATA_API int
 luaopen_sharedata(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{"alloc", lalloc},
 		{"free", lfree},
+		{"init", linit},
 		{"get", lget },
 		{"test", ltest},
 		{NULL, NULL}

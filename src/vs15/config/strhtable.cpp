@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "strhtable.h"
 #include <cassert>
 
@@ -189,7 +188,7 @@ void strhtable::expand() {
 
 	for (size_t i = 0; i < oldcap; i++) {
 		strhtable_elem *ptr = &old[i];
-		insert(ptr->get_value());
+		insert((std::string &)ptr->get_value());
 	}
 	delete[] old;
 }

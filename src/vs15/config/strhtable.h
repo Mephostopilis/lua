@@ -15,11 +15,11 @@ bool operator >= (const strhtable_elem &left, const strhtable_elem &right);
 
 class strhtable_elem {
 public:
-	strhtable_elem() ;
+	strhtable_elem();
 	~strhtable_elem();
 
 	inline std::string * get_value_ptr() const { return (std::string *)(&_value); }
-	inline std::string   get_value() const { return _value; }
+	inline const std::string & get_value() const { return _value; }
 	void set_value(std::string &value);
 
 	inline strhtable_elem * next() const { return _next; }
@@ -46,7 +46,7 @@ public:
 
 private:
 
-	uint32_t strhtable_elem::xhash();
+	uint32_t xhash();
 
 	bool            _free;
 	uint32_t        _hash;
@@ -59,7 +59,7 @@ public:
 	strhtable();
 	strhtable(int cap);
 	~strhtable();
-	
+
 	std::string * insert(std::string &s);
 
 private:

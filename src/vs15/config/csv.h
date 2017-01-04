@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cctype>
+#include <cstring>
 
 template<typename MKT, int MK, typename R>
 class csv {
@@ -100,8 +101,7 @@ private:
 
 template<typename MKT, int MK, typename R>
 csv<MKT, MK, R>::csv(strhtable *strt)
-	:this()
-	_data(NULL)
+	:_data(NULL)
 	, _size(0)
 	, _cap(0)
 	, _free(0)
@@ -162,6 +162,12 @@ bool csv<MKT, MK, R>::load(std::string filename, int headline, int typeline, int
 
 	std::map<uint32_t, value_t> *row = create_row();
 	std::string word;
+	uint8_t *look = (uint8_t *)malloc(256);
+	int size = 0;
+	int cap = 256;
+	memset(look, 0, cap);
+
+	std::map<uint8_t, int> counts;
 
 	int col = 1;
 	int line = 1;
@@ -171,23 +177,34 @@ bool csv<MKT, MK, R>::load(std::string filename, int headline, int typeline, int
 		} else if (s == 0x0d) { // /r
 			push_word(row, line, col, word);
 			word.clear();
+			memset(look, 0, cap);
+			size = 0;
 			col++;
+
+			// 新行
+			push_row(row, line);
+			row = create_row();
+			line++;
+			col = 1;
 
 			// 判断下一个字符
 			s = _fd.get();
 			if (s == 0x0a) { // /n
+							 // first
+				s = _fd.get();
+				if (s == 34) {
+					counts[34] = 1;
+				} else {
+					goto PUSHWORD;
+				}
 			} else {
-				word.push_back(s);
+				goto PUSHWORD;
 			}
-
-			push_row(row, line);
-			row = create_row();
-
-			line++;
-			col = 1;
 		} else if (s == 0x0a) {  // /n
 			push_word(row, line, col, word);
 			word.clear();
+			memset(look, 0, cap);
+			size = 0;
 			col++;
 
 			push_row(row, line);
@@ -196,11 +213,64 @@ bool csv<MKT, MK, R>::load(std::string filename, int headline, int typeline, int
 			line++;
 			col = 1;
 		} else if (s == ',') {
-			push_word(row, line, col, word);
-			word.clear();
-			col++;
+			if (counts.find(34) != counts.end()) {
+				int c = counts[34]; // 双引号计数次数
+				if (c == 0) {
+					push_word(row, line, col, word);
+					word.clear();
+					memset(look, 0, cap);
+					size = 0;
+					col++;
+					// first
+					s = _fd.get();
+					if (s == 34) {
+						counts[34] = 1;
+					} else {
+						goto PUSHWORD;
+					}
+				} else {
+					goto PUSHWORD;
+				}
+			} else {
+				push_word(row, line, col, word);
+				word.clear();
+				memset(look, 0, cap);
+				size = 0;
+				col++;
+				s = _fd.get();
+				if (s == 34) {
+					counts[34] = 1;
+				} else {
+					goto PUSHWORD;
+				}
+			}
 		} else {
+			if (s == 34) {
+				if (counts.find(34) != counts.end()) {
+					int c = counts[34];
+					if (c > 0) {
+						c--;
+						counts[34] = c;
+					} else {
+						counts[34] = 1;
+					}
+				} else {
+					counts[34] = 1;
+				}
+			}
+		PUSHWORD:
 			word.push_back(s);
+			if (size < cap) {
+				look[size++] = s;
+			} else {
+				uint8_t *ptr = (uint8_t *)realloc(look, cap * 2);
+				if (ptr == look) {
+					cap = cap * 2;
+					look = ptr;
+					look[size++] = s;
+				} else if (ptr == nullptr) {
+				}
+			}
 		}
 	}
 	_fd.close();
@@ -230,7 +300,7 @@ bool csv<MKT, MK, R>::is_float(std::string str) {
 
 template<typename MKT, int MK, typename R>
 void csv<MKT, MK, R>::flush(std::string path) {
-	std::string word;
+	/*std::string word;
 	std::istringstream iss(path);
 
 	while (!iss.eof()) {
@@ -305,7 +375,7 @@ void csv<MKT, MK, R>::flush(std::string path) {
 	ofs << filename << "::" << filename << "()" << " " << "{}" << std::endl;
 	ofs << filename << "::" << "~" << filename << "()" << " " << "{}" << std::endl;
 	ofs << _rtypes[_type[MK]] << " " << filename << "::" << "mk() const {" << std::endl;
-	ofs << "\t" << "return " << _head[MK] << ";" << std::endl;
+	ofs << "\t" << "return " <<  << ";" << std::endl;
 	ofs << "};" << std::endl;
 
 	ofs << "void " << filename << "::fill_field(int col, std::string &word) {" << std::endl;
@@ -323,7 +393,7 @@ void csv<MKT, MK, R>::flush(std::string path) {
 	}
 	ofs << "}" << std::endl;
 	ofs.flush();
-	ofs.close();
+	ofs.close();*/
 
 }
 
@@ -345,17 +415,17 @@ void csv<MKT, MK, R>::push_word(std::map<uint32_t, value_t> *row, int line, int 
 		std::string *s = _strt->insert(word);
 		v.set_string(s);
 		row->emplace(std::make_pair(col, v));
-		
+
 		if (_types.find(word) != _types.end()) {
 			_type[col] = _types[word];
 		} else {
-			throw std::exception("no exit type.");
+			assert(false);
 		}
 	} else if (line >= _dataline) {
 		value_t v;
 		if (_type[col] == value_t::UINT32_T) {
 			assert(is_integer(word));
-			uint32_t ui = std::atoi(word.data());
+			uint32_t ui = std::atoi((const char *)word.data());
 			v.set_uint32(ui);
 		} else if (_type[col] == value_t::STRING) {
 			std::string *s = _strt->insert(word);
@@ -380,11 +450,11 @@ void csv<MKT, MK, R>::push_row(std::map<uint32_t, value_t> *row, int line) {
 	// 索引
 	if (line >= _dataline) {
 		int idx = MK;
-		if (auto iter = row->find(idx) != row->end()) {
-			_rows[iter->second] = row;
-			//iter->second;
-			/*value_t *v = &(iter->second);
-			_rows[v] = row;*/
+		auto iter = row->find(idx);
+		if (iter != row->end()) {
+			if (iter->second.tt == value_t::UINT32_T) {
+				_rows[iter->second.v.ui] = row;
+			}
 		}
 	}
 }
