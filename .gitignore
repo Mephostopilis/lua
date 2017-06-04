@@ -49,6 +49,7 @@
 /src/vs15/sharedata/x64
 /src/vs15/xlua/x64
 /src/vs15/config/x64
+/src/vs15/queue/x64
 /src/vs15/shttpsc/x64
 
 /src/vs13/Debug
