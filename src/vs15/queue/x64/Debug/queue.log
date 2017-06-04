@@ -1,0 +1,18 @@
+﻿  lua-queue.c
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(20): warning C4244: “return”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(22): warning C4244: “return”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(49): warning C4018: “<”: 有符号/无符号不匹配
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(45): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(116): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(140): warning C4018: “>”: 有符号/无符号不匹配
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(146): warning C4018: “>”: 有符号/无符号不匹配
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(147): warning C4018: “>”: 有符号/无符号不匹配
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(168): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(170): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(172): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(185): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(187): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(189): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\queue\lua-queue.c(199): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+  queue.vcxproj -> D:\Ember\Documents\github\lua\src\vs15\x64\Debug\queue.dll
+  queue.vcxproj -> D:\Ember\Documents\github\lua\src\vs15\x64\Debug\queue.pdb (Full PDB)

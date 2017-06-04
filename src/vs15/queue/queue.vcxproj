@@ -19,11 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BAA0E502-CFB3-49C9-B126-4F65490C86AD}</ProjectGuid>
+    <ProjectGuid>{390EA9F7-F42F-4F21-AA61-176850C4039A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>llua</RootNamespace>
+    <RootNamespace>queue</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>liblua</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -88,7 +87,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LLUA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;QUEUE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,7 +100,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;LLUA_EXPORTS;LUA_BUILD_AS_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;QUEUE_EXPORTS;LUA_BUILD_AS_DLL;LUA_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Ember\Documents\github\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -116,7 +116,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LLUA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;QUEUE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,7 +133,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;LLUA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;QUEUE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,67 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lapi.c" />
-    <ClCompile Include="..\..\lauxlib.c" />
-    <ClCompile Include="..\..\lbaselib.c" />
-    <ClCompile Include="..\..\lbitlib.c" />
-    <ClCompile Include="..\..\lcode.c" />
-    <ClCompile Include="..\..\lcorolib.c" />
-    <ClCompile Include="..\..\lctype.c" />
-    <ClCompile Include="..\..\ldblib.c" />
-    <ClCompile Include="..\..\ldebug.c" />
-    <ClCompile Include="..\..\ldo.c" />
-    <ClCompile Include="..\..\ldump.c" />
-    <ClCompile Include="..\..\lfunc.c" />
-    <ClCompile Include="..\..\lgc.c" />
-    <ClCompile Include="..\..\linit.c" />
-    <ClCompile Include="..\..\liolib.c" />
-    <ClCompile Include="..\..\llex.c" />
-    <ClCompile Include="..\..\lmathlib.c" />
-    <ClCompile Include="..\..\lmem.c" />
-    <ClCompile Include="..\..\loadlib.c" />
-    <ClCompile Include="..\..\lobject.c" />
-    <ClCompile Include="..\..\lopcodes.c" />
-    <ClCompile Include="..\..\loslib.c" />
-    <ClCompile Include="..\..\lparser.c" />
-    <ClCompile Include="..\..\lstate.c" />
-    <ClCompile Include="..\..\lstring.c" />
-    <ClCompile Include="..\..\lstrlib.c" />
-    <ClCompile Include="..\..\ltable.c" />
-    <ClCompile Include="..\..\ltablib.c" />
-    <ClCompile Include="..\..\ltm.c" />
-    <ClCompile Include="..\..\lundump.c" />
-    <ClCompile Include="..\..\lutf8lib.c" />
-    <ClCompile Include="..\..\lvm.c" />
-    <ClCompile Include="..\..\lzio.c" />
+    <ClCompile Include="lua-queue.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\lapi.h" />
-    <ClInclude Include="..\..\lauxlib.h" />
-    <ClInclude Include="..\..\lcode.h" />
-    <ClInclude Include="..\..\lctype.h" />
-    <ClInclude Include="..\..\ldebug.h" />
-    <ClInclude Include="..\..\ldo.h" />
-    <ClInclude Include="..\..\lfunc.h" />
-    <ClInclude Include="..\..\lgc.h" />
-    <ClInclude Include="..\..\llex.h" />
-    <ClInclude Include="..\..\llimits.h" />
-    <ClInclude Include="..\..\lmem.h" />
-    <ClInclude Include="..\..\lobject.h" />
-    <ClInclude Include="..\..\lopcodes.h" />
-    <ClInclude Include="..\..\lparser.h" />
-    <ClInclude Include="..\..\lprefix.h" />
-    <ClInclude Include="..\..\lstate.h" />
-    <ClInclude Include="..\..\lstring.h" />
-    <ClInclude Include="..\..\ltable.h" />
-    <ClInclude Include="..\..\ltm.h" />
-    <ClInclude Include="..\..\lua.h" />
-    <ClInclude Include="..\..\lua.hpp" />
-    <ClInclude Include="..\..\luaconf.h" />
-    <ClInclude Include="..\..\lualib.h" />
-    <ClInclude Include="..\..\lundump.h" />
-    <ClInclude Include="..\..\lvm.h" />
-    <ClInclude Include="..\..\lzio.h" />
+    <ProjectReference Include="..\llua\llua.vcxproj">
+      <Project>{baa0e502-cfb3-49c9-b126-4f65490c86ad}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

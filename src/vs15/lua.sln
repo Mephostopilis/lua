@@ -9,11 +9,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "lua\lua.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sharedata", "sharedata\sharedata.vcxproj", "{05F4B15F-3AB3-4E41-A96C-E5FCE6AD1B59}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "llua", "llua\llua.vcxproj", "{BAA0E502-CFB3-49C9-B126-4F65490C86AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liblua", "llua\llua.vcxproj", "{BAA0E502-CFB3-49C9-B126-4F65490C86AD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xlua", "xlua\xlua.vcxproj", "{BD443122-762F-4AF4-8787-DD07D7CDB1FC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "config", "config\config.vcxproj", "{5724D807-5C57-4349-9F45-199CC0F0F904}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "queue", "queue\queue.vcxproj", "{390EA9F7-F42F-4F21-AA61-176850C4039A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shttpsc", "shttpsc\shttpsc.vcxproj", "{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +89,26 @@ Global
 		{5724D807-5C57-4349-9F45-199CC0F0F904}.Release|x64.Build.0 = Release|x64
 		{5724D807-5C57-4349-9F45-199CC0F0F904}.Release|x86.ActiveCfg = Release|Win32
 		{5724D807-5C57-4349-9F45-199CC0F0F904}.Release|x86.Build.0 = Release|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Debug|x64.ActiveCfg = Debug|x64
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Debug|x64.Build.0 = Debug|x64
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Debug|x86.ActiveCfg = Debug|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Debug|x86.Build.0 = Debug|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Release|Any CPU.ActiveCfg = Release|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Release|x64.ActiveCfg = Release|x64
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Release|x64.Build.0 = Release|x64
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Release|x86.ActiveCfg = Release|Win32
+		{390EA9F7-F42F-4F21-AA61-176850C4039A}.Release|x86.Build.0 = Release|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Debug|x64.ActiveCfg = Debug|x64
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Debug|x64.Build.0 = Debug|x64
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Debug|x86.ActiveCfg = Debug|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Debug|x86.Build.0 = Debug|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Release|Any CPU.ActiveCfg = Release|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Release|x64.ActiveCfg = Release|x64
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Release|x64.Build.0 = Release|x64
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Release|x86.ActiveCfg = Release|Win32
+		{C297C2A9-0F96-4A3D-AA33-A0E494FAC400}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
