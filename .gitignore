@@ -32,6 +32,11 @@
 *.dSYM/
 
 # folder
+/src/vs17/Debug
+/src/vs17/x64
+/src/vs17/lua/Debug
+/src/vs17/mini-lua
+
 /src/vs15/ipch
 /src/vs15/Debug
 /src/vs15/Release
