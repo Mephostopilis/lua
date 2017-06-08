@@ -54,6 +54,9 @@ static const luaL_Reg loadedlibs[] = {
   {LUA_BITLIBNAME, luaopen_bit32},
 #endif
   //{LUA_TESTLIBNAME, luaopen_test}, 
+#if defined(TESTMODULE)
+  {LUA_SSOCKLIBNAME, luaopen_ssock},
+#endif
   {NULL, NULL}
 };
 

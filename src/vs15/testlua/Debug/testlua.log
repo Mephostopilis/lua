@@ -1,0 +1,17 @@
+﻿  sssl.c
+  ssock.c
+d:\ember\documents\github\lua\src\vs15\shttpsc\ssock.c(102): warning C4013: “recv”未定义；假设外部返回 int
+d:\ember\documents\github\lua\src\vs15\shttpsc\ssock.c(135): warning C4013: “shutdown”未定义；假设外部返回 int
+d:\ember\documents\github\lua\src\vs15\shttpsc\ssock.c(140): warning C4013: “closesocket”未定义；假设外部返回 int
+  lssock.c
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(31): warning C4244: “初始化”: 从“lua_Number”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(102): warning C4090: “函数”: 不同的“const”限定符
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(101): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(120): warning C4090: “函数”: 不同的“const”限定符
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(130): warning C4090: “函数”: 不同的“const”限定符
+d:\ember\documents\github\lua\src\vs15\shttpsc\lssock.c(138): warning C4244: “初始化”: 从“lua_Integer”转换到“int”，可能丢失数据
+  正在生成代码...
+ssock.obj : error LNK2019: 无法解析的外部符号 _recv，该符号在函数 _ssock_update 中被引用
+ssock.obj : error LNK2019: 无法解析的外部符号 _shutdown，该符号在函数 _ssock_shutdown 中被引用
+ssock.obj : error LNK2019: 无法解析的外部符号 _closesocket，该符号在函数 _ssock_close 中被引用
+D:\Ember\Documents\github\lua\src\vs15\Debug\testlua.exe : fatal error LNK1120: 3 个无法解析的外部命令

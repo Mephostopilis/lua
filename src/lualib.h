@@ -47,6 +47,9 @@ LUAMOD_API int (luaopen_package) (lua_State *L);
 //#define LUA_TESTLIBNAME "test"
 //LUAMOD_API int (luaopen_test) (lua_State *L);
 
+#define LUA_SSOCKLIBNAME "ssock"
+LUAMOD_API int (luaopen_ssock) (lua_State *L);
+
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
 
