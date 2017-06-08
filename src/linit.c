@@ -33,6 +33,10 @@
 
 #include "lualib.h"
 #include "lauxlib.h"
+#ifdef TEST_LUA
+
+#endif // TEST_LUA
+
 
 
 /*
@@ -61,7 +65,10 @@ static const luaL_Reg loadedlibs[] = {
 #if defined(LUA_COMPAT_BITLIB)
 	{ LUA_BITLIBNAME, luaopen_bit32 },
 #endif
+#if defined(TEST_LUA)
 	//{LUA_TESTLIBNAME, luaopen_test}, 
+	{ LUA_COLIBNAME, luaopen_co },
+#endif
 	{ NULL, NULL }
 };
 #endif // MINI_LUA

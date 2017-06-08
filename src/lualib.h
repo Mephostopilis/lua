@@ -44,8 +44,14 @@ LUAMOD_API int (luaopen_debug) (lua_State *L);
 #define LUA_LOADLIBNAME	"package"
 LUAMOD_API int (luaopen_package) (lua_State *L);
 
+#ifdef TEST_LUA
 //#define LUA_TESTLIBNAME "test"
 //LUAMOD_API int (luaopen_test) (lua_State *L);
+
+#define LUA_COLIBNAME "co"
+LUAMOD_API int (luaopen_co)(lua_State *L);
+
+#endif // TEST_LUA
 
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);
