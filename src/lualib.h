@@ -48,8 +48,8 @@ LUAMOD_API int (luaopen_package) (lua_State *L);
 //#define LUA_TESTLIBNAME "test"
 //LUAMOD_API int (luaopen_test) (lua_State *L);
 
-#define LUA_COLIBNAME "co"
-LUAMOD_API int (luaopen_co)(lua_State *L);
+#define LUA_COTESTLIBNAME "cotest"
+LUAMOD_API int (luaopen_cotest)(lua_State *L);
 
 #endif // TEST_LUA
 

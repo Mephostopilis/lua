@@ -88,7 +88,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;TEST_LUA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -174,7 +174,7 @@
     <ClCompile Include="..\..\lutf8lib.c" />
     <ClCompile Include="..\..\lvm.c" />
     <ClCompile Include="..\..\lzio.c" />
-    <ClCompile Include="..\lua-co\lua-co.cpp" />
+    <ClCompile Include="..\lua-co\lua-co.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lapi.h" />

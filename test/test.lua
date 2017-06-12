@@ -19,3 +19,5 @@ end
 for k,v in pairs(table_name) do
 	print(k,v)
 end
+
+return "ok"

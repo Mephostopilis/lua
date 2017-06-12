@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testlua", "testlua\testlua.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua-co", "lua-co\lua-co.vcxproj", "{B7386B0D-F2EE-44B5-A533-FE82CBE963A6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liblua", "liblua\liblua.vcxproj", "{9822CE28-9924-40CD-B4BF-AC49447868B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{B7386B0D-F2EE-44B5-A533-FE82CBE963A6}.Release|x64.Build.0 = Release|x64
 		{B7386B0D-F2EE-44B5-A533-FE82CBE963A6}.Release|x86.ActiveCfg = Release|Win32
 		{B7386B0D-F2EE-44B5-A533-FE82CBE963A6}.Release|x86.Build.0 = Release|Win32
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Debug|x64.ActiveCfg = Debug|x64
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Debug|x64.Build.0 = Debug|x64
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Debug|x86.ActiveCfg = Debug|Win32
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Debug|x86.Build.0 = Debug|Win32
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Release|x64.ActiveCfg = Release|x64
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Release|x64.Build.0 = Release|x64
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Release|x86.ActiveCfg = Release|Win32
+		{9822CE28-9924-40CD-B4BF-AC49447868B4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

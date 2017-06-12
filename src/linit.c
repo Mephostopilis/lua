@@ -67,7 +67,7 @@ static const luaL_Reg loadedlibs[] = {
 #endif
 #if defined(TEST_LUA)
 	//{LUA_TESTLIBNAME, luaopen_test}, 
-	{ LUA_COLIBNAME, luaopen_co },
+	{ LUA_COTESTLIBNAME, luaopen_cotest },
 #endif
 	{ NULL, NULL }
 };
