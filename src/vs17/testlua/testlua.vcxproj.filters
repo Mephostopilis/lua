@@ -117,7 +117,7 @@
     <ClCompile Include="..\..\lzio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lua-co\lua-co.cpp">
+    <ClCompile Include="..\lua-co\lua-co.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

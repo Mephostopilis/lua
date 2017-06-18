@@ -67,17 +67,14 @@ static const luaL_Reg loadedlibs[] = {
 #endif
 #if defined(TEST_LUA)
 	//{LUA_TESTLIBNAME, luaopen_test}, 
-	{ LUA_COLIBNAME, luaopen_co },
-#endif
 <<<<<<< HEAD
-  //{LUA_TESTLIBNAME, luaopen_test}, 
-#if defined(TESTMODULE)
+	{ LUA_COLIBNAME, luaopen_co },
   {LUA_SSOCKLIBNAME, luaopen_ssock},
-#endif
-  {NULL, NULL}
 =======
+	{ LUA_COTESTLIBNAME, luaopen_cotest },
+>>>>>>> 73a75dd105b8a6976c4b24384d9ad3cf9500e6f5
+#endif
 	{ NULL, NULL }
->>>>>>> 8886d3b4677daf80b9216253f2656289493b4d9a
 };
 #endif // MINI_LUA
 

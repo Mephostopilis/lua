@@ -49,14 +49,16 @@ LUAMOD_API int (luaopen_package) (lua_State *L);
 //LUAMOD_API int (luaopen_test) (lua_State *L);
 
 <<<<<<< HEAD
+#define LUA_COLIBNAME "co"
+LUAMOD_API int (luaopen_co)(lua_State *L);
 #define LUA_SSOCKLIBNAME "ssock"
 LUAMOD_API int (luaopen_ssock) (lua_State *L);
 =======
-#define LUA_COLIBNAME "co"
-LUAMOD_API int (luaopen_co)(lua_State *L);
+#define LUA_COTESTLIBNAME "cotest"
+LUAMOD_API int (luaopen_cotest)(lua_State *L);
+>>>>>>> 73a75dd105b8a6976c4b24384d9ad3cf9500e6f5
 
 #endif // TEST_LUA
->>>>>>> 8886d3b4677daf80b9216253f2656289493b4d9a
 
 /* open all previous libraries */
 LUALIB_API void (luaL_openlibs) (lua_State *L);

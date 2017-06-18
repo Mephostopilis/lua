@@ -35,6 +35,7 @@
 /src/vs17/.vs
 /src/vs17/Debug
 /src/vs17/x64
+/src/vs17/liblua/x64
 /src/vs17/lua/Debug
 /src/vs17/lua-co/x64
 /src/vs17/mini-lua/x64
