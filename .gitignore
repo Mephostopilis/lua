@@ -32,10 +32,10 @@
 *.dSYM/
 
 # folder
-/src/vs17/.vs
-/src/vs17/Debug
-/src/vs17/x64
-/src/vs17/objs
+/build/vs17/.vs
+/build/vs17/Debug
+/build/vs17/x64
+/build/vs17/objs
 
 
 /src/vs15/ipch

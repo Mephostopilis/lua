@@ -52,8 +52,8 @@
 #define PROTOCOL_UDP 1
 #define PROTOCOL_UDPv6 2
 
-#define HEADER_LINE 0
-#define HEADER_PG 1
+#define HEADER_TYPE_LINE 0
+#define HEADER_TYPE_PG 1
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
 #define WRITE_BUFFER_SIZE 2048
@@ -232,10 +232,10 @@ wb_list_pop_freelist(struct wb_list* list) {
 typedef struct lua_socket {
 	struct lua_socket *next;
 	int             id;
-	uint32_t        fd;
-	uint16_t        protocol;
-	uint16_t        type;
-	int             header;
+	int             fd;
+	uint8_t         protocol;
+	uint8_t         type;
+	uint8_t         header;
 	struct sockaddr local;
 	struct sockaddr remote;
 	struct wb_list *wl;
@@ -271,7 +271,7 @@ on_disconnected(lua_State *L, struct lua_socket *so) {
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
 	//luaL_checktype(L, -1, )
-	
+
 	lua_pushinteger(L, so->id);
 	lua_pushinteger(L, SOCKET_CLOSE);
 	lua_pcall(L, 2, 0, 0);
@@ -279,13 +279,13 @@ on_disconnected(lua_State *L, struct lua_socket *so) {
 }
 
 static int
-on_recv(lua_State *L, struct lua_socket *so, void *buffer, int len) {
+on_data(lua_State *L, struct lua_socket *so, void *buffer, int len) {
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
 	//luaL_checktype(L, -1, )
 
 	lua_pushinteger(L, so->id);
-	lua_pushinteger(L, SOCKET_CLOSE);
+	lua_pushinteger(L, SOCKET_DATA);
 	lua_pushlstring(L, buffer, len);
 	lua_pcall(L, 3, 0, 0);
 	return 0;
@@ -522,7 +522,7 @@ lsend(lua_State *L) {
 		return 2;
 	}
 	assert(so->protocol == PROTOCOL_TCP);
-	if (so->header == HEADER_PG) {
+	if (so->header == HEADER_TYPE_PG) {
 		struct write_buffer *wb = wb_list_pop_freelist(so->wl);
 		int22bytes_bd(sz, wb->buffer, 0, 2);
 		int csz = (sz > (WRITE_BUFFER_SIZE - 2)) ? (WRITE_BUFFER_SIZE - 2) : sz;
@@ -538,7 +538,7 @@ lsend(lua_State *L) {
 			wb->sz = csz;
 			wb_list_push_wb(so->wl, wb);
 		}
-	} else if (so->header == HEADER_LINE) {
+	} else if (so->header == HEADER_TYPE_LINE) {
 		struct write_buffer *wb = NULL;
 		int n = 0;
 		while (n < sz) {
@@ -639,7 +639,7 @@ lpoll(lua_State *L) {
 						int e = WSAGetLastError();
 						if (e == WSAEINTR || e == WSAEINPROGRESS) {
 							// 当前so不处理
-						} 
+						}
 #else
 						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
 						} else {
@@ -652,15 +652,22 @@ lpoll(lua_State *L) {
 						break;
 					}
 				}
-				char *buf = ringbuf_read_offset(ptr->rb, 2);
-
-			} else if (ptr->protocol == PROTOCOL_UDP) {
-				socklen_t fromlen = sizeof(ptr->remote);
-				int res = recvfrom(ptr->fd, ptr->buffer, ptr->cap, 0, &ptr->remote, &fromlen);
-				if (res > 0) {
-					ptr->recv(ptr);
+				if (ptr->header == HEADER_TYPE_PG) {
+					if (ringbuf_bytes_used(ptr->rb) >= 2) {
+						int32_t sz = 0;
+						const char *head = (const char *)ringbuf_head(ptr->rb);
+						bytes2int_bd(head, 2, &sz);
+						if (ringbuf_bytes_used(ptr->rb) >= (2 + sz)) {
+							char *buf = NULL;
+							buf = ringbuf_read_offset(ptr->rb, 2);
+							buf = ringbuf_read_offset(ptr->rb, sz);
+							on_data(L, ptr, buf, sz);
+						}
+					}
 				} else {
+
 				}
+			} else if (ptr->protocol == PROTOCOL_UDP) {
 			} else if (ptr->protocol == PROTOCOL_UDPv6) {
 			}
 		}
@@ -757,4 +764,4 @@ luaopen_packagesocket(lua_State *L) {
 	lua_pushinteger(L, PROTOCOL_UDPv6);
 	lua_rawset(L, -3);
 	return 1;
-	}
+}

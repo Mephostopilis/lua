@@ -183,6 +183,8 @@ ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count);
  */
 ssize_t
 ringbuf_read(int fd, ringbuf_t *rb, size_t count);
+//ssize_t
+//ringbuf_readfrom(int fd, )
 
 /*
  * Copy n bytes from the ring buffer src, starting from its tail

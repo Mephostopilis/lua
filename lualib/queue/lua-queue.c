@@ -1,3 +1,5 @@
+#define LUA_LIB
+
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -11,7 +13,7 @@
 
 #define NEXT_INDEX(i, cap) ((i) > (cap)) ? ((i) % (cap)) : (i)
 
-static int
+static lua_Integer
 lsize(lua_Integer cap, lua_Integer head, lua_Integer tail) {
 	assert(head > 0 && tail > 0 && head <= cap && tail <= cap);
 	if (tail == head) {
@@ -42,7 +44,7 @@ lenqueue(lua_State *L) {
 
 	tail = NEXT_INDEX(tail + 1, cap);
 	if (head == tail) {
-		int new_cap = cap * 2;
+		lua_Integer new_cap = cap * 2;
 		if (tail == 1) {
 			tail = cap + 1;
 		} else {
@@ -66,7 +68,7 @@ lenqueue(lua_State *L) {
 	}
 	lua_pushinteger(L, tail);
 	lua_rawseti(L, 1, cap + 2);
-	int size = lsize(cap, head, tail);
+	lua_Integer size = lsize(cap, head, tail);
 	lua_pushinteger(L, size);
 	return 1;
 }
@@ -82,7 +84,7 @@ ldequeue(lua_State *L) {
 	lua_Integer tail = luaL_checkinteger(L, -1);
 	lua_pop(L, 3);
 
-	int size = lsize(cap, head, tail);
+	lua_Integer size = lsize(cap, head, tail);
 	if (size > 0) {
 		lua_rawgeti(L, 1, head);
 
@@ -102,7 +104,7 @@ lat(lua_State *L) {
 	}
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_Integer i = luaL_checkinteger(L, 2);
-	
+
 	lua_rawgeti(L, 1, 0);
 	lua_Integer cap = luaL_checkinteger(L, -1);
 	lua_rawgeti(L, 1, cap + 1);
@@ -112,9 +114,9 @@ lat(lua_State *L) {
 	lua_pop(L, 3);
 
 	assert(i <= cap);
-	int size = lsize(cap, head, tail);
+	lua_Integer size = lsize(cap, head, tail);
 	if (i <= size) {
-		int idx = NEXT_INDEX(head + i - 1, cap);
+		lua_Integer idx = NEXT_INDEX(head + i - 1, cap);
 		lua_rawgeti(L, 1, idx);
 		return 1;
 	} else {
@@ -138,13 +140,13 @@ lremove(lua_State *L) {
 
 	if (lua_type(L, 2) == LUA_TTABLE) {
 		const void *ptr = lua_topointer(L, 2);
-		int i;
+		lua_Integer i;
 		for (i = head; i != tail; i = NEXT_INDEX(i + 1, cap)) {
 			lua_rawgeti(L, 1, i);
 			if (lua_type(L, -1) == LUA_TTABLE) {
 				if (lua_topointer(L, -1) == ptr) {
 					// remove
-					size_t j = 0;
+					lua_Integer j = 0;
 					for (j = i; NEXT_INDEX(j + 1, cap) != tail; j = NEXT_INDEX(j + 1, cap)) {
 						lua_rawgeti(L, 1, NEXT_INDEX(j + 1, cap));
 						lua_rawseti(L, 1, j);
@@ -167,14 +169,14 @@ llen(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 
 	lua_rawgeti(L, 1, 0);
-	int cap = luaL_checkinteger(L, -1);
+	lua_Integer cap = luaL_checkinteger(L, -1);
 	lua_rawgeti(L, 1, cap + 1);
-	int head = luaL_checkinteger(L, -1);
+	lua_Integer head = luaL_checkinteger(L, -1);
 	lua_rawgeti(L, 1, cap + 2);
-	int tail = luaL_checkinteger(L, -1);
+	lua_Integer tail = luaL_checkinteger(L, -1);
 	lua_pop(L, 3);
 
-	int size = lsize(cap, head, tail);
+	lua_Integer size = lsize(cap, head, tail);
 	lua_pushinteger(L, size);
 	return 1;
 }
@@ -184,21 +186,21 @@ lnext(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 
 	lua_rawgeti(L, 1, 0);
-	int cap = luaL_checkinteger(L, -1);
+	lua_Integer cap = luaL_checkinteger(L, -1);
 	lua_rawgeti(L, 1, cap + 1);
-	int head = luaL_checkinteger(L, -1);
+	lua_Integer head = luaL_checkinteger(L, -1);
 	lua_rawgeti(L, 1, cap + 2);
-	int tail = luaL_checkinteger(L, -1);
+	lua_Integer tail = luaL_checkinteger(L, -1);
 	lua_pop(L, 3);
 
-	int size = lsize(cap, head, tail);
+	lua_Integer size = lsize(cap, head, tail);
 	lua_Integer idx;
 	if (lua_isnoneornil(L, 2)) {
 		idx = 0;
 	} else {
 		idx = lua_tointeger(L, 2);
 	}
-	int i = NEXT_INDEX(head + idx, cap);
+	lua_Integer i = NEXT_INDEX(head + idx, cap);
 	if (i != tail) {
 		lua_pushinteger(L, idx + 1);
 		lua_rawgeti(L, 1, i);
@@ -243,7 +245,7 @@ lalloc(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_queue(lua_State *L) {
+luaopen_chestnut_queue(lua_State *L) {
 	luaL_checkversion(L);
 
 	luaL_Reg l[] = {

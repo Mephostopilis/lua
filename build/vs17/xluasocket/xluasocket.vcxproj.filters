@@ -18,18 +18,18 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lxluasocket.c">
+    <ClCompile Include="..\..\..\lualib\xluasocket\lxluasocket.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ringbuf.c">
+    <ClCompile Include="..\..\..\lualib\xluasocket\ringbuf.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="lxluasocket.h">
+    <ClInclude Include="..\..\..\lualib\xluasocket\lxluasocket.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ringbuf.h">
+    <ClInclude Include="..\..\..\lualib\xluasocket\ringbuf.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

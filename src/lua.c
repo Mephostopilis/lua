@@ -5,7 +5,7 @@
 */
 
 #define lua_c
-
+#define LUA_CORE
 #include "lprefix.h"
 
 
