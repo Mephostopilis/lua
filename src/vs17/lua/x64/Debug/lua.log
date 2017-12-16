@@ -1,0 +1,80 @@
+﻿  lzio.c
+d:\github\lua\src\lzio.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lzio.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lvm.c
+d:\github\lua\src\lvm.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lvm.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lutf8lib.c
+  lundump.c
+d:\github\lua\src\lundump.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lundump.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lua.c
+  ltm.c
+d:\github\lua\src\ltm.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\ltm.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  ltablib.c
+  ltable.c
+d:\github\lua\src\ltable.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\ltable.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lstrlib.c
+  lstring.c
+d:\github\lua\src\lstring.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lstring.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lstate.c
+d:\github\lua\src\lstate.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lstate.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lparser.c
+d:\github\lua\src\lparser.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lparser.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  loslib.c
+  lopcodes.c
+d:\github\lua\src\lopcodes.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lopcodes.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lobject.c
+d:\github\lua\src\lobject.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lobject.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  loadlib.c
+  lmem.c
+d:\github\lua\src\lmem.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lmem.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lmathlib.c
+  llex.c
+d:\github\lua\src\llex.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\llex.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  liolib.c
+  正在生成代码...
+  正在编译...
+  linit.c
+  lgc.c
+d:\github\lua\src\lgc.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lgc.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lfunc.c
+d:\github\lua\src\lfunc.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lfunc.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  ldump.c
+d:\github\lua\src\ldump.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\ldump.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  ldo.c
+d:\github\lua\src\ldo.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\ldo.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  ldebug.c
+d:\github\lua\src\ldebug.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\ldebug.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  ldblib.c
+  lctype.c
+d:\github\lua\src\lctype.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lctype.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lcorolib.c
+  lcode.c
+d:\github\lua\src\lcode.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lcode.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  lbitlib.c
+  lbaselib.c
+  lauxlib.c
+  lapi.c
+d:\github\lua\src\lapi.c(8): warning C4005: “LUA_CORE”: 宏重定义
+  d:\github\lua\src\lapi.c(8): note: 命令行参数: 参见前面的“LUA_CORE”定义
+  正在生成代码...
+    正在创建库 D:\github\lua\src\vs17\x64\Debug\lua.lib 和对象 D:\github\lua\src\vs17\x64\Debug\lua.exp
+  lua.vcxproj -> D:\github\lua\src\vs17\x64\Debug\lua.exe
+  lua.vcxproj -> D:\github\lua\src\vs17\x64\Debug\lua.pdb (Partial PDB)
