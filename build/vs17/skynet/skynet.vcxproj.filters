@@ -21,6 +21,12 @@
     <ClCompile Include="..\..\..\lualib\skynet\skynet_timer.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\lualib\skynet\lsha1.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lualib\skynet\lua-crypt.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lualib\skynet\skynet_timer.h">

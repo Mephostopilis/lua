@@ -151,6 +151,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\lualib\skynet\lsha1.c" />
+    <ClCompile Include="..\..\..\lualib\skynet\lua-crypt.c" />
     <ClCompile Include="..\..\..\lualib\skynet\lua-timer.c" />
     <ClCompile Include="..\..\..\lualib\skynet\skynet_timer.c" />
   </ItemGroup>

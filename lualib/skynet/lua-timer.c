@@ -10,7 +10,6 @@
 #include <assert.h>
 
 
-
 static int
 linit(lua_State *L) {
 	skynet_timer_init();

@@ -22,7 +22,7 @@
 #include <mach/mach.h>
 #endif
 
-typedef void (*timer_execute_func)(void *ud,void *arg);
+typedef void(*timer_execute_func)(void *ud, void *arg);
 
 #define TIME_NEAR_SHIFT 8
 #define TIME_NEAR (1 << TIME_NEAR_SHIFT)
@@ -72,42 +72,42 @@ link_clear(struct link_list *list) {
 }
 
 static inline void
-link(struct link_list *list,struct timer_node *node) {
+link(struct link_list *list, struct timer_node *node) {
 	list->tail->next = node;
 	list->tail = node;
-	node->next=0;
+	node->next = 0;
 }
 
 static void
-add_node(struct timer *T,struct timer_node *node) {
-	uint32_t time=node->expire;
-	uint32_t current_time=T->time;
-	
-	if ((time|TIME_NEAR_MASK)==(current_time|TIME_NEAR_MASK)) {
-		link(&T->near[time&TIME_NEAR_MASK],node);
+add_node(struct timer *T, struct timer_node *node) {
+	uint32_t time = node->expire;
+	uint32_t current_time = T->time;
+
+	if ((time | TIME_NEAR_MASK) == (current_time | TIME_NEAR_MASK)) {
+		link(&T->near[time&TIME_NEAR_MASK], node);
 	} else {
 		int i;
-		uint32_t mask=TIME_NEAR << TIME_LEVEL_SHIFT;
-		for (i=0;i<3;i++) {
-			if ((time|(mask-1))==(current_time|(mask-1))) {
+		uint32_t mask = TIME_NEAR << TIME_LEVEL_SHIFT;
+		for (i = 0; i < 3; i++) {
+			if ((time | (mask - 1)) == (current_time | (mask - 1))) {
 				break;
 			}
 			mask <<= TIME_LEVEL_SHIFT;
 		}
 
-		link(&T->t[i][((time>>(TIME_NEAR_SHIFT + i*TIME_LEVEL_SHIFT)) & TIME_LEVEL_MASK)],node);	
+		link(&T->t[i][((time >> (TIME_NEAR_SHIFT + i*TIME_LEVEL_SHIFT)) & TIME_LEVEL_MASK)], node);
 	}
 }
 
 static void
-timer_add(struct timer *T,void *arg,size_t sz,int time) {
-	struct timer_node *node = (struct timer_node *)skynet_malloc(sizeof(*node)+sz);
-	memcpy(node+1,arg,sz);
+timer_add(struct timer *T, void *arg, size_t sz, int time) {
+	struct timer_node *node = (struct timer_node *)skynet_malloc(sizeof(*node) + sz);
+	memcpy(node + 1, arg, sz);
 
 	//SPIN_LOCK(T);
 
-		node->expire=time+T->time;
-		add_node(T,node);
+	node->expire = time + T->time;
+	add_node(T, node);
 
 	//SPIN_UNLOCK(T);
 }
@@ -116,9 +116,9 @@ static void
 move_list(struct timer *T, int level, int idx) {
 	struct timer_node *current = link_clear(&T->t[level][idx]);
 	while (current) {
-		struct timer_node *temp=current->next;
-		add_node(T,current);
-		current=temp;
+		struct timer_node *temp = current->next;
+		add_node(T, current);
+		current = temp;
 	}
 }
 
@@ -130,13 +130,13 @@ timer_shift(struct timer *T) {
 		move_list(T, 3, 0);
 	} else {
 		uint32_t time = ct >> TIME_NEAR_SHIFT;
-		int i=0;
+		int i = 0;
 
-		while ((ct & (mask-1))==0) {
-			int idx=time & TIME_LEVEL_MASK;
-			if (idx!=0) {
+		while ((ct & (mask - 1)) == 0) {
+			int idx = time & TIME_LEVEL_MASK;
+			if (idx != 0) {
 				move_list(T, i, idx);
-				break;				
+				break;
 			}
 			mask <<= TIME_LEVEL_SHIFT;
 			time >>= TIME_LEVEL_SHIFT;
@@ -148,7 +148,7 @@ timer_shift(struct timer *T) {
 static inline void
 dispatch_list(struct timer_node *current) {
 	do {
-		struct timer_event * event = (struct timer_event *)(current+1);
+		struct timer_event * event = (struct timer_event *)(current + 1);
 		/*struct skynet_message message;
 		message.source = 0;
 		message.session = event->session;
@@ -162,17 +162,17 @@ dispatch_list(struct timer_node *current) {
 		lua_rawgeti(L, -1, event->session);
 		luaL_checktype(L, -1, LUA_TFUNCTION);
 		lua_pcall(L, 0, 0, 0);
-		
+
 		struct timer_node * temp = current;
-		current=current->next;
-		skynet_free(temp);	
+		current = current->next;
+		skynet_free(temp);
 	} while (current);
 }
 
 static inline void
 timer_execute(struct timer *T) {
 	int idx = T->time & TIME_NEAR_MASK;
-	
+
 	while (T->near[idx].head.next) {
 		struct timer_node *current = link_clear(&T->near[idx]);
 		//SPIN_UNLOCK(T);
@@ -182,7 +182,7 @@ timer_execute(struct timer *T) {
 	}
 }
 
-static void 
+static void
 timer_update(struct timer *T) {
 	//SPIN_LOCK(T);
 
@@ -199,17 +199,17 @@ timer_update(struct timer *T) {
 
 static struct timer *
 timer_create_timer() {
-	struct timer *r=(struct timer *)skynet_malloc(sizeof(struct timer));
-	memset(r,0,sizeof(*r));
+	struct timer *r = (struct timer *)skynet_malloc(sizeof(struct timer));
+	memset(r, 0, sizeof(*r));
 
-	int i,j;
+	int i, j;
 
-	for (i=0;i<TIME_NEAR;i++) {
+	for (i = 0; i < TIME_NEAR; i++) {
 		link_clear(&r->near[i]);
 	}
 
-	for (i=0;i<4;i++) {
-		for (j=0;j<TIME_LEVEL;j++) {
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < TIME_LEVEL; j++) {
 			link_clear(&r->t[i][j]);
 		}
 	}
@@ -276,7 +276,7 @@ static uint64_t chronos_nanotime() {
 // centisecond: 1/100 second
 static void
 systime(uint32_t *sec, uint32_t *cs) {
-#if defined(_WIN32) || defined(_MSC_VER)
+#if  defined(_MSC_VER)
 	uint64_t ns = chronos_nanotime();
 	*sec = ns / 1000000000;
 	*cs = ns / 10000000;
@@ -296,7 +296,7 @@ systime(uint32_t *sec, uint32_t *cs) {
 static uint64_t
 gettime() {
 	uint64_t t;
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 	uint64_t ns = chronos_nanotime();
 	t = ns / 10000000;
 #elif !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
@@ -316,7 +316,7 @@ gettime() {
 void
 skynet_updatetime(void) {
 	uint64_t cp = gettime();
-	if(cp < TI->current_point) {
+	if (cp < TI->current_point) {
 		//skynet_error(NULL, "time diff error: change from %lld to %lld", cp, TI->current_point);
 		TI->current_point = cp;
 	} else if (cp != TI->current_point) {
@@ -324,7 +324,7 @@ skynet_updatetime(void) {
 		TI->current_point = cp;
 		TI->current += diff;
 		int i;
-		for (i=0;i<diff;i++) {
+		for (i = 0; i < diff; i++) {
 			timer_update(TI);
 		}
 	}
@@ -335,12 +335,12 @@ skynet_starttime(void) {
 	return TI->starttime;
 }
 
-uint64_t 
+uint64_t
 skynet_now(void) {
 	return TI->current;
 }
 
-void 
+void
 skynet_timer_init(void) {
 	TI = timer_create_timer();
 	uint32_t current = 0;
@@ -356,7 +356,7 @@ skynet_timer_init(void) {
 
 uint64_t
 skynet_thread_time(void) {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 	assert(0);
 	return 0;
 #elif  !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
@@ -367,7 +367,7 @@ skynet_thread_time(void) {
 #else
 	struct task_thread_times_info aTaskInfo;
 	mach_msg_type_number_t aTaskInfoCount = TASK_THREAD_TIMES_INFO_COUNT;
-	if (KERN_SUCCESS != task_info(mach_task_self(), TASK_THREAD_TIMES_INFO, (task_info_t )&aTaskInfo, &aTaskInfoCount)) {
+	if (KERN_SUCCESS != task_info(mach_task_self(), TASK_THREAD_TIMES_INFO, (task_info_t)&aTaskInfo, &aTaskInfoCount)) {
 		return 0;
 	}
 

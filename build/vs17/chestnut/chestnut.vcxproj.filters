@@ -15,7 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\lualib\queue\lua-queue.c">
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-queue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-stack.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
