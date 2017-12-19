@@ -15,36 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\lualib\xluasocket\lxluasocket.c">
+    <ClCompile Include="..\..\..\lualib\sproto\lsproto.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\lualib\xluasocket\ringbuf.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\lualib\xluasocket\write_buffer.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\lualib\xluasocket\util.c">
+    <ClCompile Include="..\..\..\lualib\sproto\sproto.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\lualib\xluasocket\lxluasocket.h">
+    <ClInclude Include="..\..\..\lualib\sproto\lsproto.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\lualib\xluasocket\ringbuf.h">
+    <ClInclude Include="..\..\..\lualib\sproto\msvcint.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\lualib\xluasocket\write_buffer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\lualib\xluasocket\xluaconf.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\lualib\xluasocket\util.h">
+    <ClInclude Include="..\..\..\lualib\sproto\sproto.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

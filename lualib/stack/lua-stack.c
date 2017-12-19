@@ -29,6 +29,9 @@ lpop(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_rawgeti(L, 1, 0);
 	lua_Integer top = luaL_checkinteger(L, -1);
+	if (top <= 0) {
+		return 0;
+	}
 	lua_rawgeti(L, 1, top);
 	top--;
 	lua_pushinteger(L, top);

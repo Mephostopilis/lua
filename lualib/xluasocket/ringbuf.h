@@ -16,29 +16,31 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-/*
- * A byte-addressable ring buffer FIFO implementation.
- *
- * The ring buffer's head pointer points to the starting location
- * where data should be written when copying data *into* the buffer
- * (e.g., with ringbuf_read). The ring buffer's tail pointer points to
- * the starting location where data should be read when copying data
- * *from* the buffer (e.g., with ringbuf_write).
- */
+ /*
+  * A byte-addressable ring buffer FIFO implementation.
+  *
+  * The ring buffer's head pointer points to the starting location
+  * where data should be written when copying data *into* the buffer
+  * (e.g., with ringbuf_read). The ring buffer's tail pointer points to
+  * the starting location where data should be read when copying data
+  * *from* the buffer (e.g., with ringbuf_write).
+  */
 
-#if defined(_MSC_VER)
+#include "xluaconf.h"
+#include <stdbool.h>
 #include <crtdefs.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#if defined(_MSC_VER)
 #if defined(_WIN64) || (defined(__DMC__) && defined(_M_AMD64))
 typedef long long ssize_t;
 # else
 typedef int ssize_t;
 # endif
-#else
-#include <stddef.h>
-#include <sys/types.h>
-#endif // WIN32
+#endif
 
 typedef struct ringbuf ringbuf_t;
 
@@ -99,20 +101,11 @@ ringbuf_bytes_free(const ringbuf_t *rb);
 size_t
 ringbuf_bytes_used(const ringbuf_t *rb);
 
-int
+bool
 ringbuf_is_full(const ringbuf_t *rb);
 
-int
+bool
 ringbuf_is_empty(const ringbuf_t *rb);
-
-/*
- * Const access to the head and tail pointers of the ring buffer.
- */
-const void *
-ringbuf_tail(const ringbuf_t *rb);
-
-const void *
-ringbuf_head(const ringbuf_t *rb);
 
 /*
  * Locate the first occurrence of character c (converted to an
@@ -182,9 +175,18 @@ ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count);
  * may be different than it was before the function was called.
  */
 ssize_t
-ringbuf_read(int fd, ringbuf_t *rb, size_t count);
-//ssize_t
-//ringbuf_readfrom(int fd, )
+ringbuf_read_fd(ringbuf_t *rb, int fd, size_t count);
+
+int
+ringbuf_read(ringbuf_t *rb, int hint, void **out);
+int
+ringbuf_read_int64(ringbuf_t *rb, int64_t *out);
+int
+ringbuf_read_int32(ringbuf_t *rb, int32_t *out);
+int
+ringbuf_read_int16(ringbuf_t *rb, int16_t *out);
+int
+ringbuf_read_int8(ringbuf_t *rb, int8_t *out);
 
 /*
  * Copy n bytes from the ring buffer src, starting from its tail
@@ -203,6 +205,7 @@ ringbuf_read(int fd, ringbuf_t *rb, size_t count);
  */
 void *
 ringbuf_memcpy_from(void *dst, ringbuf_t *src, size_t count);
+
 
 /*
  * This convenience function calls write(2) on the file descriptor fd,
@@ -225,7 +228,13 @@ ringbuf_memcpy_from(void *dst, ringbuf_t *src, size_t count);
  * return 0.
  */
 ssize_t
-ringbuf_write(int fd, ringbuf_t *rb, size_t count);
+ringbuf_write_fd(ringbuf_t *rb, int fd, size_t count);
+int
+ringbuf_write(ringbuf_t *rb, const uint8_t *buf, size_t size);
+int
+ringbuf_write_int32(ringbuf_t *rb, int32_t n);
+int
+ringbuf_write_int16(ringbuf_t *rb, int16_t n);
 
 /*
  * Copy count bytes from ring buffer src, starting from its tail
@@ -254,8 +263,7 @@ void *
 ringbuf_copy(ringbuf_t *dst, ringbuf_t *src, size_t count);
 
 
-void *
-ringbuf_read_offset(ringbuf_t *rb, int n);
+
 
 
 #endif /* INCLUDED_RINGBUF_H */

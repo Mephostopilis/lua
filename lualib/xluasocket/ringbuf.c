@@ -13,7 +13,9 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+#include "xluaconf.h"
 #include "ringbuf.h"
+#include "util.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -22,11 +24,7 @@
 #if defined(_MSC_VER)
 #include <math.h>
 #define MIN min
-#else
-#include <unistd.h>
-#include <sys/param.h>
 #endif
-
 
  /*
   * The code is written for clarity, not cleverness or performance, and
@@ -42,18 +40,44 @@ struct ringbuf {
 	size_t size;
 };
 
-static void 
+/*
+* Return a pointer to one-past-the-end of the ring buffer's
+* contiguous buffer. You shouldn't normally need to use this function
+* unless you're writing a new ringbuf_* function.
+*/
+static const uint8_t *
+ringbuf_end(const ringbuf_t *rb) {
+	return (rb->buf + rb->size);
+}
+
+static int
 ringbuf_ext(ringbuf_t *rb) {
 	size_t capacity = ringbuf_capacity(rb);
 	uint8_t *oldbuf = rb->buf;
 	size_t size = capacity * 2 + 1;
-	uint8_t *buf = malloc(size * 2);
-	memcpy(buf, oldbuf, rb->size);
-	rb->head = buf + (rb->head - oldbuf);
-	rb->tail = buf + (rb->tail - oldbuf);
-	rb->size = size;
-	rb->buf = buf;
+	uint8_t *buf = MALLOC(size * 2);
+	if (buf == NULL) {
+		return 1;
+	}
+	if (rb->head >= rb->tail) {
+		memcpy(buf, oldbuf, rb->size);
+		rb->head = buf + (rb->head - oldbuf);
+		rb->tail = buf + (rb->tail - oldbuf);
+		rb->size = size;
+		rb->buf = buf;
+	} else {
+		const uint8_t *backend = ringbuf_end(rb);
+		memcpy(buf, rb->tail, backend - rb->tail);
+		uint8_t *head = buf + (rb->head - rb->buf);
+		memcpy(head, rb->tail, backend - rb->tail);
+		head = head + (backend - rb->tail);
+		rb->head = head;
+		rb->tail = buf;
+		rb->buf = buf;
+		rb->size = size;
+	}
 	free(oldbuf);
+	return 0;
 }
 
 ringbuf_t *
@@ -94,19 +118,12 @@ ringbuf_free(ringbuf_t **rb) {
 
 size_t
 ringbuf_capacity(const ringbuf_t *rb) {
-	return ringbuf_buffer_size(rb) - 1;
+	return (rb->size - 1);
 }
 
 /*
- * Return a pointer to one-past-the-end of the ring buffer's
- * contiguous buffer. You shouldn't normally need to use this function
- * unless you're writing a new ringbuf_* function.
- */
-static const uint8_t *
-ringbuf_end(const ringbuf_t *rb) {
-	return rb->buf + ringbuf_buffer_size(rb);
-}
-
+** |*******tail***********head**************|end
+*/
 size_t
 ringbuf_bytes_free(const ringbuf_t *rb) {
 	if (rb->head >= rb->tail)
@@ -120,24 +137,15 @@ ringbuf_bytes_used(const  ringbuf_t *rb) {
 	return ringbuf_capacity(rb) - ringbuf_bytes_free(rb);
 }
 
-int
+
+bool
 ringbuf_is_full(const  ringbuf_t *rb) {
-	return ringbuf_bytes_free(rb) == 0;
+	return (ringbuf_bytes_free(rb) == 0) ? true : false;
 }
 
-int
+bool
 ringbuf_is_empty(const  ringbuf_t *rb) {
-	return ringbuf_bytes_free(rb) == ringbuf_capacity(rb);
-}
-
-const void *
-ringbuf_tail(const  ringbuf_t *rb) {
-	return rb->tail;
-}
-
-const void *
-ringbuf_head(const ringbuf_t *rb) {
-	return rb->head;
+	return (ringbuf_bytes_free(rb) == ringbuf_capacity(rb)) ? true : false;
 }
 
 /*
@@ -232,10 +240,9 @@ ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count) {
 }
 
 ssize_t
-ringbuf_read(int fd, ringbuf_t *rb, size_t count) {
+ringbuf_read_fd(ringbuf_t *rb, int fd, size_t count) {
 	if (ringbuf_is_full(rb)) {
-		size_t cap = ringbuf_capacity(rb);
-
+		ringbuf_ext(rb);
 	}
 	const uint8_t *bufend = ringbuf_end(rb);
 	size_t nfree = ringbuf_bytes_free(rb);
@@ -260,6 +267,51 @@ ringbuf_read(int fd, ringbuf_t *rb, size_t count) {
 	}
 
 	return n;
+}
+
+int
+ringbuf_read(ringbuf_t *rb, int hint, void **out) {
+	assert(out);
+	if (ringbuf_bytes_used(rb) >= hint) {
+		if (rb->head >= rb->tail) {
+			*out = rb->tail;
+			rb->tail += hint;
+			return hint;
+		} else {
+			int n = ((rb->tail - rb->buf) + hint) % rb->size;
+			const uint8_t *end = ringbuf_end(rb);
+			memcpy(end, rb->buf, n);
+			*out = rb->tail;
+			rb->tail = rb->buf + n;
+			return hint;
+		}
+	}
+	return NULL;
+}
+
+int
+ringbuf_read_int64(ringbuf_t *rb, int64_t *out) {
+	void *ptr = NULL;
+	int n = ringbuf_read(rb, 8, &ptr);
+	if (n == 8) {
+
+	}
+	return n;
+}
+
+int
+ringbuf_read_int32(ringbuf_t *rb, int32_t *out) {
+	return 0;
+}
+
+int
+ringbuf_read_int16(ringbuf_t *rb, int16_t *out) {
+	return 0;
+}
+
+int
+ringbuf_read_int8(ringbuf_t *rb, int8_t *out) {
+	return 0;
 }
 
 void *
@@ -288,7 +340,7 @@ ringbuf_memcpy_from(void *dst, ringbuf_t *src, size_t count) {
 }
 
 ssize_t
-ringbuf_write(int fd, ringbuf_t *rb, size_t count) {
+ringbuf_write_fd(ringbuf_t *rb, int fd, size_t count) {
 	size_t bytes_used = ringbuf_bytes_used(rb);
 	if (count > bytes_used)
 		return 0;
@@ -309,6 +361,35 @@ ringbuf_write(int fd, ringbuf_t *rb, size_t count) {
 	}
 
 	return n;
+}
+
+int
+ringbuf_write(ringbuf_t *rb, const uint8_t *buf, size_t size) {
+	if (ringbuf_bytes_free(rb) >= size) {
+		if (rb->head >= rb->tail) {
+			const uint8_t *end = ringbuf_end(rb);
+			int n = MIN(end - rb->head, size);
+			memcpy(rb->head, buf, n);
+			if (n < size) {
+				memcpy(rb->buf, buf + n, size - n);
+			}
+			rb->head = rb->buf + (((rb->head - rb->buf) + size) % rb->size);
+		} else {
+
+		}
+		return size;
+	}
+	return 0;
+}
+
+int
+ringbuf_write_int32(ringbuf_t *rb, int32_t n) {
+	return 0;
+}
+
+int
+ringbuf_write_int16(ringbuf_t *rb, int16_t n) {
+	return 0;
 }
 
 void *
@@ -348,26 +429,83 @@ ringbuf_copy(ringbuf_t *dst, ringbuf_t *src, size_t count) {
 	return dst->head;
 }
 
-void *
-ringbuf_read_offset(ringbuf_t *rb, int n) {
-	if (n <= 0) {
-		return NULL;
-	}
-
-	if (ringbuf_bytes_used(rb) < n) {
-		return NULL;
-	}
-	
-	if (rb->head <= rb->tail) {
-		void *ptr = rb->head;
-		rb->head = rb->head + n;
-		return ptr;
-	} else {
-		const uint8_t *bufend = ringbuf_end(rb);
-		int tn = bufend - rb->head;
-		memcpy(bufend, rb->buf, n - tn);
-		void *ptr = rb->head;
-		rb->head = rb->buf + (n - tn);
-		return ptr;
-	}
-}
+//void *
+//ringbuf_read(ringbuf_t *rb, int fd, uint8_t header, int *err) {
+//	if (ringbuf_is_full(rb)) {
+//		*err = ringbuf_ext(rb);
+//		if (*err != 0) {
+//			return NULL;
+//		}
+//	}
+//	*err = 1;
+//	while (*err == 1) {
+//		const uint8_t *bufend = ringbuf_end(rb);
+//		if (rb->head >= rb->tail) {
+//			int n = recv(fd, rb->head, bufend - rb->head, 0);
+//			if (n == -1) {
+//#if defined(_WIN32)
+//				int e = WSAGetLastError();
+//				if (e == WSAEINTR || e == WSAEINPROGRESS) {
+//					// 当前so不处理
+//				} else {
+//					//
+//
+//				}
+//#else
+//				if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
+//				} else {
+//					ptr->disc(ptr);
+//					close_sock(L, g, ptr);
+//				}
+//#endif
+//				break;
+//			} else if (res == 0) {
+//				break;
+//			}
+//		} else {
+//
+//		}
+//	}
+//
+//	size_t nfree = ringbuf_bytes_free(rb);
+//
+//	/* don't write beyond the end of the buffer */
+//	assert(bufend > rb->head);
+//	count = MIN(bufend - rb->head, count);
+//	ssize_t n = read(fd, rb->head, count);
+//	if (n > 0) {
+//		assert(rb->head + n <= bufend);
+//		rb->head += n;
+//
+//		/* wrap? */
+//		if (rb->head == bufend)
+//			rb->head = rb->buf;
+//
+//		/* fix up the tail pointer if an overflow occurred */
+//		if (n > nfree) {
+//			rb->tail = ringbuf_nextp(rb, rb->head);
+//			assert(ringbuf_is_full(rb));
+//		}
+//	}
+//
+//	if (n <= 0) {
+//		return NULL;
+//	}
+//
+//	if (ringbuf_bytes_used(rb) < n) {
+//		return NULL;
+//	}
+//
+//	if (rb->head <= rb->tail) {
+//		void *ptr = rb->head;
+//		rb->head = rb->head + n;
+//		return ptr;
+//	} else {
+//		const uint8_t *bufend = ringbuf_end(rb);
+//		int tn = bufend - rb->head;
+//		memcpy(bufend, rb->buf, n - tn);
+//		void *ptr = rb->head;
+//		rb->head = rb->buf + (n - tn);
+//		return ptr;
+//	}
+//}

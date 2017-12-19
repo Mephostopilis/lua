@@ -1,24 +1,11 @@
-#if defined(_WIN32)
-#include <Winsock2.h>
-#include <Wininet.h>
-#include <ws2tcpip.h>
-#include <Windows.h>
-#pragma comment (lib, "Ws2_32.lib")
-#else
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/timeb.h>
-#include <netdb.h>
-#include <sys/select.h>
-#endif
+#define LUA_LIB
 
+#include "xluaconf.h"
 #include "ringbuf.h"
+#include "write_buffer.h"
+
+#include <lua.h>
+#include <lauxlib.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +14,7 @@
 #include <time.h>
 #include <assert.h>
 
-#include <lua.h>
-#include <lauxlib.h>
+
 
 #define SOCKET_DATA 0
 #define SOCKET_CLOSE 1
@@ -52,48 +38,8 @@
 #define PROTOCOL_UDP 1
 #define PROTOCOL_UDPv6 2
 
-#define HEADER_TYPE_LINE 0
-#define HEADER_TYPE_PG 1
-
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-#define WRITE_BUFFER_SIZE 2048
-#define RINGBUF_SIZE 4096
 
-#define MALLOC malloc
-#define FREE   free
-
-#define COMPAT_LUA
-
-static uint8_t c2s_req_tag = 1 << 0;
-static uint8_t c2s_rsp_rag = 1 << 1;
-static uint8_t s2c_req_tag = 1 << 2;
-static uint8_t s2c_rsp_tag = 1 << 3;
-
-static int int22bytes_bd(int32_t src, char *bufer, int idx, int len) {
-	int i = idx + len - 1;
-	for (; i >= idx; --i) {
-		bufer[i] = (char)((src >> (len - 1 - i) * 8) & 0xff);
-	}
-	return 1;
-}
-
-static int bytes2int_bd(char *src, int len, int32_t *dst) {
-	assert(len == 4);
-	int i = 0;
-	for (; i < len; i++) {
-		*dst |= (src[i] << ((3 - i) * 8)) & 0xffffffff;
-	}
-	return 1;
-}
-
-static int unpackbH(char *src, int len, uint16_t *dst) {
-	assert(len == 2);
-	int i = 0;
-	for (; i < 2; i++) {
-		*dst |= (src[i] << ((1 - i) * 8)) & 0xffffffff;
-	}
-	return 1;
-}
 
 static void
 init_lib(lua_State *L) {
@@ -113,124 +59,9 @@ close_lib(lua_State *L) {
 #endif // WIN32
 }
 
-struct write_buffer {
-	struct write_buffer * next;
-	char *ptr;
-	int sz;
-	char buffer[0];
-};
-
-struct wb_list {
-	struct write_buffer * head;
-	struct write_buffer * tail;
-	struct write_buffer * freelist;
-};
-
-static inline struct wb_list*
-wb_list_new() {
-	struct wb_list* list = MALLOC(sizeof(*list));
-	list->head = NULL;
-	list->tail = NULL;
-	list->freelist = NULL;
-	return list;
-}
-
-static inline void
-wb_list_free(struct wb_list* list) {
-	struct write_buffer *first = list->head;
-	while (first) {
-		struct write_buffer *tmp = first;
-		first = first->next;
-		FREE(tmp->buffer);
-		FREE(tmp);
-	}
-}
-
-static inline void
-wb_list_push(struct wb_list* list, char *buffer, int sz) {
-	assert(list != NULL);
-	assert(sz <= WRITE_BUFFER_SIZE);
-	struct write_buffer *ptr = NULL;
-	if (list->freelist != NULL) {
-		ptr = list->freelist;
-		list->freelist = list->freelist->next;
-	} else {
-		ptr = MALLOC(sizeof(*ptr) + WRITE_BUFFER_SIZE);
-	}
-	ptr->next = NULL;
-	ptr->ptr = ptr->buffer;
-	memcpy(ptr->buffer, buffer, sz);
-	ptr->sz = sz;
-
-	if (list->head == NULL) {
-		list->head = ptr;
-		list->tail = ptr;
-	} else {
-		list->tail->next = ptr;
-		list->tail = ptr;
-	}
-	list->tail->next = NULL;
-}
-
-static inline void
-wb_list_push_wb(struct wb_list* list, struct write_buffer *wb) {
-	if (list->head == NULL) {
-		list->head = wb;
-		list->tail = wb;
-	} else {
-		list->tail->next = wb;
-		list->tail = wb;
-	}
-	list->tail->next = NULL;
-}
-
-static inline void
-wb_list_push_to_freelist(struct wb_list* list, struct write_buffer *wb) {
-	if (list->freelist == NULL) {
-		list->freelist = wb;
-	} else {
-		struct write_buffer *ptr = list->freelist;
-		while (ptr->next != NULL) {
-			ptr = ptr->next;
-		}
-		ptr->next = wb;
-	}
-	wb->next = NULL;
-}
-
-static inline struct write_buffer*
-wb_list_pop(struct wb_list* list) {
-	if (list->head == NULL) {
-		return NULL;
-	} else if (list->head == list->tail) {
-		struct	write_buffer* ptr = list->head;
-		list->head = list->tail = NULL;
-		return ptr;
-	} else {
-		struct	write_buffer* ptr = list->head;
-		list->head = list->head->next;
-		return ptr;
-	}
-}
-
-static inline struct write_buffer*
-wb_list_pop_freelist(struct wb_list* list) {
-	struct write_buffer *ptr = NULL;
-	if (list->freelist != NULL) {
-		ptr = list->freelist;
-		list->freelist = list->freelist->next;
-	} else {
-		ptr = MALLOC(sizeof(*ptr) + WRITE_BUFFER_SIZE);
-	}
-	ptr->next = NULL;
-	ptr->ptr = ptr->buffer;
-	ptr->sz = 0;
-	return ptr;
-}
-
-
 typedef struct lua_socket {
 	struct lua_socket *next;
+	struct lua_socket *extra;
 	int             id;
 	int             fd;
 	uint8_t         protocol;
@@ -247,6 +78,8 @@ typedef struct lua_gate {
 	fd_set              wfds;
 	int                 id;
 	struct lua_socket  *head;
+	struct lua_socket  *error;
+	struct lua_socket  *disconn;
 	struct lua_socket  *freelist;
 } lua_gate;
 
@@ -265,9 +98,74 @@ gate_find(struct lua_gate *g, int id) {
 	return NULL;
 }
 
+static struct lua_socket *
+gate_add(struct lua_gate *g, struct lua_socket *so) {
+	if (g->head == NULL) {
+		g->head = so;
+	} else {
+		struct lua_socket *ptr = g->head;
+		while (ptr->next) {
+			ptr = ptr->next;
+		}
+		ptr->next = so;
+	}
+	so->next = NULL;
+	return so;
+}
+
+static struct lua_socket *
+gate_del(struct lua_gate *g, struct lua_socket *so) {
+	if (so == NULL) {
+		return NULL;
+	}
+	if (g->head == NULL) {
+		return NULL;
+	} else {
+		struct lua_socket *ptr = g->head;
+		while (ptr->next && ptr->next != so) {
+			ptr = ptr->next;
+		}
+		if (ptr->next == so) {
+			ptr->next = so->next;
+		}
+		return so;
+	}
+	so->next = NULL;
+	return so;
+}
+
+static struct lua_socket *
+gate_add_error(struct lua_gate *g, struct lua_socket *so) {
+	if (g->error == NULL) {
+		g->error = so;
+	} else {
+		struct lua_socket *ptr = g->error;
+		while (ptr->extra) {
+			ptr = ptr->extra;
+		}
+		ptr->extra = so;
+	}
+	so->extra = NULL;
+	return so;
+}
+
+static struct lua_socket *
+gate_add_disconn(struct lua_gate *g, struct lua_socket *so) {
+	if (g->disconn == NULL) {
+		g->disconn = so;
+	} else {
+		struct lua_socket *ptr = g->disconn;
+		while (ptr->extra) {
+			ptr = ptr->extra;
+		}
+		ptr->extra = so;
+	}
+	so->extra = NULL;
+	return so;
+}
 
 static int
-on_disconnected(lua_State *L, struct lua_socket *so) {
+on_disconnected(lua_State *L, struct lua_gate *g, struct lua_socket *so) {
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
 	//luaL_checktype(L, -1, )
@@ -279,7 +177,8 @@ on_disconnected(lua_State *L, struct lua_socket *so) {
 }
 
 static int
-on_data(lua_State *L, struct lua_socket *so, void *buffer, int len) {
+on_data(lua_State *L, struct lua_gate *g, struct lua_socket *so, void *buffer, int len) {
+	(void)g;
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
 	//luaL_checktype(L, -1, )
@@ -287,6 +186,19 @@ on_data(lua_State *L, struct lua_socket *so, void *buffer, int len) {
 	lua_pushinteger(L, so->id);
 	lua_pushinteger(L, SOCKET_DATA);
 	lua_pushlstring(L, buffer, len);
+	lua_pcall(L, 3, 0, 0);
+	return 0;
+}
+
+static int
+on_error(lua_State *L, struct lua_gate *g, struct lua_socket *so, int err) {
+	lua_getglobal(L, "xluasocket");
+	lua_rawgetp(L, -1, so);
+	//luaL_checktype(L, -1, )
+
+	lua_pushinteger(L, so->id);
+	lua_pushinteger(L, SOCKET_ERROR);
+	lua_pushinteger(L, err);
 	lua_pcall(L, 3, 0, 0);
 	return 0;
 }
@@ -357,17 +269,8 @@ lsocket(lua_State *L) {
 		so->fd = socket(AF_INET6, SOCK_DGRAM, 0);
 	}
 
-	if (g->head == NULL) {
-		g->head = so;
-	} else {
-		struct lua_socket *ptr = g->head;
-		while (ptr->next) {
-			ptr = ptr->next;
-		}
-		ptr->next = so;
-	}
 	lua_getglobal(L, "xluasocket");
-	if (!lua_checktype(L, LUA_TTABLE)) {
+	if (!lua_istable(L, -1)) {
 		lua_newtable(L);
 		lua_setglobal(L, "xluasocket");
 		lua_getglobal(L, "xluasocket");
@@ -377,6 +280,7 @@ lsocket(lua_State *L) {
 	lua_pushvalue(L, 4);
 	lua_rawsetp(L, -1, so);
 
+	gate_add(g, so);
 	lua_pushinteger(L, so->id);
 	return 1;
 }
@@ -408,6 +312,7 @@ lconnect(lua_State *L) {
 			lua_pushinteger(L, 2);
 			return 1;
 		} else {
+
 			so->type = SOCKET_TYPE_CONNECTED;
 			lua_pushinteger(L, 0);
 			return 1;
@@ -421,74 +326,7 @@ lconnect(lua_State *L) {
 		lua_pushinteger(L, 0);
 		return 1;
 	}
-}
-
-static int
-send_buffer(lua_State *L, struct lua_socket *so, struct	write_buffer* ptr) {
-	assert(ptr != NULL);
-	if (so->protocol == PROTOCOL_TCP) {
-		int n = send(so->fd, ptr->ptr, ptr->buffer + ptr->sz - ptr->ptr, 0);
-		if (n == -1) {
-#if defined(_WIN32 )
-			int e = WSAGetLastError();
-			if (e == WSAEINTR || e == WSAEINPROGRESS) {
-				return 0;
-			} else {
-				return -1;
-			}
-#else
-			if (errno == EINTR) {
-				return 0;
-			} else {
-				return -1;
-			}
-#endif
-		} else {
-			return n;
-		}
-	} else if (so->protocol == PROTOCOL_UDP || so->protocol == PROTOCOL_UDPv6) {
-		int n = sendto(so->fd, ptr->ptr, ptr->buffer + ptr->sz - ptr->ptr, 0, &so->remote, sizeof(so->remote));
-		if (n == -1) {
-#if defined( _WIN32)
-			int e = WSAGetLastError();
-			if (e == WSAEINTR || e == WSAEINPROGRESS) {
-				return 0;
-			} else {
-				return -1;
-			}
-#else
-			if (errno == EINTR) {
-				return 0;
-			} else {
-				return -1;
-			}
-#endif
-		} else {
-			return n;
-		}
-	} else {
-		return 0;
-	}
-}
-
-static void
-send_list(lua_State *L, struct lua_socket *so) {
-	while (so->wl->head != NULL) {
-		struct write_buffer *tmp = so->wl->head;
-		int n = send_buffer(L, so, tmp);
-		if (n == -1) {
-			return;
-		} else if (tmp->buffer + tmp->sz == tmp->ptr + n) {
-			if (so->wl->head == so->wl->tail) {
-				so->wl->head = so->wl->tail = NULL;
-			} else {
-				so->wl->head = so->wl->head->next;
-			}
-			wb_list_push_to_freelist(so->wl, tmp);
-		} else {
-			tmp->ptr += n;
-		}
-	}
+	return 0;
 }
 
 /*
@@ -496,7 +334,6 @@ send_list(lua_State *L, struct lua_socket *so) {
 		   -1 2  socket not connectd
 		   -1 3  send socket socket error.
 */
-
 static int
 lsend(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
@@ -522,65 +359,7 @@ lsend(lua_State *L) {
 		return 2;
 	}
 	assert(so->protocol == PROTOCOL_TCP);
-	if (so->header == HEADER_TYPE_PG) {
-		struct write_buffer *wb = wb_list_pop_freelist(so->wl);
-		int22bytes_bd(sz, wb->buffer, 0, 2);
-		int csz = (sz > (WRITE_BUFFER_SIZE - 2)) ? (WRITE_BUFFER_SIZE - 2) : sz;
-		memcpy(wb->buffer + 2, buffer, csz);
-		int n = csz;
-		wb->sz = csz;
-		wb_list_push_wb(so->wl, wb);
-		while (n < sz) {
-			wb = wb_list_pop_freelist(so->wl);
-			csz = (sz > (WRITE_BUFFER_SIZE)) ? (WRITE_BUFFER_SIZE) : sz;
-			memcpy(wb->buffer, buffer + n, csz);
-			n += csz;
-			wb->sz = csz;
-			wb_list_push_wb(so->wl, wb);
-		}
-	} else if (so->header == HEADER_TYPE_LINE) {
-		struct write_buffer *wb = NULL;
-		int n = 0;
-		while (n < sz) {
-			wb = wb_list_pop_freelist(so->wl);
-			int csz = ((sz) > (WRITE_BUFFER_SIZE)) ? (WRITE_BUFFER_SIZE) : sz;
-			memcpy(wb->buffer, buffer, csz);
-			n += csz;
-			wb->sz = csz;
-			wb_list_push_wb(so->wl, wb);
-		}
-		wb = wb_list_pop(so->wl);
-		if (wb->sz < WRITE_BUFFER_SIZE) {
-			wb->buffer[wb->sz] = '\n';
-			wb->sz = wb->sz + 1;
-		} else {
-			wb = wb_list_pop_freelist(so->wl);
-			wb->buffer[0] = '\n';
-			wb->sz = 1;
-			wb_list_push_wb(so->wl, wb);
-		}
-	}
-
-	struct	write_buffer* ptr = wb_list_pop(so->wl);
-	if (ptr == NULL) {
-		luaL_error(L, "write buffer ptr is NULL.");
-	} else {
-		int n = send_buffer(L, so, ptr);
-		if (n == -1) {
-			lua_pushinteger(L, -1);
-			lua_pushinteger(L, 4);
-			return 3;
-		} else {
-			ptr->ptr = ptr->ptr + n;
-			if (ptr->ptr == ptr->buffer + ptr->sz) {
-				wb_list_push_to_freelist(so->wl, ptr);
-			} else {
-				wb_list_push_wb(so->wl, ptr);
-			}
-			lua_pushinteger(L, n);
-			return 1;
-		}
-	}
+	wb_list_push(so->wl, so->header, buffer, sz);
 	return 0;
 }
 
@@ -628,44 +407,88 @@ lpoll(lua_State *L) {
 			continue;
 		}
 		if (FD_ISSET(ptr->fd, &g->wfds)) {
-			send_list(L, ptr, ptr->wl);
+			struct write_buffer* wb = wb_list_pop(ptr->wl);
+			while (wb != NULL) {
+				int n = wb_write_fd(wb, ptr->fd);
+				if (n == -1) {
+#if defined(_MSC_VER)
+					int e = WSAGetLastError();
+					if (e == WSAEINTR || e == WSAEINPROGRESS) {
+						break;
+					} else {
+						gate_add_error(g, ptr);
+						on_error(L, g, ptr, e);
+						break;
+					}
+#else
+					if (errno == EINTR) {
+						break;
+					} else {
+						gate_add_error(g, ptr);
+						on_error(L, g, ptr, e);
+						break;
+					}
+#endif
+				} else if (n == 0) {
+					gate_add_disconn(g, ptr);
+					on_disconnected(L, g, ptr);
+					break;
+				}
+				if (wb_is_empty(wb)) {
+					wb_list_free_wb(ptr->wl, wb);
+				}
+				wb = wb_list_pop(ptr->wl);
+			}
 		}
 		if (FD_ISSET(ptr->fd, &g->rfds)) {
 			if (ptr->protocol == PROTOCOL_TCP) {
 				for (; ;) {
-					int res = ringbuf_read(ptr->fd, ptr->rb, RINGBUF_SIZE);
+					int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
 					if (res == -1) {
 #if defined(_WIN32)
 						int e = WSAGetLastError();
 						if (e == WSAEINTR || e == WSAEINPROGRESS) {
-							// 当前so不处理
-						}
 #else
 						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-						} else {
-							ptr->disc(ptr);
-							close_sock(L, g, ptr);
-						}
 #endif
-						break;
+							// 当前so不处理
+							break;
+						} else {
+							gate_add_error(g, ptr);
+							on_error(L, g, ptr, res);
+							break;
+						}
 					} else if (res == 0) {
+						gate_add_disconn(g, ptr);
+						on_disconnected(L, g, ptr);
 						break;
 					}
 				}
 				if (ptr->header == HEADER_TYPE_PG) {
-					if (ringbuf_bytes_used(ptr->rb) >= 2) {
-						int32_t sz = 0;
-						const char *head = (const char *)ringbuf_head(ptr->rb);
-						bytes2int_bd(head, 2, &sz);
-						if (ringbuf_bytes_used(ptr->rb) >= (2 + sz)) {
-							char *buf = NULL;
-							buf = ringbuf_read_offset(ptr->rb, 2);
-							buf = ringbuf_read_offset(ptr->rb, sz);
-							on_data(L, ptr, buf, sz);
+					while (true) {
+						if (ringbuf_bytes_used(ptr->rb) >= 2) {
+							int16_t len = 0;
+							ringbuf_read_int16(ptr->rb, &len);
+							if (ringbuf_bytes_used(ptr->rb) >= len) {
+								void *buf = NULL;
+								int sz = ringbuf_read(ptr->rb, len, &buf);
+								on_data(L, g, ptr, buf, sz);
+							} else {
+								break;
+							}
+						} else {
+							break;
 						}
 					}
-				} else {
 
+				} else {
+					int n = ringbuf_findchr(ptr->rb, '\n', 0);
+					while (n != ringbuf_bytes_used(ptr->rb)) {
+						void *out = NULL;
+						ringbuf_read(ptr->rb, n, &out);
+						on_data(L, g, ptr, out, n);
+						n = ringbuf_findchr(ptr->rb, '\n', 0);
+					}
 				}
 			} else if (ptr->protocol == PROTOCOL_UDP) {
 			} else if (ptr->protocol == PROTOCOL_UDPv6) {
@@ -697,11 +520,12 @@ static int
 lclose(lua_State *L) {
 	close_lib(L);
 	lua_pushinteger(L, SOCKET_EXIT);
+
 	return 1;
 }
 
-int
-luaopen_packagesocket(lua_State *L) {
+LUAMOD_API int
+luaopen_xluasocket(lua_State *L) {
 	//luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "new", lnew },
@@ -747,11 +571,11 @@ luaopen_packagesocket(lua_State *L) {
 	lua_pushinteger(L, SOCKET_UDP);
 	lua_rawset(L, -3);
 
-	lua_pushstring(L, "HEADER_LINE");
-	lua_pushinteger(L, HEADER_LINE);
+	lua_pushstring(L, "HEADER_TYPE_LINE");
+	lua_pushinteger(L, HEADER_TYPE_LINE);
 	lua_rawset(L, -3);
-	lua_pushstring(L, "HEADER_PG");
-	lua_pushinteger(L, HEADER_PG);
+	lua_pushstring(L, "HEADER_TYPE_PG");
+	lua_pushinteger(L, HEADER_TYPE_PG);
 	lua_rawset(L, -3);
 
 	lua_pushstring(L, "PROTOCOL_TCP");
@@ -764,4 +588,4 @@ luaopen_packagesocket(lua_State *L) {
 	lua_pushinteger(L, PROTOCOL_UDPv6);
 	lua_rawset(L, -3);
 	return 1;
-}
+	}
