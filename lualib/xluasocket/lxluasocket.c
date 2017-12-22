@@ -117,19 +117,23 @@ gate_del(struct lua_gate *g, struct lua_socket *so) {
 	}
 	if (g->head == NULL) {
 		return NULL;
+	} else if (g->head == so) {
+		g->head = g->head->next;
 	} else {
 		struct lua_socket *ptr = g->head;
-		while (ptr->next && ptr->next != so) {
+		while (ptr->next) {
+			if (ptr->next == so) {
+				ptr->next = so->next;
+				so->next = g->freelist;
+				g->freelist = so;
+				return so;
+			} else {
+				return NULL;
+			}
+
 			ptr = ptr->next;
 		}
-		if (ptr->next == so) {
-			ptr->next = so->next;
-			so->next = g->freelist;
-			g->freelist = so;
-			return so;
-		} else {
-			return NULL;
-		}
+		
 	}
 	return NULL;
 }
