@@ -36,11 +36,12 @@ wb_is_empty(struct write_buffer *wb) {
 }
 
 struct wb_list*
-	wb_list_new() {
+wb_list_new(int size) {
 	struct wb_list* list = MALLOC(sizeof(*list));
 	list->head = NULL;
 	list->tail = NULL;
 	list->freelist = NULL;
+	list->wb_size = size;
 	return list;
 }
 
@@ -50,19 +51,18 @@ wb_list_free(struct wb_list* list) {
 	while (first) {
 		struct write_buffer *tmp = first;
 		first = first->next;
-		FREE(tmp->buffer);
 		FREE(tmp);
 	}
 }
 
 struct write_buffer *
-	wb_list_alloc_wb(struct wb_list* list) {
-	struct write_buffer *ptr = NULL;
-	if (list->freelist != NULL) {
-		ptr = list->freelist;
-		list->freelist = list->freelist->next;
-	} else {
+wb_list_alloc_wb(struct wb_list* list) {
+	struct write_buffer *ptr = list->freelist;
+	if (ptr == NULL) {
+		assert(list->wb_size > 0);
 		ptr = MALLOC(sizeof(*ptr) + list->wb_size);
+	} else {
+		list->freelist = list->freelist->next;
 	}
 	memset(ptr, 0, sizeof(*ptr) + list->wb_size);
 	ptr->cap = list->wb_size;
@@ -72,21 +72,13 @@ struct write_buffer *
 
 void
 wb_list_free_wb(struct wb_list* list, struct write_buffer *wb) {
-	if (list->freelist == NULL) {
-		list->freelist = wb;
-	} else {
-		struct write_buffer *ptr = list->freelist;
-		while (ptr->next != NULL) {
-			ptr = ptr->next;
-		}
-		ptr->next = wb;
-	}
-	wb->next = NULL;
+	assert(list && wb);
+	wb->next = list->freelist;
+	list->freelist = wb;
 }
 
 void
 wb_list_push(struct wb_list* list, uint8_t header, char *buffer, int sz) {
-	assert(list->wb_size >= sz);
 	struct write_buffer *wb = wb_list_alloc_wb(list);
 	if (header == HEADER_TYPE_PG) {
 		int22bytes_bd(sz, wb->buffer, 0, 2);
@@ -108,13 +100,12 @@ wb_list_push(struct wb_list* list, uint8_t header, char *buffer, int sz) {
 		int n = 0;
 		while (n < sz) {
 			wb = wb_list_alloc_wb(list);
-			int csz = ((sz) > (WRITE_BUFFER_SIZE)) ? (WRITE_BUFFER_SIZE) : sz;
+			int csz = ((sz) > (wb->cap)) ? (wb->cap) : sz;
 			memcpy(wb->buffer, buffer, csz);
 			n += csz;
 			wb->len = csz;
 			wb_list_push_wb(list, wb);
 		}
-		wb = wb_list_pop(list);
 		if (wb->len < wb->cap) {
 			wb->buffer[wb->len] = '\n';
 			wb->len = wb->len + 1;
@@ -140,7 +131,7 @@ wb_list_push_wb(struct wb_list* list, struct write_buffer *wb) {
 }
 
 struct write_buffer*
-	wb_list_pop(struct wb_list* list) {
+wb_list_pop(struct wb_list* list) {
 	if (list->head == NULL) {
 		return NULL;
 	} else if (list->head == list->tail) {

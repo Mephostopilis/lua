@@ -1,0 +1,9 @@
+package.path = "D:\\github\\lua\\hello\\src\\?.lua;D:\\github\\lua\\hello\\src\\?\\init.lua;" .. package.path
+-- require "test.queue_test"
+
+-- print("hello world.")
+
+require "main"
+
+
+os.execute("pause")

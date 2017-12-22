@@ -3,6 +3,8 @@
 ** Copyright 2013, Lua.org & PUC-Rio  (see 'lpeg.html' for license)
 */
 
+#define LUA_LIB
+
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
@@ -1288,7 +1290,7 @@ static struct luaL_Reg metareg[] = {
 };
 
 
-int luaopen_lpeg (lua_State *L);
+LUAMOD_API int luaopen_lpeg (lua_State *L);
 int luaopen_lpeg (lua_State *L) {
   luaL_newmetatable(L, PATTERN_T);
   lua_pushnumber(L, MAXBACK);  /* initialize maximum backtracking */

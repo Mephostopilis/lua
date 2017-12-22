@@ -249,8 +249,8 @@ ringbuf_read_fd(ringbuf_t *rb, int fd, size_t count) {
 
 	/* don't write beyond the end of the buffer */
 	assert(bufend > rb->head);
-	count = MIN(bufend - rb->head, count);
-	ssize_t n = read(fd, rb->head, count);
+	count = MIN(bufend - rb->head, nfree);
+	ssize_t n = recv(fd, rb->head, count, 0);
 	if (n > 0) {
 		assert(rb->head + n <= bufend);
 		rb->head += n;
@@ -428,84 +428,3 @@ ringbuf_copy(ringbuf_t *dst, ringbuf_t *src, size_t count) {
 
 	return dst->head;
 }
-
-//void *
-//ringbuf_read(ringbuf_t *rb, int fd, uint8_t header, int *err) {
-//	if (ringbuf_is_full(rb)) {
-//		*err = ringbuf_ext(rb);
-//		if (*err != 0) {
-//			return NULL;
-//		}
-//	}
-//	*err = 1;
-//	while (*err == 1) {
-//		const uint8_t *bufend = ringbuf_end(rb);
-//		if (rb->head >= rb->tail) {
-//			int n = recv(fd, rb->head, bufend - rb->head, 0);
-//			if (n == -1) {
-//#if defined(_WIN32)
-//				int e = WSAGetLastError();
-//				if (e == WSAEINTR || e == WSAEINPROGRESS) {
-//					// 当前so不处理
-//				} else {
-//					//
-//
-//				}
-//#else
-//				if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-//				} else {
-//					ptr->disc(ptr);
-//					close_sock(L, g, ptr);
-//				}
-//#endif
-//				break;
-//			} else if (res == 0) {
-//				break;
-//			}
-//		} else {
-//
-//		}
-//	}
-//
-//	size_t nfree = ringbuf_bytes_free(rb);
-//
-//	/* don't write beyond the end of the buffer */
-//	assert(bufend > rb->head);
-//	count = MIN(bufend - rb->head, count);
-//	ssize_t n = read(fd, rb->head, count);
-//	if (n > 0) {
-//		assert(rb->head + n <= bufend);
-//		rb->head += n;
-//
-//		/* wrap? */
-//		if (rb->head == bufend)
-//			rb->head = rb->buf;
-//
-//		/* fix up the tail pointer if an overflow occurred */
-//		if (n > nfree) {
-//			rb->tail = ringbuf_nextp(rb, rb->head);
-//			assert(ringbuf_is_full(rb));
-//		}
-//	}
-//
-//	if (n <= 0) {
-//		return NULL;
-//	}
-//
-//	if (ringbuf_bytes_used(rb) < n) {
-//		return NULL;
-//	}
-//
-//	if (rb->head <= rb->tail) {
-//		void *ptr = rb->head;
-//		rb->head = rb->head + n;
-//		return ptr;
-//	} else {
-//		const uint8_t *bufend = ringbuf_end(rb);
-//		int tn = bufend - rb->head;
-//		memcpy(bufend, rb->buf, n - tn);
-//		void *ptr = rb->head;
-//		rb->head = rb->buf + (n - tn);
-//		return ptr;
-//	}
-//}

@@ -250,12 +250,15 @@ skynet_timeout(uint32_t handle, int time, int session) {
 	return session;
 }
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 #include <Windows.h>
-static uint64_t chronos_nanotime() {
+#pragma comment( lib,"winmm.lib" )
+static void clock_gettime_mono(struct timespec *ti) {
 	// See http://msdn.microsoft.com/en-us/library/windows/desktop/dn553408(v=vs.85).aspx
+
 	LARGE_INTEGER timer;
 	LARGE_INTEGER freq;
+	static LARGE_INTEGER start;
 	static double multiplier;
 	static int init = 1;
 
@@ -263,13 +266,25 @@ static uint64_t chronos_nanotime() {
 	and the alternatives have fairly crappy resolution.
 	However, if you're on XP, you've got bigger problems than timing.
 	*/
-	(void)QueryPerformanceCounter(&timer);
 	if (init) {
 		QueryPerformanceFrequency(&freq);
 		multiplier = 1.0 / (double)freq.QuadPart;
+		(void)QueryPerformanceCounter(&start);
 		init = 0;
 	}
-	return (timer.QuadPart * multiplier);
+	(void)QueryPerformanceCounter(&timer);
+	timer.QuadPart = timer.QuadPart - start.QuadPart;
+	timer.QuadPart *= 1000000; // us
+	timer.QuadPart *= multiplier;
+	ti->tv_sec = timer.QuadPart / 1000000;
+	ti->tv_nsec = timer.QuadPart * 1000;
+}
+
+static void
+systimewin(uint32_t *sec, uint32_t *cs) {
+	DWORD dw = timeGetTime();
+	*sec = dw / 1000;
+	*cs = dw / 10;
 }
 #endif
 
@@ -277,9 +292,7 @@ static uint64_t chronos_nanotime() {
 static void
 systime(uint32_t *sec, uint32_t *cs) {
 #if  defined(_MSC_VER)
-	uint64_t ns = chronos_nanotime();
-	*sec = ns / 1000000000;
-	*cs = ns / 10000000;
+	systimewin(sec, cs);
 #elif !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
 	struct timespec ti;
 	clock_gettime(CLOCK_REALTIME, &ti);
@@ -297,8 +310,10 @@ static uint64_t
 gettime() {
 	uint64_t t;
 #if defined(_MSC_VER)
-	uint64_t ns = chronos_nanotime();
-	t = ns / 10000000;
+	struct timespec ti;
+	clock_gettime_mono(&ti);
+	t = (uint64_t)ti.tv_sec * 100;
+	t += ti.tv_nsec / 10000000;
 #elif !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
 	struct timespec ti;
 	clock_gettime(CLOCK_MONOTONIC, &ti);

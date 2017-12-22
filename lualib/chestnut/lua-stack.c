@@ -40,6 +40,18 @@ lpop(lua_State *L) {
 }
 
 static int
+lpeek(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_rawgeti(L, 1, 0);
+	lua_Integer top = luaL_checkinteger(L, -1);
+	if (top <= 0) {
+		return 0;
+	}
+	lua_rawgeti(L, 1, top);
+	return 1;
+}
+
+static int
 llen(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_rawgeti(L, 1, 0);
@@ -111,6 +123,7 @@ luaopen_chestnut_stack(lua_State *L) {
 	luaL_Reg il[] = {
 		{ "push", lpush },
 		{ "pop", lpop },
+		{ "peek", lpeek },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, il);

@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IntDir>$(solutionDir)\objs\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(solutionDir)\objs\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,7 +87,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;QUEUE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;QUEUE_EXPORTS;_WINDOWS;_USRDLL;LUA_BUILD_AS_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)..\..\src\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -139,13 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\lualib\chestnut\lua-queue.c" />
-    <ClCompile Include="..\..\..\lualib\chestnut\lua-stack.c" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\lua\lua.vcxproj">
       <Project>{094c9893-1f26-4641-a09b-8876d69d6c24}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-array.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-queue.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-stack.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,10 @@
+
+local cls = class("BaseView")
+
+function cls:ctr( ... )
+	-- body
+	self._baseContext
+	self._child 
+end
+
+return cls

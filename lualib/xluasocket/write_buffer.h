@@ -14,7 +14,7 @@ bool
 wb_is_empty(struct write_buffer *wb);
 
 struct wb_list*
-wb_list_new();
+wb_list_new(int size);
 
 void
 wb_list_free(struct wb_list* list);

@@ -1,0 +1,14 @@
+local cls = class("user")
+
+function cls:ctor( ... )
+	-- body
+	self.modules = {}
+end
+
+function cls:add_module(m, ... )
+	-- body
+
+end
+
+
+return cls

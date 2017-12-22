@@ -1,0 +1,9 @@
+local _M = {}
+_M["1"] = {
+	["Id"] = 1
+	["Width"] = 
+	["Height"] = 
+	["Length"] = 
+	["CurorMH"] = 
+}
+return _M

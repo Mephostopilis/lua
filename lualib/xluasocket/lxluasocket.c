@@ -14,8 +14,6 @@
 #include <time.h>
 #include <assert.h>
 
-
-
 #define SOCKET_DATA 0
 #define SOCKET_CLOSE 1
 #define SOCKET_OPEN 2
@@ -39,7 +37,6 @@
 #define PROTOCOL_UDPv6 2
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
-
 
 static void
 init_lib(lua_State *L) {
@@ -127,40 +124,27 @@ gate_del(struct lua_gate *g, struct lua_socket *so) {
 		}
 		if (ptr->next == so) {
 			ptr->next = so->next;
+			so->next = g->freelist;
+			g->freelist = so;
+			return so;
+		} else {
+			return NULL;
 		}
-		return so;
 	}
-	so->next = NULL;
-	return so;
+	return NULL;
 }
 
 static struct lua_socket *
 gate_add_error(struct lua_gate *g, struct lua_socket *so) {
-	if (g->error == NULL) {
-		g->error = so;
-	} else {
-		struct lua_socket *ptr = g->error;
-		while (ptr->extra) {
-			ptr = ptr->extra;
-		}
-		ptr->extra = so;
-	}
-	so->extra = NULL;
+	so->extra = g->error;
+	g->error = so;
 	return so;
 }
 
 static struct lua_socket *
 gate_add_disconn(struct lua_gate *g, struct lua_socket *so) {
-	if (g->disconn == NULL) {
-		g->disconn = so;
-	} else {
-		struct lua_socket *ptr = g->disconn;
-		while (ptr->extra) {
-			ptr = ptr->extra;
-		}
-		ptr->extra = so;
-	}
-	so->extra = NULL;
+	so->extra = g->disconn;
+	g->disconn = so;
 	return so;
 }
 
@@ -168,25 +152,23 @@ static int
 on_disconnected(lua_State *L, struct lua_gate *g, struct lua_socket *so) {
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
-	//luaL_checktype(L, -1, )
+	luaL_checktype(L, -1, LUA_TFUNCTION);
 
-	lua_pushinteger(L, so->id);
 	lua_pushinteger(L, SOCKET_CLOSE);
-	lua_pcall(L, 2, 0, 0);
+	lua_pcall(L, 1, 0, 0);
 	return 0;
 }
 
 static int
-on_data(lua_State *L, struct lua_gate *g, struct lua_socket *so, void *buffer, int len) {
+on_data(lua_State *L, struct lua_gate *g, struct lua_socket *so, char *buffer, int len) {
 	(void)g;
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
-	//luaL_checktype(L, -1, )
+	luaL_checktype(L, -1, LUA_TFUNCTION);
 
-	lua_pushinteger(L, so->id);
 	lua_pushinteger(L, SOCKET_DATA);
 	lua_pushlstring(L, buffer, len);
-	lua_pcall(L, 3, 0, 0);
+	lua_pcall(L, 2, 0, 0);
 	return 0;
 }
 
@@ -194,12 +176,11 @@ static int
 on_error(lua_State *L, struct lua_gate *g, struct lua_socket *so, int err) {
 	lua_getglobal(L, "xluasocket");
 	lua_rawgetp(L, -1, so);
-	//luaL_checktype(L, -1, )
+	luaL_checktype(L, -1, LUA_TFUNCTION);
 
-	lua_pushinteger(L, so->id);
 	lua_pushinteger(L, SOCKET_ERROR);
 	lua_pushinteger(L, err);
-	lua_pcall(L, 3, 0, 0);
+	lua_pcall(L, 2, 0, 0);
 	return 0;
 }
 
@@ -249,16 +230,14 @@ lsocket(lua_State *L) {
 	if (g->freelist != NULL) {
 		so = g->freelist;
 		g->freelist = g->freelist->next;
-		so->next = NULL;
-		so->id = g->id;
 	} else {
 		so = (struct lua_socket*)MALLOC(sizeof(*so));
-		so->next = NULL;
-		so->id = g->id;
-		so->type = SOCKET_TYPE_RESERVE;
-		so->wl = wb_list_new();
+		so->wl = wb_list_new(WRITE_BUFFER_SIZE);
 		so->rb = ringbuf_new(RINGBUF_SIZE);
 	}
+	so->next = NULL;
+	so->id = g->id;
+	so->type = SOCKET_TYPE_RESERVE;
 	so->protocol = luaL_checkinteger(L, 2);
 	so->header = luaL_checkinteger(L, 3);
 	if (so->protocol == PROTOCOL_TCP) {
@@ -278,7 +257,7 @@ lsocket(lua_State *L) {
 
 	luaL_checktype(L, 4, LUA_TFUNCTION);
 	lua_pushvalue(L, 4);
-	lua_rawsetp(L, -1, so);
+	lua_rawsetp(L, -2, so);
 
 	gate_add(g, so);
 	lua_pushinteger(L, so->id);
@@ -309,10 +288,17 @@ lconnect(lua_State *L) {
 	if (so->protocol == PROTOCOL_TCP) {
 		int res = connect(so->fd, (const struct sockaddr*)&so->remote, sizeof(so->remote));
 		if (res == -1) {
-			lua_pushinteger(L, 2);
-			return 1;
+			lua_pushinteger(L, res);
+#if defined(_MSC_VER)
+			int err = WSAGetLastError();
+			lua_pushinteger(L, err);
+			closesocket(so->fd);
+#else
+			close(so->fd);
+#endif
+			gate_del(g, so);
+			return 2;
 		} else {
-
 			so->type = SOCKET_TYPE_CONNECTED;
 			lua_pushinteger(L, 0);
 			return 1;
@@ -394,6 +380,9 @@ lpoll(lua_State *L) {
 			ptr = ptr->next;
 		}
 	}
+	if (max == 0) {
+		return 0;
+	}
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 0;
@@ -442,28 +431,26 @@ lpoll(lua_State *L) {
 		}
 		if (FD_ISSET(ptr->fd, &g->rfds)) {
 			if (ptr->protocol == PROTOCOL_TCP) {
-				for (; ;) {
-					int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
-					if (res == -1) {
+				int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
+				if (res == -1) {
 #if defined(_WIN32)
-						int e = WSAGetLastError();
-						if (e == WSAEINTR || e == WSAEINPROGRESS) {
+					int e = WSAGetLastError();
+					if (e == WSAEINTR || e == WSAEINPROGRESS) {
 #else
-						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
+					if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
 #endif
-							// 当前so不处理
-							break;
-						} else {
-							gate_add_error(g, ptr);
-							on_error(L, g, ptr, res);
-							break;
-						}
-					} else if (res == 0) {
-						gate_add_disconn(g, ptr);
-						on_disconnected(L, g, ptr);
+						// 当前so不处理
+						break;
+					} else {
+						gate_add_error(g, ptr);
+						on_error(L, g, ptr, res);
 						break;
 					}
+				} else if (res == 0) {
+					gate_add_disconn(g, ptr);
+					break;
 				}
+
 				if (ptr->header == HEADER_TYPE_PG) {
 					while (true) {
 						if (ringbuf_bytes_used(ptr->rb) >= 2) {
@@ -482,12 +469,14 @@ lpoll(lua_State *L) {
 					}
 
 				} else {
-					int n = ringbuf_findchr(ptr->rb, '\n', 0);
-					while (n != ringbuf_bytes_used(ptr->rb)) {
-						void *out = NULL;
-						ringbuf_read(ptr->rb, n, &out);
-						on_data(L, g, ptr, out, n);
-						n = ringbuf_findchr(ptr->rb, '\n', 0);
+					if (ringbuf_bytes_used(ptr->rb) > 0) {
+						int n = ringbuf_findchr(ptr->rb, '\n', 0);
+						while (n < ringbuf_bytes_used(ptr->rb)) {
+							void *out = NULL;
+							n = ringbuf_read(ptr->rb, n + 1, &out);
+							on_data(L, g, ptr, out, n - 1);
+							n = ringbuf_findchr(ptr->rb, '\n', 0);
+						}
 					}
 				}
 			} else if (ptr->protocol == PROTOCOL_UDP) {
@@ -496,6 +485,22 @@ lpoll(lua_State *L) {
 		}
 		ptr = ptr->next;
 	}
+
+	ptr = g->error;
+	g->error = NULL;
+	while (ptr) {
+		gate_del(g, ptr);
+		on_error(L, g, ptr, 0);
+		ptr = ptr->next;
+	}
+	ptr = g->disconn;
+	g->disconn = NULL;
+	while (ptr) {
+		gate_del(L, g, ptr);
+		on_disconnected(L, g, ptr);
+		ptr = ptr->next;
+	}
+
 	return 0;
 }
 
@@ -588,4 +593,4 @@ luaopen_xluasocket(lua_State *L) {
 	lua_pushinteger(L, PROTOCOL_UDPv6);
 	lua_rawset(L, -3);
 	return 1;
-	}
+}

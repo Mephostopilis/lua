@@ -1,3 +1,5 @@
+#define LUA_LIB
+
 #include <string.h>
 #include <stdlib.h>
 #include "msvcint.h"
@@ -660,7 +662,7 @@ ldefault(lua_State *L) {
 	return 1;
 }
 
-int
+LUAMOD_API int
 luaopen_sproto_core(lua_State *L) {
 #ifdef luaL_checkversion
 	luaL_checkversion(L);

@@ -13,6 +13,8 @@
 static int
 linit(lua_State *L) {
 	skynet_timer_init();
+	lua_newtable(L);
+	lua_setglobal(L, "skynet_timer");
 	return 0;
 }
 
@@ -22,6 +24,14 @@ lstarttime(lua_State *L) {
 	lua_pushinteger(L, t);
 	return 1;
 }
+
+static int
+lnow(lua_State *L) {
+	uint64_t t = skynet_now();
+	lua_pushinteger(L, t);
+	return 1;
+}
+
 
 static int
 lupdate(lua_State *L) {
@@ -36,7 +46,7 @@ ltimeout(lua_State *L) {
 	luaL_checktype(L, 3, LUA_TFUNCTION);
 	lua_getglobal(L, "skynet_timer");
 	luaL_checktype(L, -1, LUA_TTABLE);
-	lua_pushvalue(L, 2);
+	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, session);
 	skynet_timeout((uint32_t)L, (int)time, (int)session);
 	return 0;
@@ -49,6 +59,7 @@ luaopen_skynet_timer(lua_State *L) {
 	luaL_Reg il[] = {
 		{ "init", linit },
 		{ "starttime", lstarttime },
+		{ "now", lnow },
 		{ "update", lupdate },
 		{ "timeout", ltimeout },
 		{ NULL, NULL },
