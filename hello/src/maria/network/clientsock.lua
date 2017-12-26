@@ -26,9 +26,11 @@ function cls:ctor(network, ... )
 	-- sproto
 	local proto = {}
 	local utils = FileUtils:getInstance()
-	proto.c2s = utils:getStringFromFile("src/proto/proto.c2s.sproto")
+	-- proto.c2s = utils:getStringFromFile("./src/proto/proto.c2s.sproto")
+	proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
 	assert(type(proto.c2s) == "string")
-	proto.s2c = utils:getStringFromFile("src/proto/proto.s2c.sproto")
+	-- proto.s2c = utils:getStringFromFile("./src/proto/proto.s2c.sproto")
+	proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
 	assert(type(proto.s2c) == "string")
 	local s2c_sp = core.newproto(parser.parse(proto.s2c))
 	local host = sproto.sharenew(s2c_sp):host "package"
@@ -161,19 +163,34 @@ end
 
 function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
 	-- body
-	self._gate_fd = ps.socket(self._g, ps.PROTOCOL_TCP, ps.HEADER_PG, conn, disc, recv)
-	local err = ps.connect(self._g, self._gate_fd, ip, port)
+	assert(ip and port and server and uid and subid and secret)
+	local g = self._network._g
+	self._gate_fd = ps.socket(g, ps.PROTOCOL_TCP, ps.HEADER_TYPE_PG, function (code, pg, ... )
+		-- body
+		print("callback", code)
+		if code == ps.SOCKET_DATA then
+			if pg then
+				local ok, err = pcall(self.gate_data, self, pg)
+				if not ok then
+					print(err)
+				end
+			end
+		elseif code == ps.SOCKET_CLOSE then
+		elseif code == ps.SOCKET_ERROR then
+		end
+	end)
+	local err = ps.connect(g, self._gate_fd, ip, port)
 	if err == 0 then
 		self._index = 1
 		local handshake = string.format("%s@%s#%s:%d", 
 			crypt.base64encode(uid), 
 			crypt.base64encode(server),
 			crypt.base64encode(subid), self._index)
-		local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
+		local hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
 
 		-- send handshake
 		print("handshake")
-		ps.send(self._g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
+		ps.send(g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
 
 	
 		self._gate_step = 1

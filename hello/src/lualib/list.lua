@@ -115,9 +115,9 @@ function _M.foreach(L, func, ... )
 	local node = L.head
 	while node do
 		if func then
-			func(node.data)
+			func(node)
 		end
-		node = node.next
+		node = node.__next__
 	end
 end
 

@@ -41,6 +41,8 @@ function io.readfile(path)
         local content = file:read("*a")
         io.close(file)
         return content
+    else
+        error(string.format("%s not exists", path))
     end
     return nil
 end

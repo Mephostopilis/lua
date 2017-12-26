@@ -1,5 +1,6 @@
 local crypt = require "skynet.crypt"
 local ps = require "xluasocket"
+local log = require "log"
 
 local cls = class("clientlogin")
 
@@ -30,12 +31,13 @@ end
 function cls:login_data(line, ... )
 	-- body	
 	print("step", self._login_step)
+	print()
 	if self._login_step == 1 then
 		local challenge = crypt.base64decode(line)
 		local clientkey = crypt.randomkey()
 		local g = assert(self._network._g)
 		local err = ps.send(g, self._login_fd, crypt.base64encode(crypt.dhexchange(clientkey)))
-		assert(err == 0)
+		assert(err > 0)
 		self._challenge = challenge
 		self._clientkey = clientkey
 		self._login_step = self._login_step + 1
@@ -43,7 +45,9 @@ function cls:login_data(line, ... )
 		local secret = crypt.dhsecret(crypt.base64decode(line), self._clientkey)
 		print("sceret is", crypt.hexencode(secret))
 		local hmac = crypt.hmac64(self._challenge, secret)
-		ps.send(self._g, self._login_fd, crypt.base64encode(hmac))
+		local g = assert(self._network._g)
+		local err = ps.send(g, self._login_fd, crypt.base64encode(hmac))
+		assert(err > 0)
 		self._secret = secret
 
 		print(self._username, self._server, self._password)
@@ -52,13 +56,15 @@ function cls:login_data(line, ... )
 			crypt.base64encode(self._server),
 			crypt.base64encode(self._password))
 		local etoke = crypt.desencode(self._secret, token)
-		ps.send(self._g, self._login_fd, crypt.base64encode(etoke))
+		local err = ps.send(g, self._login_fd, crypt.base64encode(etoke))
+		assert(err > 0)
 		self._login_step = self._login_step + 1
 	elseif self._login_step == 3 then
 		local code = tonumber(string.sub(line, 1, 4))
 		if code == 200 then
-			printInfo("handshake code: %d", code)
-			ps.closesocket(self._g, self._login_fd)
+			log.info("handshake code: %d", code)
+			local g = assert(self._network._g)
+			ps.closesocket(g, self._login_fd)
 			local xline = crypt.base64decode(string.sub(line, 5))
 			local _1 = string.find(xline, '#')
 			local _2 = string.find(xline, '@', _1+1)
@@ -69,6 +75,7 @@ function cls:login_data(line, ... )
 			print("ok")
 			self._network:OnLoginAuthed(code, uid, subid, self._secret)
 		else
+			print(code)
 			self._network:OnLoginAuthed(code, line)
 		end
 	end
@@ -94,7 +101,10 @@ function cls:login_auth(ip, port, u, p, server, ... )
 		print("callback", code)
 		if code == ps.SOCKET_DATA then
 			if line then
-				self:login_data(line)
+				local ok, err = pcall(self.login_data, self, line)
+				if not ok then
+					print(err)
+				end
 			end
 		elseif code == ps.SOCKET_CLOSE then
 		elseif code == ps.SOCKET_ERROR then
