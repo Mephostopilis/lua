@@ -27,8 +27,14 @@ end
 -- 	end)
 -- end
 
-function cls:OnLoginAuthed( ... )
+function cls:OnLoginAuthed(code, uid, subid, secret, ... )
 	-- body
+	if code == 200 then
+		print(uid, subid)
+		self.uid = uid
+		self.subid = subid
+		self.secret = secret
+	end
 end
 
 function cls:OnLoginDisconnected( ... )
@@ -37,10 +43,7 @@ end
 
 function cls:OnGateAuthed(code, uid, subid, ... )
 	-- body
-	if code == 200 then
-		self.uid = uid
-		self.subid = subid
-	end
+	
 end
 
 function cls:OnGateDisconnected( ... )

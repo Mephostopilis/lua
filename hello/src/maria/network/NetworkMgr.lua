@@ -68,16 +68,17 @@ function cls:OnLoginConnected(connected, ... )
 	end)
 end
 
-function cls:OnLoginAuthed( ... )
+function cls:OnLoginAuthed(code, uid, subid, secret, ... )
 	-- body
 	self._l:foreach(function (i, ... )
 		-- body
-		i:OnLoginAuthed(connected)
+		i:OnLoginAuthed(code, uid, subid, secret, ... )
 	end)
 end
 
 function cls:OnLoginDisconnected( ... )
 	-- body
+	print("login disconnected.")
 	self._l:foreach(function (i, ... )
 		-- body
 		i:OnLoginDisconnected(connected)
@@ -88,10 +89,10 @@ function cls:OnLoginError( ... )
 	-- body
 end
 
-function cls:GateAuth(ip, port, ... )
+function cls:GateAuth(ip, port, server, uid, subid, secret, ... )
 	-- body
 	self._client = clientsock.new(self)
-	return self._client:gate_auth(ip, port)
+	return self._client:gate_auth(ip, port, server, uid, subid, secret)
 end
 
 
