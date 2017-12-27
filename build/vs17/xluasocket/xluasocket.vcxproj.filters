@@ -27,9 +27,6 @@
     <ClCompile Include="..\..\..\lualib\xluasocket\write_buffer.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\lualib\xluasocket\util.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lualib\xluasocket\lxluasocket.h">
@@ -44,7 +41,7 @@
     <ClInclude Include="..\..\..\lualib\xluasocket\xluaconf.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\lualib\xluasocket\util.h">
+    <ClInclude Include="..\..\..\lualib\xluasocket\protoc.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

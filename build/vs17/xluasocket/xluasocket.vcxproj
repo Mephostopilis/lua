@@ -23,7 +23,7 @@
     <ProjectGuid>{3033FDBE-DB99-49BC-BA7E-660FBD8AC4B0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>xluasocket</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -158,13 +158,12 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\lualib\xluasocket\lxluasocket.c" />
     <ClCompile Include="..\..\..\lualib\xluasocket\ringbuf.c" />
-    <ClCompile Include="..\..\..\lualib\xluasocket\util.c" />
     <ClCompile Include="..\..\..\lualib\xluasocket\write_buffer.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lualib\xluasocket\lxluasocket.h" />
+    <ClInclude Include="..\..\..\lualib\xluasocket\protoc.h" />
     <ClInclude Include="..\..\..\lualib\xluasocket\ringbuf.h" />
-    <ClInclude Include="..\..\..\lualib\xluasocket\util.h" />
     <ClInclude Include="..\..\..\lualib\xluasocket\write_buffer.h" />
     <ClInclude Include="..\..\..\lualib\xluasocket\xluaconf.h" />
   </ItemGroup>

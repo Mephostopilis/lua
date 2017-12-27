@@ -346,7 +346,13 @@ lsend(lua_State *L) {
 		return 2;
 	}
 	assert(so->protocol == PROTOCOL_TCP);
-	wb_list_push(so->wl, so->header, buffer, sz);
+	if (so->header == HEADER_TYPE_LINE) {
+		wb_list_push_line(so->wl, buffer, sz);
+	} else if (so->header == HEADER_TYPE_PG) {
+		wb_list_push_string(so->wl, buffer, sz);
+	} else {
+		luaL_error(L, "header is wrong.");
+	}
 	lua_pushinteger(L, sz);
 	return 1;
 }
@@ -448,43 +454,28 @@ lpoll(lua_State *L) {
 						on_error(L, g, ptr, res);
 						break;
 					}
-		} else if (res == 0) {
-			gate_add_disconn(g, ptr);
-			break;
-		}
-
-		if (ptr->header == HEADER_TYPE_PG) {
-			while (true) {
-				if (ringbuf_bytes_used(ptr->rb) >= 2) {
-					int16_t len = 0;
-					ringbuf_read_int16(ptr->rb, &len);
-					if (ringbuf_bytes_used(ptr->rb) >= len) {
-						void *buf = NULL;
-						int sz = ringbuf_read(ptr->rb, len, &buf);
-						on_data(L, g, ptr, buf, sz);
-				} else {
-						break;
-					}
-			} else {
+				} else if (res == 0) {
+					gate_add_disconn(g, ptr);
 					break;
 				}
-		}
 
-	} else {
-			if (ringbuf_bytes_used(ptr->rb) > 0) {
-				int n = ringbuf_findchr(ptr->rb, '\n', 0);
-				while (n < ringbuf_bytes_used(ptr->rb)) {
-					void *out = NULL;
-					n = ringbuf_read(ptr->rb, n + 1, &out);
-					on_data(L, g, ptr, out, n - 1);
-					n = ringbuf_findchr(ptr->rb, '\n', 0);
+				if (ptr->header == HEADER_TYPE_PG) {
+					int size = 0;
+					uint8_t *buf = NULL;
+					while (ringbuf_read_string(ptr->rb, &buf, &size) == 0) {
+						on_data(L, g, ptr, buf, size);
+					}
+				} else {
+					int size = 0;
+					uint8_t *buf = NULL;
+					while (ringbuf_read_line(ptr->rb, &buf, &size) == 0) {
+						on_data(L, g, ptr, buf, size);
+					}
 				}
+			} else if (ptr->protocol == PROTOCOL_UDP) {
+			} else if (ptr->protocol == PROTOCOL_UDPv6) {
 			}
 		}
-} else if (ptr->protocol == PROTOCOL_UDP) {
-} else if (ptr->protocol == PROTOCOL_UDPv6) {
-}
-}
 		ptr = ptr->next;
 	}
 

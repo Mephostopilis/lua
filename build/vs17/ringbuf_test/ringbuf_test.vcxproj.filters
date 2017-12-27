@@ -21,9 +21,18 @@
     <ClCompile Include="..\..\..\lualib\xluasocket\ringbuf_test.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\lualib\xluasocket\write_buffer.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\lualib\xluasocket\ringbuf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lualib\xluasocket\protoc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\lualib\xluasocket\write_buffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

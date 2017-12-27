@@ -175,10 +175,12 @@ ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count);
  * may be different than it was before the function was called.
  */
 ssize_t
-ringbuf_read_fd(ringbuf_t *rb, int fd, size_t count);
+ringbuf_read_fd(ringbuf_t *rb, int fd, size_t hint_max);
 
 int
-ringbuf_read(ringbuf_t *rb, int hint, void **out);
+ringbuf_read_string(ringbuf_t *rb, uint8_t **out, int *size);
+int
+ringbuf_read_line(ringbuf_t *rb, uint8_t **out, int *size);
 int
 ringbuf_read_int64(ringbuf_t *rb, int64_t *out);
 int
@@ -228,9 +230,12 @@ ringbuf_memcpy_from(void *dst, ringbuf_t *src, size_t count);
  * return 0.
  */
 ssize_t
-ringbuf_write_fd(ringbuf_t *rb, int fd, size_t count);
+ringbuf_write_fd(ringbuf_t *rb, int fd);
+
 int
-ringbuf_write(ringbuf_t *rb, const uint8_t *buf, size_t size);
+ringbuf_write_string(ringbuf_t *rb, const uint8_t *buf, size_t size);
+int
+ringbuf_write_line(ringbuf_t *rb, const uint8_t *buf, size_t size);
 int
 ringbuf_write_int32(ringbuf_t *rb, int32_t n);
 int

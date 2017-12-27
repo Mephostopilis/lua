@@ -22,8 +22,9 @@
 #include <arpa/inet.h>
 #endif
 
-#define MALLOC malloc
-#define FREE   free
+#define MALLOC  malloc
+#define FREE    free
+#define REALLOC realloc
 
 #define HEADER_TYPE_LINE 0
 #define HEADER_TYPE_PG 1
