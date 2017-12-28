@@ -2,6 +2,7 @@ local ps = require "xluasocket"
 local clientlogin = require "maria.network.clientlogin"
 local clientsock = require "maria.network.clientsock"
 local list = require "list"
+local log = require "log"
 local assert = assert
 local instance
 
@@ -19,8 +20,8 @@ function cls:ctor( ... )
 	-- body
 	self._g = assert(ps.new())
 	self._l = list.new()
-	self._login = nil
-	self._client = nil
+	self.login = nil
+	self.client = nil
 
 	return self
 end
@@ -52,10 +53,10 @@ end
 function cls:LoginAuth(ip, port, server, u, p, ... )
 	-- body
 	assert(ip and port and server and u and p)
-	self._login = clientlogin.new(self)
-	local err = self._login:login_auth(ip, port, u, p, server)
-	if err ~= 0 then
-		self._login = nil
+	local  login = clientlogin.new(self)
+	local err = login:login_auth(ip, port, u, p, server)
+	if err == 0 then
+		self.login = login
 	end
 	return err
 end
@@ -78,7 +79,7 @@ end
 
 function cls:OnLoginDisconnected( ... )
 	-- body
-	print("login disconnected.")
+	log.info("login disconnected.")
 	self._l:foreach(function (i, ... )
 		-- body
 		i:OnLoginDisconnected(connected)
@@ -91,16 +92,19 @@ end
 
 function cls:GateAuth(ip, port, server, uid, subid, secret, ... )
 	-- body
-	self._client = clientsock.new(self)
-	return self._client:gate_auth(ip, port, server, uid, subid, secret)
+	local client = clientsock.new(self)
+	local err = client:gate_auth(ip, port, server, uid, subid, secret)
+	if err == 0 then
+		self.client = client
+	end
+	return err
 end
-
 
 function cls:OnGateAuthed(code, ... )
 	-- body
 	self._l:foreach(function (i, ... )
 		-- body
-		i:OnGateAuthed(connected)
+		i:OnGateAuthed(code)
 	end)
 end
 
@@ -108,7 +112,7 @@ function cls:OnGateDisconnected( ... )
 	-- body
 	self._l:foreach(function (i, ... )
 		-- body
-		i:OnGateDisconnected(connected)
+		i:OnGateDisconnected()
 	end)
 end
 

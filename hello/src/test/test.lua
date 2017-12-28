@@ -10,6 +10,8 @@ package.path = root .. "\\lualib\\entitas\\?.lua;" .. root .. "\\entitas\\?\\ini
 require "main"
 local NetworkMgr = require "maria.network.NetworkMgr"
 local User = require "maria.module.User"
+local timer = require "maria.timer"
+timer.init()
 
 print("hello")
 
@@ -51,13 +53,16 @@ local t = {
 	end
 }
 NetworkMgr:getInstance():RegNetwork(t)
-
-
 NetworkMgr:getInstance():LoginAuth("127.0.0.1", "3002", server, username, password)
 
+timer.timeout(10, function ( ... )
+	-- body
+	NetworkMgr:getInstance().client:send_request("handshake")
+end)
 
 while true do 
 	NetworkMgr:getInstance():Update()
+	timer.update()
 end
 
 os.execute("pause")

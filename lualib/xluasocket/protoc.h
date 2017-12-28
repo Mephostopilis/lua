@@ -36,8 +36,11 @@ WriteInt16(char *ptr, int ofs, int16_t val) {
 		ptr[ofs + 1] = (val << 8) & 0xff;
 		return ofs + 2;
 	} else {
-		ptr[ofs + 0] = val >> 8 & 0xff;
-		ptr[ofs + 8] = val & 0xff;
+		int len = 2;
+		int i = ofs + len - 1;
+		for (; i >= ofs; --i) {
+			ptr[i] = (char)((val >> (len - 1 - i) * 8) & 0xff);
+		}
 		return (ofs + 2);
 	}
 }

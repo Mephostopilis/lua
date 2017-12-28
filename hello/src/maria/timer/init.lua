@@ -30,25 +30,39 @@ function _M.update( ... )
 	core.update()
 end
 
--- sec
-function _M.timeout(time, u, c,  ... )
+function _M.timeout_tween(sec, f, ... )
 	-- body
-	-- if u then
-	-- 	for i=1,time-1 do
-	-- 		local id = next_id()
-	-- 		core.timeout(time * 100, id, function ( ... )
-	-- 			-- body
-	-- 			u(i)
-	-- 		end)
-	-- 	end
-	-- end
-
-	local id = assert(next_id())
-	print(id)
-	core.timeout(time * 100, id, function ( ... )
+	assert(sec and f)
+	local function cb( ... )
 		-- body
-		c(time)
-	end)
+		if f then
+			f()
+		end
+	end
+	for i=1,time do
+		local id = next_id()
+		core.timeout(i * 100, id, cb)
+	end
+	return function ( ... )
+		-- body
+		f = nil
+	end
+end
+
+function _M.timeout(sec, f,  ... )
+	assert(sec and f)
+	local function cb( ... )
+		-- body
+		if f then
+			f()
+		end
+	end
+	local id = next_id()
+	core.timeout(sec * 100, id, cb)
+	return function ( ... )
+		-- body
+		f = nil
+	end
 end
 
 _M.starttime = assert(core.starttime)

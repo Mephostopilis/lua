@@ -27,7 +27,7 @@ wb_write_fd(struct write_buffer *ptr, int fd) {
 	char buffer[1024] = { 0 };
 	int count = min(1024, (ptr->buffer + ptr->len - ptr->ptr));
 	memcpy(buffer, ptr->ptr, count);
-	printf("prof write fd %s", buffer);
+	printf("prof write fd [[%s]] ---------- \n", buffer);
 	int n = send(fd, ptr->ptr, (ptr->buffer + ptr->len - ptr->ptr), 0);
 	if (n > 0) {
 		ptr->ptr = ptr->ptr + n;
