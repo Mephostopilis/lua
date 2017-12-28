@@ -74,6 +74,7 @@ function Entity:add(comp_type, ...)
 
     local new_comp = comp_type.new(...)
     self._components[comp_type] = new_comp
+    -- self[new_comp.__comp_name] = new_comp
     self.on_component_added(self, new_comp)
 end
 

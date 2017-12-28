@@ -12,9 +12,9 @@
 
 static int
 linit(lua_State *L) {
-	skynet_timer_init();
 	lua_newtable(L);
 	lua_setglobal(L, "skynet_timer");
+	skynet_timer_init();
 	return 0;
 }
 
@@ -48,7 +48,7 @@ ltimeout(lua_State *L) {
 	luaL_checktype(L, -1, LUA_TTABLE);
 	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, session);
-	skynet_timeout((uint32_t)L, (int)time, (int)session);
+	skynet_timeout((uintptr_t)L, (int)time, (int)session);
 	return 0;
 }
 

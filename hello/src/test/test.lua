@@ -13,6 +13,7 @@ local User = require "maria.module.User"
 local timer = require "maria.timer"
 timer.init()
 
+require "test.test_entity_system"
 print("hello")
 
 -- local fd = io.open("proto/proto.c2s.sproto", "r+")
@@ -57,6 +58,7 @@ NetworkMgr:getInstance():LoginAuth("127.0.0.1", "3002", server, username, passwo
 
 timer.timeout(10, function ( ... )
 	-- body
+	print("timeout hello")
 	NetworkMgr:getInstance().client:send_request("handshake")
 end)
 

@@ -36,7 +36,8 @@ typedef void(*timer_execute_func)(void *ud, void *arg);
 #define skynet_free free
 
 struct timer_event {
-	uint32_t handle;
+	//uint32_t handle;
+	uintptr_t handle;
 	int session;
 };
 
@@ -156,7 +157,7 @@ dispatch_list(struct timer_node *current) {
 		message.sz = (size_t)PTYPE_RESPONSE << MESSAGE_TYPE_SHIFT;*/
 
 		//skynet_context_push(event->handle, &message);
-		lua_State *L = (lua_State *)(void *)(event->handle);
+		lua_State *L = (lua_State *)(event->handle);
 		lua_getglobal(L, "skynet_timer");
 		luaL_checktype(L, -1, LUA_TTABLE);
 		lua_rawgeti(L, -1, event->session);
@@ -222,7 +223,7 @@ timer_create_timer() {
 }
 
 int
-skynet_timeout(uint32_t handle, int time, int session) {
+skynet_timeout(uintptr_t handle, int time, int session) {
 	if (time <= 0) {
 		/*struct skynet_message message;
 		message.source = 0;
@@ -233,7 +234,7 @@ skynet_timeout(uint32_t handle, int time, int session) {
 		if (skynet_context_push(handle, &message)) {
 			return -1;
 		}*/
-		lua_State *L = (lua_State *)(void *)(handle);
+		lua_State *L = (lua_State *)(handle);
 		lua_getglobal(L, "skynet_timer");
 		luaL_checktype(L, -1, LUA_TTABLE);
 		lua_rawgeti(L, -1, session);
