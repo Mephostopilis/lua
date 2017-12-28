@@ -36,9 +36,8 @@ WriteInt16(char *ptr, int ofs, int16_t val) {
 		ptr[ofs + 1] = (val << 8) & 0xff;
 		return ofs + 2;
 	} else {
-		for (size_t i = 0; i < 2; i++) {
-			ptr[ofs + i] = (val >> (8 * i)) & 0xff;
-		}
+		ptr[ofs + 0] = val >> 8 & 0xff;
+		ptr[ofs + 8] = val & 0xff;
 		return (ofs + 2);
 	}
 }
@@ -106,9 +105,9 @@ ReadUInt8(char *ptr, int ofs, uint8_t *val) {
 		*val = ptr[ofs];
 		return ofs + 1;
 	} else {
-		size_t len = 1;
-		int16_t res = 0;
-		for (size_t i = 0; i < len; i++) {
+		int len = 1;
+		uint8_t res = 0;
+		for (int i = 0; i < len; i++) {
 			res |= ptr[ofs + i] << (8 * i);
 		}
 		*val = res;
@@ -124,7 +123,7 @@ ReadInt16(char *ptr, int ofs, int16_t *val) {
 		*val |= ptr[ofs + 1] >> 8;
 		return ofs + 2;
 	} else {
-		size_t len = 2;
+		int len = 2;
 		int16_t res = 0;
 		for (size_t i = 0; i < len; i++) {
 			res |= ptr[ofs + i] << (8 * i);

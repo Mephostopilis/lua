@@ -33,10 +33,12 @@ local t = {
 	OnLoginAuthed = function (self, code, ... )
 		-- body
 		if code == 200 then
+			print("OnLoginAuthed ---------------------")
 			print(user.server)
 			print(user.uid)
 			print(user.subid)
 			print(user.secret)
+			print("gate Auth ---------------------")
 			NetworkMgr:getInstance():GateAuth("127.0.0.1", 3301, user.server, user.uid, user.subid, user.secret)
 		end
 	end,

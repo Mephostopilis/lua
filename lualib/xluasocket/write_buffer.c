@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 struct write_buffer {
 	struct write_buffer * next;
@@ -23,6 +24,10 @@ struct wb_list {
 int
 wb_write_fd(struct write_buffer *ptr, int fd) {
 	assert(ptr != NULL);
+	char buffer[1024] = { 0 };
+	int count = min(1024, (ptr->buffer + ptr->len - ptr->ptr));
+	memcpy(buffer, ptr->ptr, count);
+	printf("prof write fd %s", buffer);
 	int n = send(fd, ptr->ptr, (ptr->buffer + ptr->len - ptr->ptr), 0);
 	if (n > 0) {
 		ptr->ptr = ptr->ptr + n;
@@ -85,6 +90,9 @@ wb_list_free_wb(struct wb_list* list, struct write_buffer *wb) {
 void
 wb_list_push_string(struct wb_list* list, char *buffer, int sz) {
 	struct write_buffer *wb = wb_list_pop(list);
+	if (wb == NULL) {
+		wb = wb_list_alloc_wb(list);
+	}
 	if (wb_bytes_free(wb) < 2) {
 		wb_list_push_wb(list, wb);
 		wb = wb_list_alloc_wb(list);
@@ -92,18 +100,19 @@ wb_list_push_string(struct wb_list* list, char *buffer, int sz) {
 	int ofs = WriteInt16(wb->buffer + wb->len, 0, sz);
 	wb->len += ofs;
 	int n = 0;
-	int realsz = (sz > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz);
+	int realsz = ((sz - n) > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz - n);
 	memcpy(wb->buffer + wb->len, buffer, realsz);
 	n += realsz;
-	wb->len = realsz;
+	wb->len += realsz;
+	wb_list_push_wb(list, wb);
 
 	while (n < sz) {
+		wb = wb_list_pop(list);
 		if (wb_bytes_free(wb) < (sz - n)) {
 			wb_list_push_wb(list, wb);
 			wb = wb_list_alloc_wb(list);
 		}
-		wb = wb_list_alloc_wb(list);
-		realsz = (sz > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz);
+		realsz = ((sz - n) > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz - n);
 		memcpy(wb->buffer + wb->len, buffer + n, realsz);
 		n += realsz;
 		wb->len += realsz;
@@ -131,7 +140,9 @@ wb_list_push_line(struct wb_list* list, char *buffer, int sz) {
 	if (wb->len < wb->cap) {
 		wb->buffer[wb->len] = '\n';
 		wb->len = wb->len + 1;
+		wb_list_push_wb(list, wb);
 	} else {
+		wb_list_push_wb(list, wb);
 		wb = wb_list_alloc_wb(list);
 		wb->buffer[0] = '\n';
 		wb->len = 1;

@@ -31,7 +31,6 @@ end
 function cls:login_data(line, ... )
 	-- body	
 	print("step", self._login_step)
-	print()
 	if self._login_step == 1 then
 		local challenge = crypt.base64decode(line)
 		local clientkey = crypt.randomkey()

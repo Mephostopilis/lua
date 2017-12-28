@@ -143,7 +143,9 @@ end
 
 function cls:gate_data(package, ... )
 	-- body
+	print("gate_data")
 	if self._gate_step == 1 then
+		print(package)
 		local code = tonumber(string.sub(package, 1, 3))
 		if code == 200 then
 			printInfo("gate auth ok.")
@@ -164,6 +166,7 @@ end
 function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
 	-- body
 	assert(ip and port and server and uid and subid and secret)
+	print("gate_auth", uid, subid, secret, server)
 	local g = self._network._g
 	self._gate_fd = ps.socket(g, ps.PROTOCOL_TCP, ps.HEADER_TYPE_PG, function (code, pg, ... )
 		-- body
