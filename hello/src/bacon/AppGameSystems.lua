@@ -14,6 +14,12 @@ end
 function cls:ctor( ... )
 	-- body
 	self.processors = Processors.new()
+	self.setappcontexts = {}
+	self.setcontexts = {}
+end
+
+function cls:Add(system, ... )
+	-- body
 end
 
 function cls:SetAppContext( ... )
