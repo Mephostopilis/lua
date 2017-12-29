@@ -154,15 +154,21 @@ dispatch_list(struct timer_node *current) {
 		message.source = 0;
 		message.session = event->session;
 		message.data = NULL;
-		message.sz = (size_t)PTYPE_RESPONSE << MESSAGE_TYPE_SHIFT;*/
+		message.sz = (size_t)PTYPE_RESPONSE << MESSAGE_TYPE_SHIFT;
 
-		//skynet_context_push(event->handle, &message);
+		skynet_context_push(event->handle, &message);*/
+
 		lua_State *L = (lua_State *)(event->handle);
 		lua_getglobal(L, "skynet_timer");
 		luaL_checktype(L, -1, LUA_TTABLE);
 		lua_rawgeti(L, -1, event->session);
 		luaL_checktype(L, -1, LUA_TFUNCTION);
-		lua_pcall(L, 0, 0, 0);
+		int err = lua_pcall(L, 0, 0, 0);
+		if (err != 0) {
+			size_t l;
+			const char *i = lua_tolstring(L, -1, &l);
+			printf(i);
+		}
 
 		struct timer_node * temp = current;
 		current = current->next;

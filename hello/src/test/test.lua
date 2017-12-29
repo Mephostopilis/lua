@@ -8,6 +8,7 @@ package.path = root .. "\\lualib\\entitas\\?.lua;" .. root .. "\\entitas\\?\\ini
 -- print("hello world.")
 
 require "main"
+require "test.queue_test"
 local NetworkMgr = require "maria.network.NetworkMgr"
 local User = require "maria.module.User"
 local timer = require "maria.timer"

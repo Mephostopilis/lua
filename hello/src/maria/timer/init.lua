@@ -21,6 +21,7 @@ local _M = {}
 function _M.init( ... )
 	-- body
 	if not timer.init then
+		timer.init = true
 		core.init()
 	end
 end

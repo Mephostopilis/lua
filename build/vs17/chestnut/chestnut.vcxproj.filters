@@ -4,6 +4,8 @@
     <ClCompile Include="..\..\..\lualib\chestnut\lua-queue.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-stack.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-array.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-vector.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-larray.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="snowflake">

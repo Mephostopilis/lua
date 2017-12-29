@@ -9,11 +9,8 @@
 #include <stdbool.h>
 #include <assert.h>
 
-
 static int
 linit(lua_State *L) {
-	lua_newtable(L);
-	lua_setglobal(L, "skynet_timer");
 	skynet_timer_init();
 	return 0;
 }
@@ -45,6 +42,11 @@ ltimeout(lua_State *L) {
 	lua_Integer session = luaL_checkinteger(L, 2);
 	luaL_checktype(L, 3, LUA_TFUNCTION);
 	lua_getglobal(L, "skynet_timer");
+	if (!lua_istable(L, -1)) {
+		lua_newtable(L);
+		lua_setglobal(L, "skynet_timer");
+		lua_getglobal(L, "skynet_timer");
+	}
 	luaL_checktype(L, -1, LUA_TTABLE);
 	lua_pushvalue(L, 3);
 	lua_rawseti(L, -2, session);
