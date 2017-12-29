@@ -74,7 +74,7 @@ function Entity:add(comp_type, ...)
 
     local new_comp = comp_type.new(...)
     self._components[comp_type] = new_comp
-    -- self[new_comp.__comp_name] = new_comp
+    self[comp_type.__comp_name] = new_comp
     self.on_component_added(self, new_comp)
 end
 
@@ -110,10 +110,12 @@ function Entity:_replace(comp_type, args)
     if not args then
         --print("_replace 0")
         self._components[comp_type] = nil
+        self[comp_type.__comp_name] = nil
         self.on_component_removed(self, previous_comp)
     else
         local new_comp = comp_type.new(table_unpack(args))
         self._components[comp_type] = new_comp
+        self[comp_type.__comp_name] = new_comp
         self.on_component_replaced(self, previous_comp, new_comp)
     end
 end

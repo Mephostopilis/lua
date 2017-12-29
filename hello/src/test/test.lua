@@ -8,13 +8,17 @@ package.path = root .. "\\lualib\\entitas\\?.lua;" .. root .. "\\entitas\\?\\ini
 -- print("hello world.")
 
 require "main"
-require "test.queue_test"
+-- require "test.queue_test"
+require "test.test_entity_system"
+
+return
+
 local NetworkMgr = require "maria.network.NetworkMgr"
 local User = require "maria.module.User"
 local timer = require "maria.timer"
 timer.init()
 
-require "test.test_entity_system"
+
 print("hello")
 
 -- local fd = io.open("proto/proto.c2s.sproto", "r+")

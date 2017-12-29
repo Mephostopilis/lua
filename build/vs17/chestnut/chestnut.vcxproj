@@ -146,9 +146,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\lualib\chestnut\lua-array.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-larray.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-math.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-queue.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-stack.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-vector.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\lualib\chestnut\math3d.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

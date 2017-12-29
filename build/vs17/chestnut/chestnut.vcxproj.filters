@@ -6,10 +6,14 @@
     <ClCompile Include="..\..\..\lualib\chestnut\lua-array.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-vector.c" />
     <ClCompile Include="..\..\..\lualib\chestnut\lua-larray.c" />
+    <ClCompile Include="..\..\..\lualib\chestnut\lua-math.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="snowflake">
       <UniqueIdentifier>{9c72e2e5-c6e4-44a7-a40d-6fe09c6a57e7}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\lualib\chestnut\math3d.h" />
   </ItemGroup>
 </Project>

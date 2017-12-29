@@ -1,38 +1,27 @@
 ﻿
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using DG.Tweening;
-using Entitas;
-using Maria;
-using Maria.Network;
-using Maria.Util;
-using Maria.Res;
-using Bacon.Service;
-using Bacon.Event;
-using Bacon.Game;
-using Bacon.Game.View;
-using Bacon.Model.GameUI;
-using Maria.Event;
+local cls = class("PlayerSystem")
 
-namespace Bacon.GameSystems {
-    //
-    // GetComponent must be in render
+function cls:ctor( ... )
+    -- body
+    self._appContext = nil
+    self._context = nil
+    self._gameSystems = nil
+end
 
-    public class PlayerSystem : ISystem, ISetContextSystem, IInitializeSystem {
 
-        protected GameContext _context;
-        protected AppContext _appContext;
-        protected AppGameSystems _gameSystems;
+function cls:SetContext(context, ... )
+    -- body
+    self._context = context
+end
+        
+function cls:SetAppContext(AppContext context) 
+    self. _appContext = context;
+end
 
-        public PlayerSystem(Contexts contexts) {
-            _context = contexts.game;
-        }
-
-        public void SetAppContext(AppContext context) {
-            _appContext = context;
-            _gameSystems = _appContext.GameSystems;
-        }
+function cls:SetAppGameSystem(system, ... )
+    -- body
+    self._gameSystems = system
+end
 
         public virtual void Initialize() {
             EventListenerCmd listener2 = new EventListenerCmd(MyEventCmd.EVENT_SETUP_HAND, OnSetupHand);
