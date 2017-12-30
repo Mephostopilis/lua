@@ -57,7 +57,7 @@ function _M.remove(L, node, ... )
 		end
 	else
 		local p = L.head
-		while p then
+		while p do
 			if p == node then
 				local prev = p.__prev__
 				prev.__next__ = p.__next__
@@ -115,9 +115,9 @@ function _M.foreach(L, func, ... )
 	local node = L.head
 	while node do
 		if func then
-			func(node.data)
+			func(node)
 		end
-		node = node.next
+		node = node.__next__
 	end
 end
 

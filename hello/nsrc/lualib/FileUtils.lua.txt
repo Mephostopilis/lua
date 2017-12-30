@@ -17,7 +17,12 @@ end
 function cls:getStringFromFile(path) 
 	if xlua then
 	else
-		return io.readfile(path)
+		local ok, err = pcall(io.readfile, path)
+		if ok then
+			return err
+		else 
+			print(err)
+		end
 	end
 end
 

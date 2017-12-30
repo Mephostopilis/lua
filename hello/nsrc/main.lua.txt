@@ -21,7 +21,7 @@ local app
 
 function main( ... )
 	-- body
-	local app = App.new()
+	app = App.new()
 end
 
 function Startup( ... )

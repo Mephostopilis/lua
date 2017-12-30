@@ -16,13 +16,22 @@ def printDir(rootdir):
 			if os.path.isfile(path):
 				npath = path.replace("src", "nsrc") + ".txt"
 				print(path)
-				rfd = open(path, "r", encoding="UTF-8")
-				c = rfd.read()
-				rfd.close()
-				wfd = open(npath, "w", encoding="UTF-8")
-				wfd.write(c)
-				wfd.flush()
-				wfd.close()
+				if sys.version_info[0] == 2 :
+					rfd = open(path, "r")
+					c = rfd.read()
+					rfd.close()	
+					wfd = open(npath, "w")
+					wfd.write(c)
+					wfd.flush()
+					wfd.close()	
+				else:
+					rfd = open(path, "r", encoding="UTF-8")
+					c = rfd.read()
+					rfd.close()	
+					wfd = open(npath, "w", encoding="UTF-8")
+					wfd.write(c)
+					wfd.flush()
+					wfd.close()
 			else:
 				printDir(path)
 		except Exception as e:
