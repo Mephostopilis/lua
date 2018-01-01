@@ -33,7 +33,7 @@
     <ProjectGuid>{6E779805-1E25-49E2-8E6A-779D2BDAA979}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ringbuf_test</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

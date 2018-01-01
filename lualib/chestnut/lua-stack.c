@@ -10,17 +10,18 @@
 
 static int
 lpush(lua_State *L) {
-	if (!lua_gettop(L) >= 2) {
-		luaL_error(L, "element of queue must not be nil.");
-	}
+	lua_settop(L, 2);
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_rawgeti(L, 1, 0);
 	lua_Integer top = luaL_checkinteger(L, -1);
 	if (lua_type(L, 2) == LUA_TNIL) {
+		luaL_error(L, "args #2 must not be nil.");
 		return 0;
 	}
 	lua_pushvalue(L, 2); // forbit more args.
 	lua_rawseti(L, 1, ++top);
+	lua_pushinteger(L, top);
+	lua_rawseti(L, 1, 0);
 	return 0;
 }
 
@@ -32,8 +33,7 @@ lpop(lua_State *L) {
 	if (top <= 0) {
 		return 0;
 	}
-	lua_rawgeti(L, 1, top);
-	top--;
+	lua_rawgeti(L, 1, top--);
 	lua_pushinteger(L, top);
 	lua_rawseti(L, 1, 0);
 	return 1;
