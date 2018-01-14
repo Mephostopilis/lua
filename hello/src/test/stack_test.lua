@@ -18,3 +18,17 @@ for i=1,5 do
 end
 
 print(#s)
+
+local m = {}
+
+m[1] = 1
+m[2] = 2
+m[3] = 3
+
+for i,v in ipairs(m) do
+	print(i,v)
+end
+
+for k,v in pairs(m) do
+	print(k,v)
+end

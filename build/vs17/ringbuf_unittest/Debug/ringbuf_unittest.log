@@ -1,0 +1,4 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets(387,5): warning MSB8028: 中间目录(Debug\)包含从另一个项目(ringbuf_test.vcxproj)共享的文件。   这会导致错误的清除和重新生成行为。
+  ringbuf_unittest.cc
+  ringbuf_unittest.vcxproj -> D:\github\lua\build\vs17\Debug\ringbuf_unittest.exe
+  ringbuf_unittest.vcxproj -> D:\github\lua\build\vs17\Debug\ringbuf_unittest.pdb (Partial PDB)
