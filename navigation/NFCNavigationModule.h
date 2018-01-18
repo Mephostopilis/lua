@@ -1,4 +1,4 @@
-// -------------------------------------------------------------------------
+﻿// -------------------------------------------------------------------------
 //    @FileName         :    NFCNavigationModule.h
 //    @Author           :    Bluesky
 //    @Date             :    2016-06-22
@@ -11,18 +11,11 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <array>
 #include "DetourNavMeshBuilder.h"
 #include "DetourNavMeshQuery.h"
 #include "DetourCommon.h"
 #include "DetourNavMesh.h"
-//#include "NFComm/NFCore/NFIObject.h"
-//#include "NFComm/NFPluginModule/NFGUID.h"
-//#include "NFComm/NFPluginModule/NFINavigationModule.h"
-//#include "NFComm/NFPluginModule/NFILogModule.h"
-//#include "NFComm/NFPluginModule/NFIClassModule.h"
-//#include "NFComm/NFPluginModule/NFIElementModule.h"
-//#include "NFComm/NFPluginModule/NFPlatform.h"
-//#include "NFComm/NFCore/NFVector3.hpp"
 
 /** 安全的释放一个指针内存 */
 #define SAFE_RELEASE(i)										\
@@ -86,19 +79,19 @@ public:
 		dtFreeNavMeshQuery(navmeshLayer.pNavmeshQuery);
 	};
 
-	int FindStraightPath(const NFVector3& start, const NFVector3& end, std::vector<NFVector3>& paths)
+	int FindStraightPath(const float* start, const float* end, std::vector<std::array<float, 3>> &paths)
 	{
 		dtNavMeshQuery* navmeshQuery = navmeshLayer.pNavmeshQuery;
 
 		float spos[3];
-		spos[0] = start.X();
-		spos[1] = start.Y();
-		spos[2] = start.Z();
+		spos[0] = start[0];
+		spos[1] = start[1];
+		spos[2] = start[2];
 
 		float epos[3];
-		epos[0] = end.X();
-		epos[1] = end.Y();
-		epos[2] = end.Z();
+		epos[0] = end[0];
+		epos[1] = end[0];
+		epos[2] = end[0];
 
 		dtQueryFilter filter;
 		filter.setIncludeFlags(0xffff);
@@ -141,12 +134,12 @@ public:
 
 			navmeshQuery->findStraightPath(startNearestPt, endNearestPt, polys, npolys, straightPath, straightPathFlags, straightPathPolys, &nstraightPath, MAX_POLYS);
 
-			NFVector3 currpos;
+			std::array<float, 3> currpos;
 			for (int i = 0; i < nstraightPath * 3; )
 			{
-				currpos.SetX(straightPath[i++]);
-				currpos.SetY(straightPath[i++]);
-				currpos.SetZ(straightPath[i++]);
+				currpos[0] = straightPath[i++];
+				currpos[1] = straightPath[i++];
+				currpos[2] = straightPath[i++];
 				paths.push_back(currpos);
 				pos++;
 			}
@@ -155,7 +148,7 @@ public:
 		return pos;
 	}
 
-	int FindRandomPointAroundCircle(const NFVector3& centerPos, std::vector<NFVector3>& points, NFINT32 max_points, float maxRadius)
+	int FindRandomPointAroundCircle(float* centerPos, std::vector<std::array<float, 3>>& points, int32_t max_points, float maxRadius)
 	{
 		dtNavMeshQuery* navmeshQuery = navmeshLayer.pNavmeshQuery;
 
@@ -165,7 +158,7 @@ public:
 
 		if (maxRadius <= 0.0001f)
 		{
-			NFVector3 currpos;
+			std::array<float, 3> currpos;
 
 			for (int i = 0; i < max_points; i++)
 			{
@@ -174,9 +167,9 @@ public:
 				dtStatus status = navmeshQuery->findRandomPoint(&filter, frand, &ref, pt);
 				if (dtStatusSucceed(status))
 				{
-					currpos.SetX(pt[0]);
-					currpos.SetY(pt[1]);
-					currpos.SetZ(pt[2]);
+					currpos[0] = pt[0];
+					currpos[1] = pt[1];
+					currpos[2] = pt[2];
 
 					points.push_back(currpos);
 				}
@@ -190,9 +183,9 @@ public:
 		dtPolyRef startRef = INVALID_NAVMESH_POLYREF;
 
 		float spos[3];
-		spos[0] = centerPos.X();
-		spos[1] = centerPos.Y();
-		spos[2] = centerPos.Z();
+		spos[0] = centerPos[0];
+		spos[1] = centerPos[1];
+		spos[2] = centerPos[2];
 
 		float startNearestPt[3];
 		navmeshQuery->findNearestPoly(spos, extents, &filter, &startRef, startNearestPt);
@@ -203,7 +196,7 @@ public:
 			return NAV_ERROR_NEARESTPOLY;
 		}
 
-		NFVector3 currpos;
+		std::array<float, 3> currpos;
 		bool done = false;
 		int itry = 0;
 
@@ -220,12 +213,13 @@ public:
 				if (dtStatusSucceed(status))
 				{
 					done = true;
-					currpos.SetX(pt[0]);
-					currpos.SetY(pt[1]);
-					currpos.SetZ(pt[2]);
+					currpos[0] = (pt[0]);
+					currpos[1] = (pt[1]);
+					currpos[2] = (pt[2]);
 
-					NFVector3 v = centerPos - currpos;
-					float dist_len = v.Length();
+					float v[3];
+					dtVsub(centerPos, currpos.data(), v);
+					float dist_len = dtVlen(v);
 					if (dist_len > maxRadius)
 						continue;
 
@@ -240,21 +234,21 @@ public:
 		return (int)points.size();
 	}
 
-	int Raycast(const NFVector3& start, const NFVector3& end, std::vector<NFVector3>& hitPointVec)
+	int Raycast(const float* start, const float* end, std::vector<std::array<float, 3>>& hitPointVec)
 	{
 		dtNavMeshQuery* navmeshQuery = navmeshLayer.pNavmeshQuery;
 
-		float hitPoint[3];
+		std::array<float, 3> hitPoint;
 
 		float spos[3];
-		spos[0] = start.X();
-		spos[1] = start.Y();
-		spos[2] = start.Z();
+		spos[0] = start[0];
+		spos[1] = start[1];
+		spos[2] = start[2];
 
 		float epos[3];
-		epos[0] = end.X();
-		epos[1] = end.Y();
-		epos[2] = end.Z();
+		epos[0] = end[0];
+		epos[1] = end[1];
+		epos[2] = end[2];
 
 		dtQueryFilter filter;
 		filter.setIncludeFlags(0xffff);
@@ -295,16 +289,16 @@ public:
 			if (npolys)
 			{
 				float h = 0;
-				navmeshQuery->getPolyHeight(polys[npolys - 1], hitPoint, &h);
+				navmeshQuery->getPolyHeight(polys[npolys - 1], hitPoint.data(), &h);
 				hitPoint[1] = h;
 			}
 		}
 
-		hitPointVec.push_back(NFVector3(hitPoint[0], hitPoint[1], hitPoint[2]));
+		hitPointVec.push_back(hitPoint);
 		return 1;
 	}
 
-	static NF_SHARE_PTR<NFCNavigationHandle> Create(std::string resPath)
+	static NFCNavigationHandle* Create(std::string resPath)
 	{
 		FILE* fp = fopen(resPath.c_str(), "rb");
 		if (!fp)
@@ -435,7 +429,7 @@ public:
 			return NULL;
 		}
 
-		NF_SHARE_PTR<NFCNavigationHandle> pNavMeshHandle = NF_SHARE_PTR<NFCNavigationHandle>(NF_NEW NFCNavigationHandle());
+		NFCNavigationHandle* pNavMeshHandle = new NFCNavigationHandle();
 		dtNavMeshQuery* pMavmeshQuery = new dtNavMeshQuery();
 
 		pMavmeshQuery->init(mesh, 1024);
@@ -480,47 +474,6 @@ public:
 
 	NavmeshLayer navmeshLayer;
 	std::string resPath;
-};
-
-class NFCNavigationModule : public NFINavigationModule
-{
-public:
-	NFCNavigationModule(NFIPluginManager* p)
-    {
-        pPluginManager = p;
-    }
-
-
-    virtual ~NFCNavigationModule()
-    {
-    }
-
-	virtual bool Init();
-	virtual bool AfterInit();
-	virtual bool BeforeShut();
-	virtual bool Shut();
-	virtual bool Execute();
-
-	NF_SHARE_PTR<NFCNavigationHandle> LoadNavigation(NFINT64 scendId, std::string resPath);
-
-	NF_SHARE_PTR<NFCNavigationHandle> FindNavigation(NFINT64 scendId);
-
-	virtual bool ExistNavigation(NFINT64 scendId);
-
-	virtual bool RemoveNavigation(NFINT64 scendId);
-
-	virtual int FindPath(NFINT64 scendId, const NFVector3& start, const NFVector3& end, std::vector<NFVector3>& paths);
-
-	virtual int FindRandomPointAroundCircle(NFINT64 scendId, const NFVector3& centerPos, std::vector<NFVector3>& points, NFINT32 max_points, float maxRadius);
-
-	virtual int Raycast(NFINT64 scendId, const NFVector3& start, const NFVector3& end, std::vector<NFVector3>& hitPointVec);
-
-private:
-	NFILogModule* m_pLogModule;
-	NFIClassModule* m_pClassModule;
-	NFIElementModule* m_pElementModule;
-
-	std::unordered_map<NFINT64, NF_SHARE_PTR<NFCNavigationHandle>> m_Navhandles;
 };
 
 #endif
