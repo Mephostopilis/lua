@@ -32,41 +32,8 @@
 *.dSYM/
 
 # folder
-/build/vs17/.vs
-/build/vs17/Debug
-/build/vs17/x64
-/build/vs17/objs
-
-
-/src/vs15/ipch
-/src/vs15/Debug
-/src/vs15/Release
-/src/vs15/x64
-/src/vs15/lua/Debug
-/src/vs15/lua/Release
-/src/vs15/lua/x64
-/src/vs15/luac/Debug
-/src/vs15/luac/Release
-/src/vs15/luac/x64
-/src/vs15/llua/Debug
-/src/vs15/llua/Release
-/src/vs15/llua/x64
-
-/src/vs15/sharedata/x64
-/src/vs15/xlua/x64
-/src/vs15/config/x64
-/src/vs15/queue/x64
-/src/vs15/shttpsc/x64
-/src/vs15/testlua/Debug
-/src/vs15/testlua/x64
-
-/src/vs13/Debug
-/src/vs13/ipch
-/src/vs13/x64
-/src/vs13/lua13/Debug
-/src/vs13/lua13/x64
-/src/vs13/luac13/Debug
-/src/vs13/luac13/x64
+/bin
+/build
 
 *.suo
 *.sdf
