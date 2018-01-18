@@ -37,4 +37,8 @@
 
 *.suo
 *.sdf
+!googletest/Debug/gtestd.lib
+!googletest/Debug/gtestd.dll
+!googletest/Debug/gtest_maind.lib
+!googletest/Debug/gtest_maind.dll
 
