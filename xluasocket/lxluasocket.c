@@ -38,6 +38,8 @@
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
 
+#define MAX_SOCKET_NUM (1028)
+
 static void
 init_lib(lua_State *L) {
 #if defined(_WIN32)
@@ -71,13 +73,14 @@ typedef struct lua_socket {
 } lua_socket;
 
 typedef struct lua_gate {
+	int                 count;
 	fd_set              rfds;
 	fd_set              wfds;
-	int                 id;
 	struct lua_socket  *head;
 	struct lua_socket  *error;
 	struct lua_socket  *disconn;
 	struct lua_socket  *freelist;
+	struct lua_socket   socks[0];
 } lua_gate;
 
 static struct lua_socket *
@@ -99,7 +102,8 @@ static struct lua_socket *
 gate_add(struct lua_gate *g, struct lua_socket *so) {
 	if (g->head == NULL) {
 		g->head = so;
-	} else {
+	}
+	else {
 		struct lua_socket *ptr = g->head;
 		while (ptr->next) {
 			ptr = ptr->next;
@@ -117,9 +121,11 @@ gate_del(struct lua_gate *g, struct lua_socket *so) {
 	}
 	if (g->head == NULL) {
 		return NULL;
-	} else if (g->head == so) {
+	}
+	else if (g->head == so) {
 		g->head = g->head->next;
-	} else {
+	}
+	else {
 		struct lua_socket *ptr = g->head;
 		while (ptr->next) {
 			if (ptr->next == so) {
@@ -213,41 +219,22 @@ close_sock(lua_State *L, struct lua_gate *g, struct lua_socket *so) {
 
 static int
 lnew(lua_State *L) {
-	init_lib(L);
-	struct lua_gate *g = (struct lua_gate *)MALLOC(sizeof(*g));
-	memset(g, 0, sizeof(*g));
-	g->head = NULL;
-	g->freelist = NULL;
-	lua_pushlightuserdata(L, g);
-	return 1;
-}
+	luaL_checktype(L, 1, LUA_TFUNCTION);
 
-static int
-lsocket(lua_State *L) {
-	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-	g->id++;
-	struct lua_socket *so = NULL;
-	if (g->freelist != NULL) {
-		so = g->freelist;
-		g->freelist = g->freelist->next;
-	} else {
-		so = (struct lua_socket*)MALLOC(sizeof(*so));
-		so->wl = wb_list_new(WRITE_BUFFER_SIZE);
-		so->rb = ringbuf_new(RINGBUF_SIZE);
+	init_lib(L);
+	struct lua_gate *g = (struct lua_gate *)lua_newuserdata(L, sizeof(*g) + MAX_SOCKET_NUM * sizeof(struct lua_socket));
+	memset(g, 0, sizeof(*g) + MAX_SOCKET_NUM * sizeof(struct lua_socket));
+	g->head = NULL;
+	g->freelist = &g->socks[MAX_SOCKET_NUM - 1];
+	for (size_t i = 1; i < MAX_SOCKET_NUM; i++)
+	{
+		g->socks[i].id = i;
+		g->socks[i].wl = wb_list_new(WRITE_BUFFER_SIZE);
+		g->socks[i].rb = ringbuf_new(RINGBUF_SIZE);
 	}
-	so->next = NULL;
-	so->extra = NULL;
-	so->id = g->id;
-	so->type = SOCKET_TYPE_RESERVE;
-	so->protocol = luaL_checkinteger(L, 2);
-	so->header = luaL_checkinteger(L, 3);
-	if (so->protocol == PROTOCOL_TCP) {
-		so->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	} else if (so->protocol == PROTOCOL_UDP) {
-		so->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	} else if (so->protocol == PROTOCOL_UDPv6) {
-		so->fd = socket(AF_INET6, SOCK_DGRAM, 0);
-	}
+
+	lua_upvalueindex(L, 1);
+	luaL
 
 	lua_getglobal(L, "xluasocket");
 	if (!lua_istable(L, -1)) {
@@ -255,15 +242,83 @@ lsocket(lua_State *L) {
 		lua_setglobal(L, "xluasocket");
 		lua_getglobal(L, "xluasocket");
 	}
+	lua_pushvalue(L, 1);
+	lua_rawsetp(L, -2, g);
 
-	luaL_checktype(L, 4, LUA_TFUNCTION);
-	lua_pushvalue(L, 4);
-	lua_rawsetp(L, -2, so);
+	return 1;
+}
 
-	gate_add(g, so);
+
+static int
+lsocket(lua_State *L) {
+	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
+	if (g->count >= (MAX_SOCKET_NUM - 1)) {
+		lua_pushinteger(L, SOCKET_ERROR);
+		return 1;
+	}
+	struct lua_socket *so = g->freelist;
+	if (++g->count >= (MAX_SOCKET_NUM - 1)) {
+		g->freelist = g->socks[0];
+	}
+	else {
+		for (size_t i = (so->id - 1); i != so->id; )
+		{
+			if (g->socks[i].type == SOCKET_TYPE_INVALID)
+			{
+				g->freelist = g->socks[i];
+				break;
+			}
+			--i;
+			i = (i < 1) ? (MAX_SOCKET_NUM - 1) : i;
+		}
+	}
+
+	so->next = NULL;
+	so->extra = NULL;
+	so->type = SOCKET_TYPE_RESERVE;
+	so->protocol = luaL_checkinteger(L, 2);
+	so->header = luaL_checkinteger(L, 3);
+	if (so->protocol == PROTOCOL_TCP) {
+		so->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	}
+	else if (so->protocol == PROTOCOL_UDP) {
+		so->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	}
+	else if (so->protocol == PROTOCOL_UDPv6) {
+		so->fd = socket(AF_INET6, SOCK_DGRAM, 0);
+	}
+
 	lua_pushinteger(L, so->id);
 	return 1;
 }
+
+static int
+llisten(lua_state *L) {
+	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
+	lua_Integer id = luaL_checkinteger(L, 2);
+	lua_socket *so = g->socks[id];
+	size_t sz;
+	const char *addr = luaL_checklstring(L, 3, &sz);
+	uint16_t port = luaL_checkinteger(L, 4);
+	struct sockaddr_in *local = (struct sockaddr_in *)&so->local;
+	local->sin_family = AF_INET;
+	local->sin_port = htons(port);
+	inet_pton(AF_INET, addr, &local->sin_addr);
+	bind(so->fd, (const struct sockaddr*)local, sizeof(*local));
+	so->type = SOCKET_TYPE_PLISTEN;
+	listen(so->fd, 0);
+	return 0;
+}
+
+static int
+lstart(lua_State *L) {
+	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
+	lua_Integer id = luaL_checkinteger(L, 2);
+	gate_add(g, g->socks[id]);
+	lua_pushinteger(L, SOCKET_OPEN);
+	return 1;
+}
+
 
 /*
  * @return 0 success
@@ -299,16 +354,19 @@ lconnect(lua_State *L) {
 #endif
 			gate_del(g, so);
 			return 2;
-		} else {
+		}
+		else {
 			so->type = SOCKET_TYPE_CONNECTED;
 			lua_pushinteger(L, 0);
 			return 1;
 		}
-	} else if (so->protocol == PROTOCOL_UDP) {
+	}
+	else if (so->protocol == PROTOCOL_UDP) {
 		so->type = SOCKET_TYPE_CONNECTED;
 		lua_pushinteger(L, 0);
 		return 1;
-	} else if (so->protocol == PROTOCOL_UDPv6) {
+	}
+	else if (so->protocol == PROTOCOL_UDPv6) {
 		so->type = SOCKET_TYPE_CONNECTED;
 		lua_pushinteger(L, 0);
 		return 1;
@@ -348,9 +406,11 @@ lsend(lua_State *L) {
 	assert(so->protocol == PROTOCOL_TCP);
 	if (so->header == HEADER_TYPE_LINE) {
 		wb_list_push_line(so->wl, buffer, sz);
-	} else if (so->header == HEADER_TYPE_PG) {
+	}
+	else if (so->header == HEADER_TYPE_PG) {
 		wb_list_push_string(so->wl, buffer, sz);
-	} else {
+	}
+	else {
 		luaL_error(L, "header is wrong.");
 	}
 	lua_pushinteger(L, sz);
@@ -384,7 +444,8 @@ lpoll(lua_State *L) {
 			FD_SET(ptr->fd, &g->rfds);
 			FD_SET(ptr->fd, &g->wfds);
 			ptr = ptr->next;
-		} else {
+		}
+		else {
 			ptr = ptr->next;
 		}
 	}
@@ -412,7 +473,8 @@ lpoll(lua_State *L) {
 					int e = WSAGetLastError();
 					if (e == WSAEINTR || e == WSAEINPROGRESS) {
 						break;
-					} else {
+					}
+					else {
 						gate_add_error(g, ptr);
 						on_error(L, g, ptr, e);
 						break;
@@ -420,13 +482,15 @@ lpoll(lua_State *L) {
 #else
 					if (errno == EINTR) {
 						break;
-					} else {
+					}
+					else {
 						gate_add_error(g, ptr);
 						on_error(L, g, ptr, e);
 						break;
 					}
 #endif
-				} else if (n == 0) {
+				}
+				else if (n == 0) {
 					gate_add_disconn(g, ptr);
 					on_disconnected(L, g, ptr);
 					break;
@@ -438,42 +502,52 @@ lpoll(lua_State *L) {
 			}
 		}
 		if (FD_ISSET(ptr->fd, &g->rfds)) {
-			if (ptr->protocol == PROTOCOL_TCP) {
-				int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
-				if (res == -1) {
-#if defined(_WIN32)
-					int e = WSAGetLastError();
-					if (e == WSAEINTR || e == WSAEINPROGRESS) {
-#else
-					if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-#endif
-						// 当前so不处理
-						break;
-					} else {
-						gate_add_error(g, ptr);
-						on_error(L, g, ptr, res);
-						break;
-					}
-				} else if (res == 0) {
-					gate_add_disconn(g, ptr);
-					break;
-				}
+			if (ptr->type == SOCKET_TYPE_LISTEN)
+			{
 
-				if (ptr->header == HEADER_TYPE_PG) {
-					int size = 0;
-					uint8_t *buf = NULL;
-					while (ringbuf_read_string(ptr->rb, &buf, &size) == 0) {
-						on_data(L, g, ptr, buf, size);
+			} else if (ptr->type == SOCKET_TYPE_CONNECTED) {
+				if (ptr->protocol == PROTOCOL_TCP) {
+					int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
+					if (res == -1) {
+#if defined(_WIN32)
+						int e = WSAGetLastError();
+						if (e == WSAEINTR || e == WSAEINPROGRESS) {
+#else
+						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
+#endif
+							// 当前so不处理
+							break;
+						}
+						else {
+							gate_add_error(g, ptr);
+							on_error(L, g, ptr, res);
+							break;
+						}
 					}
-				} else {
-					int size = 0;
-					uint8_t *buf = NULL;
-					while (ringbuf_read_line(ptr->rb, &buf, &size) == 0) {
-						on_data(L, g, ptr, buf, size);
+					else if (res == 0) {
+						gate_add_disconn(g, ptr);
+						break;
+					}
+
+					if (ptr->header == HEADER_TYPE_PG) {
+						int size = 0;
+						uint8_t *buf = NULL;
+						while (ringbuf_read_string(ptr->rb, &buf, &size) == 0) {
+							on_data(L, g, ptr, buf, size);
+						}
+					}
+					else {
+						int size = 0;
+						uint8_t *buf = NULL;
+						while (ringbuf_read_line(ptr->rb, &buf, &size) == 0) {
+							on_data(L, g, ptr, buf, size);
+						}
 					}
 				}
-			} else if (ptr->protocol == PROTOCOL_UDP) {
-			} else if (ptr->protocol == PROTOCOL_UDPv6) {
+				else if (ptr->protocol == PROTOCOL_UDP) {
+				}
+				else if (ptr->protocol == PROTOCOL_UDPv6) {
+				}
 			}
 		}
 		ptr = ptr->next;
@@ -529,7 +603,9 @@ luaopen_xluasocket(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "new", lnew },
 		{ "socket", lsocket },
+		{ "listen", llisten },
 		{ "connect", lconnect },
+		{ "start", lstart },
 		{ "send", lsend },
 		{ "sendto", lsendto },
 		{ "poll", lpoll },
@@ -587,4 +663,4 @@ luaopen_xluasocket(lua_State *L) {
 	lua_pushinteger(L, PROTOCOL_UDPv6);
 	lua_rawset(L, -3);
 	return 1;
-}
+	}

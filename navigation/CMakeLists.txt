@@ -1,9 +1,6 @@
-file(GLOB navigation_ROOT_Cpp
-	*.cpp)
-file(GLOB navigation_ROOT_Hpp
-	*.hpp)
-file(GLOB navigation_ROOT_H
-	*.h)
+file(GLOB navigation_ROOT_Cpp *.cpp)
+file(GLOB navigation_ROOT_Hpp *.hpp)
+file(GLOB navigation_ROOT_H *.h)
 
 include_directories(../src)
 add_library(navigation ${navigation_ROOT_Cpp} ${navigation_ROOT_H} ${navigation_ROOT_Hpp})
