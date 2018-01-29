@@ -34,6 +34,8 @@
 # folder
 /bin
 /build
+/build32
+/build64
 
 *.suo
 *.sdf

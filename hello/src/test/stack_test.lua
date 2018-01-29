@@ -1,34 +1,34 @@
+local lu = require "luaunit"
+
 local stack = require "chestnut.stack"
 
-local s = stack()
+TestStack = {}
 
-
-for i=1,10 do
-	s:push(i)
+function TestStack:setUp( ... )
+	-- body
+	self.s = stack()
 end
 
-print(#s)
-
-for i=1,100 do
-	print(s:pop())
+function TestStack:test_push( ... )
+	-- body
+	for i=1,10 do
+		self.s:push(i)
+	end
+	lu.assertEquals(#self.s, 10)
 end
 
-for i=1,5 do
-	s:push(i)
+function TestStack:test_pop( ... )
+	-- body
+	for i=1,10 do
+		self.s:pop()
+	end
+	lu.assertEquals(#self.s, 0)
+	for i=1,100 do
+		self.s:pop()
+	end
+	lu.assertEquals(#self.s, 0)
 end
 
-print(#s)
-
-local m = {}
-
-m[1] = 1
-m[2] = 2
-m[3] = 3
-
-for i,v in ipairs(m) do
-	print(i,v)
-end
-
-for k,v in pairs(m) do
-	print(k,v)
-end
+local runner = lu.LuaUnit.new()
+runner:setOutputType("tap")
+runner:runSuite()

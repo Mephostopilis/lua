@@ -3,19 +3,19 @@ file(GLOB navigation_ROOT_Hpp *.hpp)
 file(GLOB navigation_ROOT_H *.h)
 
 include_directories(../src)
-add_library(navigation ${navigation_ROOT_Cpp} ${navigation_ROOT_H} ${navigation_ROOT_Hpp})
+add_library(navigation SHARED ${navigation_ROOT_Cpp} ${navigation_ROOT_H} ${navigation_ROOT_Hpp})
 add_definitions(-DNF_NONCLIENT_BUILD -D_CRT_SECURE_NO_WARNINGS)
-set_target_properties( navigation PROPERTIES OUTPUT_NAME_DEBUG "navigation_d")
+add_definitions(-DLUA_BUILD_AS_DLL)
+#set_target_properties( navigation PROPERTIES OUTPUT_NAME_DEBUG "navigation_d")
 
 if( WIN32 )
     set_target_properties( navigation PROPERTIES PREFIX "")
 endif()
 
-#set_target_properties( navigation PROPERTIES 
-#	FOLDER "NFDeps"
-#	ARCHIVE_OUTPUT_DIRECTORY ${NFOutPutDir}
-#	RUNTIME_OUTPUT_DIRECTORY ${NFOutPutDir}
-#	LIBRARY_OUTPUT_DIRECTORY ${NFOutPutDir} )
+set_target_properties( navigation PROPERTIES
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../bin)
 	
 if(UNIX)
 	if (CMAKE_BUILD_TYPE MATCHES "Release")
@@ -24,6 +24,6 @@ if(UNIX)
 		target_link_libraries(navigation )
 	endif()
 else()
-	target_link_libraries(navigation )
+	target_link_libraries(navigation ../../bin/liblua)
 endif()
 

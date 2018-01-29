@@ -233,8 +233,8 @@ lnew(lua_State *L) {
 		g->socks[i].rb = ringbuf_new(RINGBUF_SIZE);
 	}
 
-	lua_upvalueindex(L, 1);
-	luaL
+	lua_pushvalue(L, lua_upvalueindex(1));
+	lua_setmetatable(L, -2);
 
 	lua_getglobal(L, "xluasocket");
 	if (!lua_istable(L, -1)) {
@@ -258,14 +258,14 @@ lsocket(lua_State *L) {
 	}
 	struct lua_socket *so = g->freelist;
 	if (++g->count >= (MAX_SOCKET_NUM - 1)) {
-		g->freelist = g->socks[0];
+		g->freelist = &g->socks[0];
 	}
 	else {
 		for (size_t i = (so->id - 1); i != so->id; )
 		{
 			if (g->socks[i].type == SOCKET_TYPE_INVALID)
 			{
-				g->freelist = g->socks[i];
+				g->freelist = &g->socks[i];
 				break;
 			}
 			--i;
@@ -293,10 +293,14 @@ lsocket(lua_State *L) {
 }
 
 static int
-llisten(lua_state *L) {
+llisten(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
 	lua_Integer id = luaL_checkinteger(L, 2);
-	lua_socket *so = g->socks[id];
+	lua_socket *so = &g->socks[id];
+	if (so->type != SOCKET_TYPE_RESERVE)
+	{
+		return 0;
+	}
 	size_t sz;
 	const char *addr = luaL_checklstring(L, 3, &sz);
 	uint16_t port = luaL_checkinteger(L, 4);
@@ -309,16 +313,6 @@ llisten(lua_state *L) {
 	listen(so->fd, 0);
 	return 0;
 }
-
-static int
-lstart(lua_State *L) {
-	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-	lua_Integer id = luaL_checkinteger(L, 2);
-	gate_add(g, g->socks[id]);
-	lua_pushinteger(L, SOCKET_OPEN);
-	return 1;
-}
-
 
 /*
  * @return 0 success
@@ -372,6 +366,15 @@ lconnect(lua_State *L) {
 		return 1;
 	}
 	return 0;
+}
+
+static int
+lstart(lua_State *L) {
+	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
+	lua_Integer id = luaL_checkinteger(L, 2);
+	gate_add(g, &g->socks[id]);
+	lua_pushinteger(L, SOCKET_OPEN);
+	return 1;
 }
 
 /*

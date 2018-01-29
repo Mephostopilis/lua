@@ -3,7 +3,7 @@
 #include "lua.hpp"
 #include "NFCNavigationModule.h"
 
-struct navigatoin {
+struct pathfinding {
 	NFCNavigationHandle *handle;
 };
 
@@ -11,17 +11,17 @@ static int
 lalloc(lua_State *L) {
 	size_t l;
 	const char *respath = luaL_checklstring(L, 1, &l);
-	struct navigatoin *nav = (struct navigatoin *)lua_newuserdata(L, sizeof(struct navigation));
+	struct pathfinding *nav = (struct pathfinding *)lua_newuserdata(L, sizeof(struct pathfinding));
 	nav->handle = NFCNavigationHandle::Create(respath);
 
 	lua_pushvalue(L, lua_upvalueindex(1));
-	luaL_setmetatable(L, "navigation");
+	lua_setmetatable(L, -1);
 	return 1;
 }
 
 static int 
 lFindStraightPath(lua_State *L) {
-	struct navigatoin *n = (struct navigatoin *)lua_touserdata(L, 1);
+	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 2);
 	lua_Number start_y = luaL_checknumber(L, 3);
 	lua_Number start_z = luaL_checknumber(L, 4);
@@ -40,18 +40,18 @@ lFindStraightPath(lua_State *L) {
 	end[2] = end_z;
 
 	std::vector<std::array<float, 3>> paths;
-	int pos = n->handle->FindStraightPath(start, end, paths);
+	int pos = nav->handle->FindStraightPath(start, end, paths);
 	if (pos > 0)
 	{
 		lua_pushinteger(L, pos);
-
+		return 1;
 	}
 	return 0;
 }
 
 static int
-lFindRandomPointAroundCircle(lua_State *L, const float* centerPos, std::vector<float[3]>& points, int32_t max_points, float maxRadius) {
-	struct navigatoin *n = (struct navigatoin *)luaL_checkudata(L, 0, "");
+lFindRandomPointAroundCircle(lua_State *L/*, const float* centerPos, std::vector<float[3]>& points, int32_t max_points, float maxRadius*/) {
+	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 1);
 	lua_Number start_y = luaL_checknumber(L, 2);
 	lua_Number start_z = luaL_checknumber(L, 3);
@@ -60,7 +60,7 @@ lFindRandomPointAroundCircle(lua_State *L, const float* centerPos, std::vector<f
 
 static int 
 lRaycast(lua_State *L) {
-	struct navigatoin *n = (struct navigatoin *)lua_touserdata(L, 1);
+	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 2);
 	lua_Number start_y = luaL_checknumber(L, 3);
 	lua_Number start_z = luaL_checknumber(L, 4);
@@ -79,7 +79,7 @@ lRaycast(lua_State *L) {
 	end[2] = end_z;
 
 	std::vector<std::array<float, 3>> hitPointVec;
-	int res = n->handle->Raycast(start, end, &hitPointVec);
+	int res = nav->handle->Raycast(start, end, hitPointVec);
 	lua_pushinteger(L, res);
 	lua_newtable(L);
 	for (size_t i = 0; i < hitPointVec.size(); i++)
