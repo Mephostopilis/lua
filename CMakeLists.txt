@@ -4,3 +4,5 @@ add_subdirectory(src)
 add_subdirectory(chestnut)
 add_subdirectory(xluasocket)
 add_subdirectory(navigation)
+add_subdirectory(plist)
+
