@@ -1,70 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using Entitas;
-using Maria;
-using Bacon.Game;
-using Bacon.Model.Room;
-using Maria.Controller;
+﻿local log = require "log"
+local UIContextManager = require "maria.uibase.UIContextManager"
+local SceneComponent = require "bacon.components.SceneComponent"
+local log = require "log"
 
-namespace Bacon.GameSystems {
-    public class SceneSystem : ISystem, ISetContextSystem, IInitializeSystem, ISceneController {
-        private GameContext _context;
-        private AppContext _appContext;
-        private AppGameSystems _gameSystems;
+local cls = class("SceneSystem")
 
-        public SceneSystem(Contexts contexts) {
-            _context = contexts.game;
-        }
+function cls:ctor( ... )
+    -- body
+    self._context = nil
+    self._appContext = nil
+    self._gameSystems = nil
+end
 
-        public void SetAppContext(AppContext context) {
-            _appContext = context;
-            _gameSystems = _appContext.GameSystems;
-        }
+function cls:SetAppContext(context) 
+    self._appContext = context
+    self._gameSystems = context.gameSystems
+end
 
-        public void Initialize() {
-            Director.Instance.ControllerMgr.RegController(this);
-        }
+function cls:SetContext(context, ... )
+    -- body
+    self._context = context 
+end
 
-        public void OnControllerEnter(Controller controller) {
-        }
 
-        public void OnControllerEnterLoadDidFinish(Controller controller) {
-            if (controller.Name == "game") {
-            }
-        }
+function cls:OnEnter(context, ... )
+	-- body
+	local scene = context:get_unique_component(SceneComponent)
+	if scene.name == "login" then
+        self._gameSystems.loginSystem:OnEnter(context)
+	end
+end
 
-        public void OnControllerExitUnloadDidStart(Controller controller) {
-        }
 
-        public void OnControllerExit(Controller controller) {
-        }
+function cls:Initialize()         
+end
 
-        public void OnControllerPause(Controller controller) {
-        }
-
-        public void OnControllerPauseUnloadDidStart(Controller controller) {
-        }
-
-        public void OnControllerResumeLoadDidFinish(Controller controller) {
-        }
-
-        public void OnControllerResume(Controller controller) {
-        }
-
-        public void OnControllerEnterSetupUI(Controller controller) {
-            if (controller.Name == GameController.Name) {
-                _appContext.EnqueueRenderQueue(_gameSystems.CardValueIndexSystem.RenderLoadMahjong);
-                _gameSystems.NetIdxSystem.ShowHeadFirst();
-                _gameSystems.NetIdxSystem.LoadHand();
-                _gameSystems.NetIdxSystem.Ready();
-
-                RoomModule roomModule = _appContext.U.GetModule<RoomModule>();
-                _appContext.GameSystems.DeskSystem.SetRoomId(roomModule.RoomId);
-            }
-        }
-    }
-}
+return cls

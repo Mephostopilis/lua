@@ -1,50 +1,63 @@
-﻿using Entitas;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿local IndexComponent = require "bacon.components.IndexComponent"
+local Matcher = require "entitas.Matcher"
+local PrimaryEntityIndex = require "entitas.PrimaryEntityIndex"
+local log = require "log"
+local cls = class("IndexSystem")
 
-namespace Bacon.GameSystems {
-    public class IndexSystem : Entitas.ISystem {
-        private static int index = 0;   // index 从1开始，0作为不存在
+function cls:ctor( ... )
+    -- body
+    self._appContext = nil
+    self._context = nil
+    self._gameSystems = nil
+    self._index = 0
+end
 
-        private Dictionary<int, Entitas.IEntity> entitas = new Dictionary<int, IEntity>();
+function cls:SetAppContext(context, ... )
+    -- body
+    self._appContext = context
+    self._gameSystems = context.gameSystems
+end
 
-        private GameContext context;
+function cls:SetContext(context, ... )
+    -- body
+    self._context = context
+    local indexGroup = context:get_group(Matcher({IndexComponent}))
+    
+    -- indexGroup.on_entity_added:add(function ( ... )
+    --     self._gameSystems.indexSystem:OnEntityAdded( ... )
+    --     -- body
+    -- end)
+    local indexPrimaryIndex = PrimaryEntityIndex.new(IndexComponent, indexGroup, 'index')
+    context:add_entity_index(indexPrimaryIndex)
+    log.info("IndexSystem SetContext")
+end
 
-        public IndexSystem(Contexts contexts) {
-            context = contexts.game;
-            context.OnEntityCreated += OnEntityCreated;
-            context.OnEntityDestroyed += OnEntityDestroyed;
-            context.OnEntityWillBeDestroyed += OnEntityWillBeDestroyed;
-        }
+function cls:NextIndex( ... )
+    -- body
+    self._index = self._index + 1
+    return self._index
+end
 
-        public GameEntity FindEntity(int index) {
-            if (entitas.ContainsKey(index)) {
-                return entitas[index] as GameEntity;
-            }
-            return null;
-        }
+-- @breif
+-- @param index : integer
+--
+function cls:FindEntity(index, ... )
+    -- body
+    local indexPrimaryIndex = self._context:get_entity_index(IndexComponent)
+    return indexPrimaryIndex:get_entity(index)
+end
 
-        private void OnEntityWillBeDestroyed(IContext context, IEntity entity) {
-            // 其他系统都在这里处理
-        }
+function cls:OnEntityAdded(entity, ... )
+    -- body
+end
 
-        private void OnEntityCreated(IContext context, IEntity entity) {
-#if (!GEN_COMPONENT)
-            index++;
-            var gameEntity = entity as GameEntity;
-            gameEntity.AddIndex(index);
-            entitas.Add(index, gameEntity);
-#endif
-        }
+function cls:OnEntityRemoved(entity, Entity, ... )
+    -- body
+end
 
-        private void OnEntityDestroyed(IContext context, IEntity entity) {
-#if (!GEN_COMPONENT)
-            var gameEntity = entity as GameEntity;
-            int index = gameEntity.index.index;
-            entitas.Remove(index);
-#endif
-        }
-    }
-}
+function cls:OnEntityReplaced(entity, Entity, ... )
+    -- body
+end
+
+
+return cls

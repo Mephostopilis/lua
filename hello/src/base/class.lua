@@ -62,7 +62,10 @@ function cc.class(classname, super)
     cls.new = function ( ... )
         -- body
         local instance = {}
-        setmetatable(instance, {__index = cls})
+        setmetatable(instance, {__index = cls, __tostring = function (instance, ... )
+            -- body
+            return string.format("instance of class %s", instance.__cname)
+        end})
         instance.class = cls
         instance:ctor(...)
         return instance
@@ -73,7 +76,7 @@ function cc.class(classname, super)
     if superType == "table" then
         assert(type(super.__cname) == "string", string_format("cc.class() - create class \"%s\" used super class isn't declared by cc.class()", classname))
         cls.super = super
-        setmetatable(cls, {__index = cls.super})
+        setmetatable(cls, {__index = cls.super })
     elseif superType ~= "nil" then
         error(string_format("cc.class() - create class \"%s\" with invalid super type \"%s\"", classname, superType))
     end

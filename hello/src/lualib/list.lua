@@ -1,16 +1,6 @@
 local assert = assert
 local _M = {}
 
-function _M.new( ... )
-	-- body
-	local node = {}
-	node.size = 0
-	node.head = nil
-	node.tail = nil
-	setmetatable(node, { __index = _M })
-	return node
-end
-
 function _M.push_front(L, node, ... )
 	-- body
 	assert(type(ele) == "table")
@@ -111,12 +101,10 @@ end
 
 function _M.foreach(L, func, ... )
 	-- body
-	assert(L)
+	assert(L and func)
 	local node = L.head
-	while node do
-		if func then
-			func(node)
-		end
+	while node ~= nil do		
+		func(node)
 		node = node.__next__
 	end
 end
@@ -126,19 +114,14 @@ function _M.sort(L, comp, ... )
 	assert(L and comp)	
 end
 
-function _M.head(L, ... )
+local function list( ... )
 	-- body
-	return L.head
+	local node = {}
+	node.size = 0
+	node.head = nil
+	node.tail = nil
+	setmetatable(node, { __index = _M })
+	return node
 end
 
-function _M.tail(L, ... )
-	-- body
-	return L.tail
-end
-
-function _M.size(L, ... )
-	-- body
-	return L.size
-end
-
-return _M
+return list

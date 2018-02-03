@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,12 +35,7 @@ namespace Bacon.Game {
         RESTART = 18
     }
 
-    public enum OverType {
-        NONE = 0,
-        JIEHU = 1,
-        XUELIU = 2,
-        XUEZHAN = 3,
-    }
+    
 
     public enum GangType {
         NONE = 0,

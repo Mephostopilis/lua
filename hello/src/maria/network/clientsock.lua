@@ -4,6 +4,7 @@ local sproto = require "sproto.sproto"
 local parser = require "sproto.sprotoparser"
 local core = require "sproto.core"
 local FileUtils = require "FileUtils"
+local ABLoader = require "maria.res.ABLoader"
 local log = require "log"
 local assert = assert
 
@@ -26,10 +27,18 @@ function cls:ctor(network, ... )
 	local proto = {}
 	local utils = FileUtils:getInstance()
 	-- proto.c2s = utils:getStringFromFile("./src/proto/proto.c2s.sproto")
-	proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
+	if true then
+		proto.c2s = ABLoader:getInstance():LoadTextAsset("XLua/src/proto", "proto.c2s.sproto").text
+	else
+		proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
+	end
 	assert(type(proto.c2s) == "string")
 	-- proto.s2c = utils:getStringFromFile("./src/proto/proto.s2c.sproto")
-	proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
+	if true then
+		proto.s2c = ABLoader:getInstance():LoadTextAsset("XLua/src/proto", "proto.s2c.sproto").text
+	else
+		proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
+	end
 	assert(type(proto.s2c) == "string")
 	local s2c_sp = core.newproto(parser.parse(proto.s2c))
 	local host = sproto.sharenew(s2c_sp):host "package"
@@ -44,7 +53,7 @@ function cls:ctor(network, ... )
 	return self
 end
 
-function cls:RegisterRequest(name, cb, ud, ... )
+function cls:regiseter_request(name, cb, ud, ... )
 	-- body
 	local pac = self._REQUEST[name]
 	if pac then
@@ -55,7 +64,7 @@ function cls:RegisterRequest(name, cb, ud, ... )
 	end
 end
 
-function cls:RegisterResponse(name, cb, ud, ... )
+function cls:register_response(name, cb, ud, ... )
  	-- body
  	local pac = self._RESPONSE[name]
 	if pac then
@@ -82,10 +91,12 @@ function cls:send_request(name, args, appendix, ... )
 		local v = self._send_request(name, args, self._response_session)
 		ps.send(self._g, self._gate_fd, v)
 		log.info("send request %s: %d", name, self._response_session)
+	else
+		log.error("clientsock not auted, you cann't send request")
 	end
 end
 
-function cls:response(session, args, ... )
+function cls:_response(session, args, ... )
 	-- body
 	local name = self._RESPONSE_SESSION_NAME[session]
 	local RESPONSE = self._RESPONSE
@@ -97,7 +108,7 @@ function cls:response(session, args, ... )
 	log.info("response %s: %s", name, session)
 end
 
-function cls:request(name, args, response, ... )
+function cls:_request(name, args, response, ... )
 	-- body
 	log.info("request %s.", name)
 	local REQUEST = self._REQUEST
@@ -110,54 +121,16 @@ function cls:request(name, args, response, ... )
 	end
 end
 
-function cls:dispatch(type, ... )
+function cls:_dispatch(type, ... )
 	-- body
 	if type == "REQUEST" then
-		local ok, result = pcall(cls.request, self, ...)
+		local ok, result = pcall(cls._request, self, ...)
 		if ok then
 			ps.send(self._g, self._gate_fd, result)
 		end
 	elseif type == "RESPONSE" then
-		pcall(cls.response, self, ... )
+		pcall(cls._response, self, ... )
 	end
-end
-
-function cls:gate_connected( ... )
-	-- body
-	self._index = 1
-	self._version = 1
-	local handshake = string.format("%s@%s#%s:%d", 
-		crypt.base64encode(self._uid), 
-		crypt.base64encode(self._server),
-		crypt.base64encode(self._subid), self._index)
-	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
-
-	-- send handshake
-	log.info("handshake")
-	ps.send(self._g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
-
-	self._state = state.GATE
-	self._gate_step = 1
-end
-
-function cls:gate_data(package, ... )
-	-- body
-	if self._gate_step == 1 then
-		local code = tonumber(string.sub(package, 1, 3))
-		if code == 200 then
-			log.info("gate auth ok.")
-			self._gate_step = 2
-		end
-		self._network:OnGateAuthed(code)
-	elseif self._gate_step == 2 then
-		self:dispatch(self._host:dispatch(package))
-	end
-end
-
-function cls:gate_disconnected( ... )
-	-- body
-	self._gate_step = 0
-	self._network:OnGateDisconnected()
 end
 
 function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
@@ -194,6 +167,44 @@ function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
 		self._gate_step = 1
 	end
 	return err
+end
+
+function cls:gate_connected( ... )
+	-- body
+	self._index = 1
+	self._version = 1
+	local handshake = string.format("%s@%s#%s:%d", 
+		crypt.base64encode(self._uid), 
+		crypt.base64encode(self._server),
+		crypt.base64encode(self._subid), self._index)
+	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
+
+	-- send handshake
+	log.info("handshake")
+	ps.send(self._g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
+
+	self._state = state.GATE
+	self._gate_step = 1
+end
+
+function cls:gate_data(package, ... )
+	-- body
+	if self._gate_step == 1 then
+		local code = tonumber(string.sub(package, 1, 3))
+		if code == 200 then
+			log.info("gate auth ok.")
+			self._gate_step = 2
+		end
+		self._network:OnGateAuthed(code)
+	elseif self._gate_step == 2 then
+		self:_dispatch(self._host:dispatch(package))
+	end
+end
+
+function cls:gate_disconnected( ... )
+	-- body
+	self._gate_step = 0
+	self._network:OnGateDisconnected()
 end
 
 return cls

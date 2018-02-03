@@ -25,5 +25,6 @@ if(UNIX)
 	endif()
 else()
 	target_link_libraries(navigation ../../bin/liblua)
+	ADD_DEPENDENCIES(navigation lua)
 endif()
 

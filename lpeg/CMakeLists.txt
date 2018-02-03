@@ -23,6 +23,6 @@ set_target_properties(lpeg PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
 ENDIF()
 ENDIF(CMAKE_CL_64)
 target_link_libraries(lpeg ../../bin/liblua)
-#ADD_DEPENDENCIES(lpeg sproto)
+ADD_DEPENDENCIES(lpeg lua)
 
 #set(BUILD_USE_64BITS on)

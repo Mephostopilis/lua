@@ -12,6 +12,10 @@ require "base.table"
 class = cc.class
 
 local App = require "bacon.App"
+local log = require "log"
+local pcall = pcall
+-- local list_test = require "list_test"
+-- local stack_test = require "stack_test"
 
 
 -- xlua.hotfix(CS.Maria.Application, 'XluaTest', function (self) 
@@ -21,21 +25,23 @@ local app
 
 function main( ... )
 	-- body
-	app = App.new()
+	local ok, err = pcall(App.new)
+	if ok then
+		app = err
+	else
+		log.error(err)
+	end
 end
 
 function Startup( ... )
 	-- body
-	
-	app:Startup()
+	local ok, err = pcall(App.Startup, app)
+	if not ok then
+		log.error(err)
+	end
 end
 
 function Cleanup( ... )
 	-- body
 	app:Cleanup()
-end
-
-if true then
-	main()
-	Startup()
 end

@@ -9,7 +9,7 @@ add_library(xluasocket SHARED ${XLUASOCKET_H} ${XLUASOCKET_C})
 set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin)
 set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
 target_link_libraries(xluasocket ../../bin/liblua)
-ADD_DEPENDENCIES(xluasocket liblua)
+ADD_DEPENDENCIES(xluasocket lua)
 
 project(ringbuf_unittest)
 SET(RINGBUG_UNITTEST_H ./ringbuf.h ./write_buffer.h)
@@ -21,3 +21,4 @@ add_executable(ringbuf_unittest ${RINGBUG_UNITTEST_H} ${RINGBUG_UNITTEST_C})
 set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin)
 set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
 target_link_libraries(ringbuf_unittest ../../googletest/Debug/gtestd ../../googletest/Debug/gtest_maind)
+

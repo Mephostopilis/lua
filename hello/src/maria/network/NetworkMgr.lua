@@ -19,10 +19,11 @@ end
 function cls:ctor( ... )
 	-- body
 	self._g = assert(ps.new())
-	self._l = list.new()
-	self.login = nil
-	self.client = nil
+	self._l = list()
+	self.login = clientlogin.new(self)
+	self.client = clientsock.new(self)
 
+	log.info(tostring(self.login))
 	return self
 end
 
@@ -41,6 +42,10 @@ end
 
 function cls:RegNetwork(deleget, ... )
 	-- body
+	if not deleget then
+		log.error("deleget is nil")
+		return
+	end
 	self._l:push_back(deleget)
 end
 
@@ -53,8 +58,7 @@ end
 function cls:LoginAuth(ip, port, server, u, p, ... )
 	-- body
 	assert(ip and port and server and u and p)
-	local  login = clientlogin.new(self)
-	local err = login:login_auth(ip, port, u, p, server)
+	local err = self.login:login_auth(ip, port, u, p, server)
 	if err == 0 then
 		self.login = login
 	end
@@ -71,9 +75,12 @@ end
 
 function cls:OnLoginAuthed(code, uid, subid, secret, ... )
 	-- body
+
 	self._l:foreach(function (i, ... )
 		-- body
-		i:OnLoginAuthed(code, uid, subid, secret, ... )
+		if i.OnLoginAuthed then
+			i:OnLoginAuthed(code, uid, subid, secret, ... )
+		end
 	end)
 end
 
@@ -92,16 +99,13 @@ end
 
 function cls:GateAuth(ip, port, server, uid, subid, secret, ... )
 	-- body
-	local client = clientsock.new(self)
-	local err = client:gate_auth(ip, port, server, uid, subid, secret)
-	if err == 0 then
-		self.client = client
-	end
+	local err = self.client:gate_auth(ip, port, server, uid, subid, secret)
 	return err
 end
 
 function cls:OnGateAuthed(code, ... )
 	-- body
+	log.info("NetworkMgr OnGateAuthed")
 	self._l:foreach(function (i, ... )
 		-- body
 		i:OnGateAuthed(code)

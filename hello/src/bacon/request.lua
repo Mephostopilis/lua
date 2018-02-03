@@ -1,45 +1,45 @@
 local log = require "log"
-local errorcode = require "errorcode"
+local errorcode = require "bacon.errorcode"
 local assert = assert
 
 local cls = class("request")
 
-function cls:cls:ctor(ctx, cs) 
+function cls:ctor(ctx, cs)
     self._appContext = ctx
 
-    cs.RegisterRequest("handshake", cls.handshake, self)
-    cs.RegisterRequest("inbox", cls.inbox, self)
-    cs.RegisterRequest("match", cls.match, self)
-    cs.RegisterRequest("join", cls.join, self)
-    cs.RegisterRequest("leave", cls.leave, self)
-    cs.RegisterRequest("offline", cls.afk, self)
-    cs.RegisterRequest("online", cls.authed, self)
+    cs:regiseter_request("handshake", cls.handshake, self)
+    cs:regiseter_request("inbox", cls.inbox, self)
+    cs:regiseter_request("match", cls.match, self)
+    cs:regiseter_request("join", cls.join, self)
+    cs:regiseter_request("leave", cls.leave, self)
+    cs:regiseter_request("offline", cls.afk, self)
+    cs:regiseter_request("online", cls.authed, self)
 
-    cs.RegisterRequest("ready", "ready", self)
-    cs.RegisterRequest("shuffle", "shuffle", self)
-    cs.RegisterRequest("dice", "dice", self)
-    cs.RegisterRequest("deal", "deal", self)
-    cs.RegisterRequest("take_xuanpao", "takexuanpao", self)
-    cs.RegisterRequest("take_xuanque", takexuanque)
-    cs.RegisterRequest("xuanpao", xuanpao)
-    cs.RegisterRequest("xuanque", xuanque)
-    cs.RegisterRequest("ocall", ocall)
-    cs.RegisterRequest("mcall", mcall)
-    cs.RegisterRequest("take_turn", taketurn)
+    cs:regiseter_request("ready", "ready", self)
+    cs:regiseter_request("shuffle", "shuffle", self)
+    cs:regiseter_request("dice", "dice", self)
+    cs:regiseter_request("deal", "deal", self)
+    cs:regiseter_request("take_xuanpao", "takexuanpao", self)
+    cs:regiseter_request("take_xuanque", takexuanque)
+    cs:regiseter_request("xuanpao", xuanpao)
+    cs:regiseter_request("xuanque", xuanque)
+    cs:regiseter_request("ocall", ocall)
+    cs:regiseter_request("mcall", mcall)
+    cs:regiseter_request("take_turn", taketurn)
 
-    cs.RegisterRequest("peng", peng)
-    cs.RegisterRequest("gang", gang)
-    cs.RegisterRequest("hu", hu)
-    cs.RegisterRequest("lead", lead)
+    cs:regiseter_request("peng", peng)
+    cs:regiseter_request("gang", gang)
+    cs:regiseter_request("hu", hu)
+    cs:regiseter_request("lead", lead)
 
-    cs.RegisterRequest("over", over)
-    cs.RegisterRequest("settle", settle)
-    cs.RegisterRequest("final_settle", finalsettle)
-    cs.RegisterRequest("restart", restart)
-    cs.RegisterRequest("take_restart", takerestart)
+    cs:regiseter_request("over", over)
+    cs:regiseter_request("settle", settle)
+    cs:regiseter_request("final_settle", finalsettle)
+    cs:regiseter_request("restart", restart)
+    cs:regiseter_request("take_restart", takerestart)
 
-    cs.RegisterRequest("rchat", rchat)
-    cs.RegisterRequest("radio", radio)
+    cs:regiseter_request("rchat", rchat)
+    cs:regiseter_request("radio", radio)
 end
 
 function cls:handshake( requestObj) 
@@ -51,128 +51,128 @@ end
 
 function cls:inbox( requestObj) 
     log.info("request inbox.")
-    local m = _appContext.U.GetModule<local>()
-    return m.OnInbox(requestObj)
+    -- local m = _appContext.U.GetModule<local>()
+    -- return m.OnInbox(requestObj)
 end
 
-function cls:match( requestObj) 
+function cls:match(requestObj) 
     -- return null
     -- //MainController controller = ctx.Peek<MainController>()
     -- //return controller.OnMatch(requestObj)
 end
 
-function cls:join( requestObj) 
-    GameSystems.JoinSystem joinSystem = _appContext.GameSystems.JoinSystem
+function cls:join(requestObj)
+    local joinSystem = self._appContext.gameSystems.joinSystem
     return joinSystem.OnJoin(requestObj)
 end
 
-function cls:leave( requestObj) 
-    GameSystems.JoinSystem joinSystem = _appContext.GameSystems.JoinSystem
+function cls:leave(requestObj) 
+    local joinSystem = self._appContext.gameSystems.joinSystem
     return joinSystem.OnLeave(requestObj)
 end
 
-function cls:authed( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+function cls:authed(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnOnline(requestObj)
 end
 
-function cls:afk( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+function cls:afk(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnOffline(requestObj)
 end
 
-function cls:ready( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+function cls:ready(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnReady(requestObj)
 end
 
 function cls:shuffle( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnShuffle(requestObj)
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnShuffle(requestObj)
 end
 
-function cls:dice( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnDice(requestObj)
+function cls:dice(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnDice(requestObj)
 end
 
-function cls:deal( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnDeal(requestObj)
+function cls:deal(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnDeal(requestObj)
 end
 
 function cls:takexuanpao( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnTakeXuanPao(requestObj)
+    local gameSystem = _appContext.gameSystems.gameSystem
+    return gameSystem:OnTakeXuanPao(requestObj)
 end
 
 function cls:xuanpao( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnXuanPao(requestObj)
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnXuanPao(requestObj)
 end
 
-function cls:takexuanque( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+function cls:takexuanque(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnTakeXuanQue(requestObj)
 end
 
-function cls:xuanque( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+function cls:xuanque(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnXuanQue(requestObj)
 end
 
-function cls:taketurn( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnTakeTurn(requestObj)
+function cls:taketurn(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnTakeTurn(requestObj)
 end
 
 function cls:ocall( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnOCall(requestObj)
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnOCall(requestObj)
 end
 
-function cls:mcall( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnMCall(requestObj)
+function cls:mcall( requestObj )  
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnMCall(requestObj)
 end
 
 function cls:peng( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnPeng(requestObj)
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnPeng(requestObj)
 end
 
-function cls:gang( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnGang(requestObj)
+function cls:gang(requestObj) 
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnGang(requestObj)
 end
 
 function cls:hu( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnHu(requestObj)
 end
 
 function cls:lead( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
-    return gameSystem.OnLead(requestObj)
+    local gameSystem = self._appContext.gameSystems.gameSystem
+    return gameSystem:OnLead(requestObj)
 end
 
 function cls:over( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnOver(requestObj)
 end
 
 function cls:settle( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnSettle(requestObj)
 end
 
 function cls:finalsettle( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnFinalSettle(requestObj)
 end
 
 function cls:restart( requestObj) 
-    GameSystems.GameSystem gameSystem = _appContext.GameSystems.GameSystem
+    local gameSystem = self._appContext.gameSystems.gameSystem
     return gameSystem.OnRestart(requestObj)
 end
 
@@ -187,8 +187,8 @@ end
 -- //end
 
 function cls:radio( requestObj) 
-    AdverModule adverModule = _appContext.U.GetModule<AdverModule>()
-    return adverModule.Radio(requestObj)
+    -- AdverModule adverModule = self._appContext.U.GetModule<AdverModule>()
+    -- return adverModule.Radio(requestObj)
 end
 
-
+return cls

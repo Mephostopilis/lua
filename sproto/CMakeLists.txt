@@ -24,6 +24,7 @@ set_target_properties(sproto PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin
 ENDIF(MSVC)
 ENDIF(CMAKE_CL_64)
 target_link_libraries(sproto ../../bin/liblua)
+ADD_DEPENDENCIES(sproto lua)
 
 #ADD_DEPENDENCIES(sproto bson)
 #set(BUILD_USE_64BITS on)

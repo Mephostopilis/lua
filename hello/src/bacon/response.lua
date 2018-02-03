@@ -1,11 +1,19 @@
 local assert = assert
-local errorcode = require "errorcode"
-local _M = {}
+local log = require "log"
+local errorcode = require "bacon.errorcode"
 
-function _M.handshake(env, args, ... )
+local cls = class("response")
+
+function cls:ctor(ctx, cs, ... )
 	-- body
-	assert(args.errorcode == errorcode.SUCCESS)
-	print("handshake")
+	self._appContext = ctx
+
+	cs:register_response("handshake", cls.handshake, self)
 end
 
-return _M
+function cls:handshake( ... )
+	-- body
+	log.info("handshake")
+end
+
+return cls

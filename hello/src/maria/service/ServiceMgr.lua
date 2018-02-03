@@ -15,21 +15,31 @@ function cls:ctor( ... )
 	self._services = {}
 end
 
-function cls:RegService(s, ... )
+function cls:Startup( ... )
 	-- body
-	local name = s.name
-	self._services[name] = s
+	for _,v in pairs(self._services) do
+		v:Startup(...)
+	end
 end
 
-function cls:UnrService(s, ... )
+function cls:RegService(t, ... )
 	-- body
-	local name = s.name
-	self._services[name] = nil
+	if not self._services[t] then
+		local service = t.new()
+		self._services[t] = service
+	end
 end
 
-function cls:QueryService(name, ... )
+function cls:UnrService(t, ... )
 	-- body
-	return self._services[name]
+	if self._services[t] then
+		self._services[t] = nil
+	end
+end
+
+function cls:QueryService(t, ... )
+	-- body
+	return self._services[t]
 end
 
 return cls

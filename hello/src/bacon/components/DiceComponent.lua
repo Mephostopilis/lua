@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Entitas;
+﻿local MakeComponent = require('entitas.MakeComponent')
 
-namespace Entitas.Components.Game {
-
-    [Game]
-    public sealed class DiceComponent : IComponent {
-        public long index = 0; // 0 左， 1右
-        public long dian  = 0;
-    }
-
-}
+return MakeComponent("hand",
+              "index",                                     -- // 0 左，1，右
+              "dian",                                     -- GameObject
+)
