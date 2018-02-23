@@ -59,13 +59,15 @@ ringbuf_end(const ringbuf_t *rb) {
 static int
 ringbuf_ext(ringbuf_t *rb) {
 	size_t capacity = ringbuf_capacity(rb);
-	size_t size = capacity * 2 + 1;
+	size_t realsize = capacity * 2 + 1;
+	size_t newrealsize = capacity * 2 * 2 + 1;
+	size_t newsize = capacity * 2 + 1;
 	uint8_t *oldbuf = rb->buf;
 	/*if (REALLOC(oldbuf, size * 2) != NULL) {
 		rb->size = size;
 		return 0;
 	}*/
-	uint8_t *buf = MALLOC(size * 2);
+	uint8_t *buf = MALLOC(newrealsize);
 	if (buf == NULL) {
 		return -1;
 	}
@@ -73,20 +75,20 @@ ringbuf_ext(ringbuf_t *rb) {
 		memcpy(buf, oldbuf, rb->size);
 		rb->head = buf + (rb->head - oldbuf);
 		rb->tail = buf + (rb->tail - oldbuf);
-		rb->size = size;
+		rb->size = newsize;
 		rb->buf = buf;
 	} else {
 
 		const uint8_t *backend = ringbuf_end(rb);
 		int n = backend - rb->tail;
-		memcpy(buf, rb->tail, n);
-		uint8_t *head = buf + n;
+		memcpy(buf + 1, rb->tail, n);
+		uint8_t *head = buf + 1 + n;
 		memcpy(head, rb->buf, rb->head - rb->buf);
 		head = head + (rb->head - rb->buf);
 		rb->head = head;
 		rb->tail = buf;
 		rb->buf = buf;
-		rb->size = size;
+		rb->size = newsize;
 	}
 	free(oldbuf);
 	return 0;
@@ -94,12 +96,13 @@ ringbuf_ext(ringbuf_t *rb) {
 
 ringbuf_t *
 ringbuf_new(size_t capacity) {
-	ringbuf_t *rb = malloc(sizeof(struct ringbuf));
+	ringbuf_t *rb = MALLOC(sizeof(struct ringbuf));
 	if (rb) {
 
 		/* One byte is used for detecting the full condition. */
 		rb->size = capacity + 1;
-		rb->buf = malloc(rb->size * 2);
+		size_t realsize = capacity * 2 + 1;
+		rb->buf = MALLOC(realsize);
 		if (rb->buf)
 			ringbuf_reset(rb);
 		else {

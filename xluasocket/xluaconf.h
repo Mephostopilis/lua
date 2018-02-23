@@ -1,7 +1,7 @@
 #ifndef XLUACONF_H
 #define XLUACONF_H
 
-#if defined(_MSC_VER) && defined(_WIN32)
+#if defined(_MSC_VER) || defined(_WIN32)
 #include <Winsock2.h>
 #include <Wininet.h>
 #include <ws2tcpip.h>
