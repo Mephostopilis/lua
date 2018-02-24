@@ -28,7 +28,7 @@ wb_write_fd(struct write_buffer *ptr, int fd) {
 	int count = min(1024, (ptr->buffer + ptr->len - ptr->ptr));
 	memcpy(buffer, ptr->ptr, count);
 	printf("prof write fd [[%s]] ---------- \n", buffer);
-	int n = send(fd, ptr->ptr, (ptr->buffer + ptr->len - ptr->ptr), 0);
+	int n = send(fd, ptr->ptr, count, 0);
 	if (n > 0) {
 		ptr->ptr = ptr->ptr + n;
 	}
@@ -66,7 +66,7 @@ wb_list_free(struct wb_list* list) {
 }
 
 struct write_buffer *
-	wb_list_alloc_wb(struct wb_list* list) {
+wb_list_alloc_wb(struct wb_list* list) {
 	struct write_buffer *ptr = list->freelist;
 	if (ptr == NULL) {
 		assert(list->wb_size > 0);
@@ -163,7 +163,7 @@ wb_list_push_wb(struct wb_list* list, struct write_buffer *wb) {
 }
 
 struct write_buffer*
-	wb_list_pop(struct wb_list* list) {
+wb_list_pop(struct wb_list* list) {
 	if (list->head == NULL) {
 		return NULL;
 	} else if (list->head == list->tail) {

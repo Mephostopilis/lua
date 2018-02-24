@@ -239,19 +239,19 @@ lnew(lua_State *L) {
 	return 1;
 }
 
-
+/*
+** @return 0 resiv
+           1 ~ 1023
+*/
 static int
 lsocket(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-	if (g->count > (MAX_SOCKET_NUM)) {
-		lua_pushinteger(L, SOCKET_ERROR);
+	if (g->count >= (MAX_SOCKET_NUM - 1)) {
+		lua_pushinteger(L, 0);
 		return 1;
 	}
-	if (g->count > MAX_SOCKET_NUM) {
-		return 0;
-	}
 	struct lua_socket *so = g->freelist;
-	if (++g->count > (MAX_SOCKET_NUM)) {
+	if (++g->count >= (MAX_SOCKET_NUM - 1)) {
 		g->freelist = &g->socks[0];
 	} else {
 		for (size_t i = (so->id - 1); i != so->id; ) {
@@ -313,7 +313,7 @@ static int
 lconnect(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
 	lua_Integer id = luaL_checkinteger(L, 2);
-	if (id < 1 && id > MAX_SOCKET_NUM) {
+	if (id < 1 && id >= MAX_SOCKET_NUM) {
 		lua_pushinteger(L, 3);
 		return 1;
 	}
@@ -446,7 +446,7 @@ lpoll(lua_State *L) {
 	ptr = g->head;
 	while (ptr != NULL) {
 		if (FD_ISSET(ptr->fd, &g->wfds)) {
-			if (ptr->type != SOCKET_TYPE_CONNECTED) {
+			if (ptr->type == SOCKET_TYPE_CONNECTED) {
 				struct write_buffer* wb = wb_list_pop(ptr->wl);
 				while (wb != NULL) {
 					int n = wb_write_fd(wb, ptr->fd);
@@ -580,7 +580,6 @@ lpoll(lua_State *L) {
 		ptr = ptr->next;
 	}
 
-	
 	on_accept(L, g);
 	on_disconnected(L, g);
 	on_error(L, g);

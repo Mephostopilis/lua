@@ -14,5 +14,5 @@ assert(xluasocket.start(g, id) == 0)
 
 while true do 
 	xluasocket.poll(g)
-	xluasocket.send(g, id, "hello world")
+	assert(xluasocket.send(g, id, "hello world") == 0)
 end

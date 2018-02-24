@@ -5,7 +5,7 @@ local g = xluasocket.new(function (id, t, ... )
 	if t == xluasocket.SOCKET_DATA then
 		print(...)
 	elseif t == xluasocket.SOCKET_ACCEPT then
-		print("accept ...")
+		print("accept")
 	end
 end)
 
@@ -16,8 +16,8 @@ end
 
 local id = xluasocket.socket(g, xluasocket.PROTOCOL_TCP, xluasocket.HEADER_TYPE_LINE)
 
-assert(xluasocket.listen(g, id, "127.0.0.1", 3300) == 0)
-assert(xluasocket.start(g, id) == 0)
+xluasocket.listen(g, id, "127.0.0.1", 3300)
+xluasocket.start(g, id)
 
 while true do 
 	xluasocket.poll(g)
