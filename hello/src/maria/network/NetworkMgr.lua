@@ -18,10 +18,41 @@ end
 
 function cls:ctor( ... )
 	-- body
-	self._g = assert(ps.new())
 	self._l = list()
 	self.login = clientlogin.new(self)
 	self.client = clientsock.new(self)
+
+	self._g = assert(ps.new(function (id, code, ... )
+		-- body
+		if code == ps.SOCKET_DATA then
+			if id == self.login._login_fd then
+				log.info("login SOCKET_DATA")
+				local line = tostring(...)
+				local ok, err = pcall(clientlogin.login_data, self.login, line)
+				if not ok then
+					log.error(err)
+				end
+			elseif id == self.client._gate_fd then
+				log.info("client SOCKET_DATA")
+				local pg = tostring	(...)
+				local ok, err = pcall(clientsock.gate_data, self.client, pg)
+				if not ok then
+					log.error(err)
+				end
+			end
+		elseif code == ps.SOCKET_CLOSE then
+			if id == self.login._login_fd then
+				local ok, err = pcall(clientlogin.login_disconnected, self.login)
+				if not ok then
+					log.error(err)
+				end
+			elseif id == self.client._gate_fd then
+
+			end
+		elseif code == ps.SOCKET_ERROR then
+		end
+	end))
+	
 
 	log.info(tostring(self.login))
 	return self
@@ -60,7 +91,7 @@ function cls:LoginAuth(ip, port, server, u, p, ... )
 	assert(ip and port and server and u and p)
 	local err = self.login:login_auth(ip, port, u, p, server)
 	if err == 0 then
-		self.login = login
+		log.info("login auth success.")
 	end
 	return err
 end

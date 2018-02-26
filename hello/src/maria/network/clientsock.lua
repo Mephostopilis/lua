@@ -26,18 +26,18 @@ function cls:ctor(network, ... )
 	-- sproto
 	local proto = {}
 	local utils = FileUtils:getInstance()
-	-- proto.c2s = utils:getStringFromFile("./src/proto/proto.c2s.sproto")
-	if true then
+	if false then
 		proto.c2s = ABLoader:getInstance():LoadTextAsset("XLua/src/proto", "proto.c2s.sproto").text
 	else
-		proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
+		proto.c2s = utils:getStringFromFile("../hello/src/proto/proto.c2s.sproto")
+		-- proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
 	end
 	assert(type(proto.c2s) == "string")
-	-- proto.s2c = utils:getStringFromFile("./src/proto/proto.s2c.sproto")
-	if true then
+	if false then
 		proto.s2c = ABLoader:getInstance():LoadTextAsset("XLua/src/proto", "proto.s2c.sproto").text
 	else
-		proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
+		proto.s2c = utils:getStringFromFile("../hello/src/proto/proto.s2c.sproto")
+		-- proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
 	end
 	assert(type(proto.s2c) == "string")
 	local s2c_sp = core.newproto(parser.parse(proto.s2c))
@@ -81,16 +81,24 @@ function cls:send_request(name, args, appendix, ... )
 		local max = 1000000
 		self._response_session = self._response_session + 1 % max
 		self._RESPONSE_SESSION_NAME[self._response_session] = name
-		local pac = self._RESPONSE[name]
-		if pac then
-			pac.appendix = appendix
-		else
-			self._RESPONSE[name] = { name = name, appendix = appendix }
+		if appendix then
+			local pac = self._RESPONSE[name]
+			if pac then
+				pac.appendix = appendix
+			end
 		end
 
 		local v = self._send_request(name, args, self._response_session)
-		ps.send(self._g, self._gate_fd, v)
-		log.info("send request %s: %d", name, self._response_session)
+		local g = assert(self._network._g)
+		local err, bytes = ps.send(g, self._gate_fd, v)
+		if err == 0 then
+			log.info("send request %s: %d", name, self._response_session)
+			log.info("login send bytes = %d", bytes)
+		else
+			self._login_step = 0
+			log.error("login send error.")
+			return
+		end
 	else
 		log.error("clientsock not auted, you cann't send request")
 	end
@@ -101,11 +109,17 @@ function cls:_response(session, args, ... )
 	local name = self._RESPONSE_SESSION_NAME[session]
 	local RESPONSE = self._RESPONSE
 	local pac = RESPONSE[name]
-	local ok, err = pcall(pac.cb, pac.ud, args, pac.appendix, ...)
-	if not ok then
-		log.error(err)
+	if pac then
+		for k,v in pairs(pac) do
+			print(k,v)
+		end
+		local ok, err = pcall(pac.cb, pac.ud, args, pac.appendix, ...)
+		if not ok then
+			log.error(err)
+		end
+	else
+		log.error("response %s: %s is nil.", name, session)
 	end
-	log.info("response %s: %s", name, session)
 end
 
 function cls:_request(name, args, response, ... )
@@ -113,11 +127,15 @@ function cls:_request(name, args, response, ... )
 	log.info("request %s.", name)
 	local REQUEST = self._REQUEST
 	local f = REQUEST[name]
-	local ok, err = pcall(f, REQUEST, args)
-	if ok then
-		return response(err)
+	if f then
+		local ok, err = pcall(f, REQUEST, args)
+		if ok then
+			return response(err)
+		else
+			log.error(err)
+		end
 	else
-		log.error(err)
+		log.error("request name = %s is nil", name)
 	end
 end
 
@@ -126,7 +144,16 @@ function cls:_dispatch(type, ... )
 	if type == "REQUEST" then
 		local ok, result = pcall(cls._request, self, ...)
 		if ok then
-			ps.send(self._g, self._gate_fd, result)
+			if result then
+				local g = assert(self._network._g)
+				local err, bytes = ps.send(g, self._gate_fd, result)
+				if err == 0 then
+				else
+					return
+				end
+			else
+				log.error("request result is nil")
+			end
 		end
 	elseif type == "RESPONSE" then
 		pcall(cls._response, self, ... )
@@ -152,6 +179,11 @@ function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
 	end)
 	local err = ps.connect(g, self._gate_fd, ip, port)
 	if err == 0 then
+		err = ps.start(g, self._gate_fd)
+		if err ~= 0 then
+			log.error("clientsock start failture.")
+			return
+		end
 		self._index = 1
 		local handshake = string.format("%s@%s#%s:%d", 
 			crypt.base64encode(uid), 
@@ -160,10 +192,13 @@ function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
 		local hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
 
 		-- send handshake
-		print("handshake")
-		ps.send(g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
-
-	
+		local err, bytes = ps.send(g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
+		if err == 0 then
+		else
+			self._login_step = 0
+			log.error("clientsock send error.")
+			return
+		end
 		self._gate_step = 1
 	end
 	return err

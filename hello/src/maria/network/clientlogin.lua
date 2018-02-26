@@ -34,8 +34,14 @@ function cls:login_data(line, ... )
 		local challenge = crypt.base64decode(line)
 		local clientkey = crypt.randomkey()
 		local g = assert(self._network._g)
-		local err = ps.send(g, self._login_fd, crypt.base64encode(crypt.dhexchange(clientkey)))
-		assert(err > 0)
+		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(crypt.dhexchange(clientkey)))
+		if err == 0 then
+			log.info("login send bytes = %d", bytes)
+		else
+			self._login_step = 0
+			log.error("login send error.")
+			return
+		end
 		self._challenge = challenge
 		self._clientkey = clientkey
 		self._login_step = self._login_step + 1
@@ -44,8 +50,14 @@ function cls:login_data(line, ... )
 		log.info("sceret is %s", crypt.hexencode(secret))
 		local hmac = crypt.hmac64(self._challenge, secret)
 		local g = assert(self._network._g)
-		local err = ps.send(g, self._login_fd, crypt.base64encode(hmac))
-		assert(err > 0)
+		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(hmac))
+		if err == 0 then
+			log.info("login send bytes = %d", bytes)
+		else
+			self._login_step = 0
+			log.error("login send error.")
+			return
+		end
 		self._secret = secret
 
 		log.info("%s:%s:%s", self._username, self._server, self._password)
@@ -55,7 +67,13 @@ function cls:login_data(line, ... )
 			crypt.base64encode(self._password))
 		local etoke = crypt.desencode(self._secret, token)
 		local err = ps.send(g, self._login_fd, crypt.base64encode(etoke))
-		assert(err > 0)
+		if err == 0 then
+			log.info("login send bytes = %d", bytes)
+		else
+			self._login_step = 0
+			log.error("login send error.")
+			return
+		end
 		self._login_step = self._login_step + 1
 	elseif self._login_step == 3 then
 		local code = tonumber(string.sub(line, 1, 4))
@@ -83,9 +101,8 @@ function cls:login_data(line, ... )
 	end
 end
 
-function cls:login_disconnected(ok, so, ... )
+function cls:login_disconnected( ... )
 	-- body
-	assert(ok == ps.SOCKET_CLOSE)
 	log.info("login_disconnected")
 end
 
@@ -98,22 +115,13 @@ function cls:login_auth(ip, port, u, p, server, ... )
 	self._server     = server
 	
 	local g = assert(self._network._g)
-	self._login_fd = ps.socket(g, ps.PROTOCOL_TCP, ps.HEADER_TYPE_LINE, function (code, line, ... )
-		-- body
-		if code == ps.SOCKET_DATA then
-			if line then
-				local ok, err = pcall(self.login_data, self, line)
-				if not ok then
-					print(err)
-				end
-			end
-		elseif code == ps.SOCKET_CLOSE then
-		elseif code == ps.SOCKET_ERROR then
-		end
-	end)
+	self._login_fd = ps.socket(g, ps.PROTOCOL_TCP, ps.HEADER_TYPE_LINE)
 	local err = ps.connect(g, self._login_fd, ip, port)
 	if err == 0 then
-		self._login_step = 1
+		err = ps.start(g, self._login_fd)
+		if err == 0 then
+			self._login_step = 1
+		end
 	end
 	return err
 end

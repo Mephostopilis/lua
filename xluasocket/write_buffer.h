@@ -25,6 +25,9 @@ wb_list_new(int size);
 void
 wb_list_free(struct wb_list* list);
 
+size_t
+wb_list_size(struct wb_list* list);
+
 struct write_buffer *
 wb_list_alloc_wb(struct wb_list* list);
 

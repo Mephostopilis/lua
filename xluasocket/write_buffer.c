@@ -65,6 +65,17 @@ wb_list_free(struct wb_list* list) {
 	}
 }
 
+size_t
+wb_list_size(struct wb_list* list) {
+	size_t size = 0;
+	struct write_buffer *wb = list->head;
+	while (wb) {
+		size++;
+		wb = wb->next;
+	}
+	return size;
+}
+
 struct write_buffer *
 wb_list_alloc_wb(struct wb_list* list) {
 	struct write_buffer *ptr = list->freelist;
@@ -83,6 +94,8 @@ wb_list_alloc_wb(struct wb_list* list) {
 void
 wb_list_free_wb(struct wb_list* list, struct write_buffer *wb) {
 	assert(list && wb);
+	wb->ptr = wb->buffer;
+	wb->len = 0;
 	wb->next = list->freelist;
 	list->freelist = wb;
 }
