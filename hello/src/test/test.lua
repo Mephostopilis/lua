@@ -26,6 +26,7 @@ class = cc.class
 -- require "test.test_entity_system"
 -- require "test.server"
 -- require "test.client"
-require "test.network_test"
+-- require "test.network_test"
+require "test.dbpack_test"
 
 os.execute("pause")
