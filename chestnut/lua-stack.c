@@ -68,12 +68,13 @@ lnext(lua_State *L) {
 		idx = luaL_checkinteger(L, -1);		
 	} else {
 		idx = lua_tointeger(L, 2);
+		idx--;
 	}
 	if (idx <= 0) {
 		return 0;
 	}
 	lua_pushinteger(L, idx);
-	lua_rawgeti(L, 1, idx--);
+	lua_rawgeti(L, 1, idx);
 	return 2;
 }
 
@@ -93,16 +94,18 @@ lfree(lua_State *L) {
 
 static int
 lalloc(lua_State *L) {
-	int len = 16;
 	int n = lua_gettop(L);
-	while (n > len) {
-		len *= 2;
-	}
 	lua_createtable(L, n, 3);
+
 	lua_pushvalue(L, lua_upvalueindex(1));
 	lua_setmetatable(L, -2);
 
-	lua_pushinteger(L, 0);
+	for (int i = 1; i <= n; i++) {
+		lua_pushvalue(L, i);
+		lua_rawseti(L, -2, i);
+	}
+
+	lua_pushinteger(L, n);
 	lua_rawseti(L, -2, 0);
 
 	return 1;
