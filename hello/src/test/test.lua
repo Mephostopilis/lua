@@ -27,6 +27,7 @@ class = cc.class
 -- require "test.server"
 -- require "test.client"
 -- require "test.network_test"
-require "stack_test"
+-- require "stack_test"
+require "test.dbpack_test"
 
 os.execute("pause")

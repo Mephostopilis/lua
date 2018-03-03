@@ -1,0 +1,16 @@
+project(rapidjson)
+aux_source_directory(. RAPIDJSON_C)
+#SET(RAPIDJSON_H ./xluaconf.h ./write_buffer.h ./ringbuf.h ./protoc.h)
+#SET(RAPIDJSON_C ./lRAPIDJSON.c ./ringbuf.c ./write_buffer.c)
+message(STATUS ${RAPIDJSON_C})
+include_directories(.)
+include_directories(./include)
+include_directories(../src)
+ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
+add_library(rapidjson SHARED ${RAPIDJSON_C})
+set_target_properties(rapidjson PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin)
+set_target_properties(rapidjson PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
+target_link_libraries(rapidjson ../../bin/liblua)
+ADD_DEPENDENCIES(rapidjson lua)
+
+
