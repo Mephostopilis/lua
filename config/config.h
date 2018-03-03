@@ -10,12 +10,6 @@
 #define CONFIG_API extern
 #endif
 
-#include <string.h>
-
-void a() {
-	_strnicmp
-}
-
 // 此类是从 sharedata.dll 导出的
 //class SHAREDATA_API Csharedata {
 //public:
