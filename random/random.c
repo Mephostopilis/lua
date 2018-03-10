@@ -5,7 +5,9 @@
 //
 // Modified by Cloud Wu
 
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #include <stdint.h>
 

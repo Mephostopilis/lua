@@ -1,4 +1,6 @@
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #include <lua.h>
 #include <lauxlib.h>

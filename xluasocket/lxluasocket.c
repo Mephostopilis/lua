@@ -1,4 +1,6 @@
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #include "xluaconf.h"
 #include "ringbuf.h"
@@ -527,7 +529,7 @@ lpoll(lua_State *L) {
 						} else if (e == WSAECONNRESET) {
 							closesocket(ptr->fd);
 #else
-						} else if (e == ECONNRESET) {
+						} else if (errno == ECONNRESET) {
 							close(ptr->fd);
 #endif
 							ptr->type = SOCKET_TYPE_CLOSE;
@@ -559,7 +561,7 @@ lpoll(lua_State *L) {
 							int size = 0;
 							uint8_t *buf = NULL;
 							while (ringbuf_read_string(ptr->rb, &buf, &size) > 0 && count <= 50) {
-								on_data(L, g, ptr, buf, size);
+								on_data(L, g, ptr, (char *)buf, size);
 								count++;
 							}
 					} else {
@@ -567,7 +569,7 @@ lpoll(lua_State *L) {
 							int size = 0;
 							uint8_t *buf = NULL;
 							while (ringbuf_read_line(ptr->rb, &buf, &size) > 0 && count <= 50) {
-								on_data(L, g, ptr, buf, size);
+								on_data(L, g, ptr, (char *)buf, size);
 								count++;
 							}
 						}

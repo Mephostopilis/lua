@@ -4,7 +4,9 @@
 *  @author  Marcela Ozorio Suarez, Roberto I.
 */
 
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #include <string.h>
 

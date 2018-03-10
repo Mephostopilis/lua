@@ -23,6 +23,10 @@
 #if defined(_MSC_VER)
 #include <math.h>
 #define MIN min
+#else
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+//#define MIN min
 #endif
 
 static int
@@ -227,7 +231,7 @@ ringbuf_memset(ringbuf_t *dst, int c, size_t len) {
 }
 
 void *
-ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count) {
+ringbuf_memcpy_into(ringbuf_t *dst, const uint8_t *src, size_t count) {
 	const uint8_t *u8src = src;
 	const uint8_t *bufend = ringbuf_end(dst);
 	int overflow = count > ringbuf_bytes_free(dst);
@@ -237,7 +241,7 @@ ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count) {
 		/* don't copy beyond the end of the buffer */
 		assert(bufend > dst->head);
 		size_t n = MIN(bufend - dst->head, count - nread);
-		memcpy(dst->head, u8src + nread, n);
+		memcpy((void *)dst->head, (const void *)u8src + nread, n);
 		dst->head += n;
 		nread += n;
 

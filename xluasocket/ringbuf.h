@@ -28,13 +28,13 @@
 
 #include "xluaconf.h"
 #include <stdbool.h>
-#include <crtdefs.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #if defined(_MSC_VER)
+#include <crtdefs.h>
 #if defined(_WIN64) || (defined(__DMC__) && defined(_M_AMD64))
 typedef long long ssize_t;
 # else
@@ -157,7 +157,7 @@ ringbuf_memset(ringbuf_t *dst, int c, size_t len);
  * different than it was before the function was called.
  */
 void *
-ringbuf_memcpy_into(ringbuf_t *dst, const void *src, size_t count);
+ringbuf_memcpy_into(ringbuf_t *dst, const uint8_t *src, size_t count);
 
 /*
  * This convenience function calls read(2) on the file descriptor fd,

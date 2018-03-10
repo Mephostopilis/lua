@@ -6,6 +6,15 @@
 #include <assert.h>
 #include <stdio.h>
 
+#if defined(_MSC_VER)
+#include <math.h>
+#define MAX max
+#define MIN min
+#else
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 struct write_buffer {
 	struct write_buffer * next;
 	char *ptr;                 // send ptr
@@ -25,7 +34,7 @@ int
 wb_write_fd(struct write_buffer *ptr, int fd) {
 	assert(ptr != NULL);
 	char buffer[1024] = { 0 };
-	int count = min(1024, (ptr->buffer + ptr->len - ptr->ptr));
+	int count = MIN(1024, (ptr->buffer + ptr->len - ptr->ptr));
 	memcpy(buffer, ptr->ptr, count);
 	printf("prof write fd [[%s]] ---------- \n", buffer);
 	int n = send(fd, ptr->ptr, count, 0);

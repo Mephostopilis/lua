@@ -1,4 +1,6 @@
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #ifdef __cplusplus
 extern "C" {

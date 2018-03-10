@@ -3,7 +3,9 @@
 ** Copyright 2013, Lua.org & PUC-Rio  (see 'lpeg.html' for license)
 */
 
+#ifndef ANDROID
 #define LUA_LIB
+#endif // !ANDROID
 
 #include <ctype.h>
 #include <limits.h>
