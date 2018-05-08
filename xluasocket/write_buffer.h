@@ -1,3 +1,7 @@
+﻿/*
+** 缓存发送数据
+*/
+
 #ifndef WRITE_BUFFER_H
 #define WRITE_BUFFER_H
 

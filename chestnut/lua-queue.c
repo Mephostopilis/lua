@@ -167,6 +167,12 @@ lremove(lua_State *L) {
 }
 
 static int
+lnewindex(lua_State *L) {
+	luaL_error(L, "not suppoort.");
+	return 0;
+}
+
+static int
 llen(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 
@@ -251,6 +257,7 @@ luaopen_chestnut_queue(lua_State *L) {
 	luaL_checkversion(L);
 
 	luaL_Reg l[] = {
+		{ "__newindex", lnewindex },
 		{ "__pairs", lpairs },
 		{ "__len", llen },
 		{ "__gc", lfree},

@@ -14,7 +14,9 @@ lnewindex(lua_State *L) {
 	if (idx <= 0) {
 		return luaL_error(L, "The index should be positive (%d)", (int)idx);
 	}
-
+	if (lua_gettop(L) < 3) {
+		return luaL_error(L, "The top should be more than 3");
+	}
 	lua_rawgeti(L, 1, 0);
 	lua_Integer sparselen = luaL_checkinteger(L, -1);
 	if (idx > sparselen) {
@@ -45,9 +47,8 @@ lnext(lua_State *L) {
 	if (idx > sparselen) {
 		return 0;
 	}
-	lua_rawgeti(L, 1, idx);
 	lua_pushinteger(L, idx);
-	lua_pushvalue(L, -2);
+	lua_rawgeti(L, 1, idx);
 	return 2;
 }
 
@@ -57,7 +58,7 @@ lpairs(lua_State *L) {
 	
 	lua_pushcfunction(L, lnext);
 	lua_pushvalue(L, 1);
-	lua_pushnil(L);
+	lua_pushnil(L);              // key
 	return 3;
 }
 
@@ -73,12 +74,12 @@ lnewarrayinit(lua_State *L) {
 	int n = lua_gettop(L);
 	lua_pushvalue(L, lua_upvalueindex(1));
 	lua_Integer size = luaL_checkinteger(L, -1);
-	lua_createtable(L, size, 0);
+	lua_createtable(L, size, 1);
 	lua_pushvalue(L, lua_upvalueindex(2));
 	lua_setmetatable(L, -2);
 	luaL_checktype(L, -1, LUA_TTABLE);
-	int i;
-	for (i = 1; i <= n && i <= size; i++) {
+	int i = 1;
+	for (; i <= n && i <= size; ++i) {
 		lua_pushvalue(L, i);
 		lua_rawseti(L, -2, i);
 	}

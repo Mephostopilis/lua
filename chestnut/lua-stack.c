@@ -53,6 +53,12 @@ lpeek(lua_State *L) {
 	return 1;
 }
 
+static int 
+lnewindex(lua_State *L) {
+	luaL_error(L, "not suppoort.");
+	return 0;
+}
+
 static int
 llen(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
@@ -70,7 +76,7 @@ lnext(lua_State *L) {
 		idx = luaL_checkinteger(L, -1);		
 	} else {
 		idx = lua_tointeger(L, 2);
-		idx--;
+		--idx;
 	}
 	if (idx <= 0) {
 		return 0;
@@ -96,9 +102,12 @@ lfree(lua_State *L) {
 
 static int
 lalloc(lua_State *L) {
+	int prearr = 16;
 	int n = lua_gettop(L);
-	lua_createtable(L, n, 3);
-
+	while (n > prearr) {
+		prearr *= 2;
+	}
+	lua_createtable(L, prearr, 1);
 	lua_pushvalue(L, lua_upvalueindex(1));
 	lua_setmetatable(L, -2);
 
@@ -118,6 +127,7 @@ luaopen_chestnut_stack(lua_State *L) {
 	luaL_checkversion(L);
 
 	luaL_Reg l[] = {
+		{ "__newindex", lnewindex },
 		{ "__pairs", lpairs },
 		{ "__len", llen },
 		{ "__gc", lfree },

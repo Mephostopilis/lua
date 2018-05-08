@@ -1,4 +1,4 @@
-#ifndef ANDROID
+﻿#ifndef ANDROID
 #define LUA_LIB
 #endif // !ANDROID
 
@@ -77,18 +77,18 @@ typedef struct lua_socket {
 } lua_socket;
 
 typedef struct lua_gate {
-	int                 count;        // �����˶���
+	int                 count;        // 分配了多少
 	fd_set              rfds;
 	fd_set              wfds;
-	struct lua_socket  *head;         // ���е�
-	struct lua_socket  *error;
-	struct lua_socket  *disconn;
-	struct lua_socket  *accept;
-	struct lua_socket  *freelist;
-	struct lua_socket   socks[0];
+	struct lua_socket  *head;         // 遍历所有socket
+	struct lua_socket  *error;        // 从head删除，加入错误
+	struct lua_socket  *disconn;      // 从head删除，加入断连
+	struct lua_socket  *accept;       // 加入accept，单独处理
+	struct lua_socket  *freelist;     // 用来查找下一个分配的socket
+	struct lua_socket   socks[0];     // 分配的所有socket
 } lua_gate;
 
-// ���ӵ�head
+// 增加到head
 static void
 gate_add(struct lua_gate *g, struct lua_socket *so) {
 	assert(g != NULL && so != NULL);
@@ -523,7 +523,7 @@ lpoll(lua_State *L) {
 #else
 						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
 #endif
-							// ��ǰso������
+							// 当前so不处理
 							break;
 #if defined(_WIN32)
 						} else if (e == WSAECONNRESET) {
