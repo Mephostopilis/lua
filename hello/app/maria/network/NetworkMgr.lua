@@ -4,11 +4,10 @@ local clientsock = require "maria.network.clientsock"
 local list = require "list"
 local log = require "log"
 local assert = assert
-local instance
 
 local cls = class("NetworkMgr")
 
-function cls:ctor( ... )
+function cls:ctor()
 	-- body
 	self._l = list()
 	self.login = clientlogin.new(self)
@@ -50,17 +49,17 @@ function cls:ctor( ... )
 	return self
 end
 
-function cls:Startup( ... )
+function cls:Startup()
 	-- body
 end
 
-function cls:Cleanup( ... )
+function cls:Cleanup()
 	-- body
 	self.login:close()
 	self.client:close()
 end
 
-function cls:Update( ... )
+function cls:Update()
 	-- body
 	ps.poll(self._g)
 end
@@ -122,13 +121,13 @@ function cls:OnLoginError()
 	assert(self)
 end
 
-function cls:GateAuth(ip, port, server, uid, subid, secret, ... )
+function cls:GateAuth(ip, port, server, uid, subid, secret)
 	-- body
 	local err = self.client:gate_auth(ip, port, server, uid, subid, secret)
 	return err
 end
 
-function cls:OnGateAuthed(code, ... )
+function cls:OnGateAuthed(code)
 	-- body
 	log.info("NetworkMgr OnGateAuthed")
 	self._l:foreach(function (i, ... )

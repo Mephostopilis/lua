@@ -1,8 +1,7 @@
 local NetworkMgr = require "maria.network.NetworkMgr"
-local User = require "maria.module.User"
 local timer = require "timer"
 
-local function run( ... )
+local function run()
 	-- body
 	-- begain to connect
 	local username = "hello"
@@ -41,14 +40,12 @@ local function run( ... )
 	NetworkMgr:getInstance():RegNetwork(t)
 	NetworkMgr:getInstance():LoginAuth("127.0.0.1", "3002", server, username, password)
 
-	
-
 	local function execute(obj, message, arg, ... )
 		-- body
 		print(timer.now())
 		if obj == NetworkMgr:getInstance() then
 			if message == "timeout" then
-				NetworkMgr:getInstance().client:send_request("handshake")		
+				NetworkMgr:getInstance().client:send_request("handshake")
 			end
 		end
 	end
@@ -62,5 +59,3 @@ local ok, err = pcall(run)
 if not ok then
 	print(err)
 end
-
-os.execute("pause")
