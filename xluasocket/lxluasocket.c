@@ -41,7 +41,7 @@
 
 #define UDP_ADDRESS_SIZE 19	// ipv6 128bit + port 16bit + 1 byte type
 
-#define MAX_SOCKET_NUM (1024)
+#define MAX_SOCKET_NUM (4)
 
 static void
 init_lib(lua_State *L) {
@@ -63,8 +63,8 @@ close_lib(lua_State *L) {
 
 typedef struct lua_socket {
 	struct lua_socket *next;
-	struct lua_socket *extra;
-	struct lua_socket *accept;
+	struct lua_socket *listen;    // 所有监听的socket并且有客户来链接
+	struct lua_socket *accept;    // 所有接受的
 	int             id;
 	int             fd;
 	uint8_t         protocol;
@@ -77,7 +77,7 @@ typedef struct lua_socket {
 } lua_socket;
 
 typedef struct lua_gate {
-	int                 count;        // 分配了多少
+	int                 count;        // 使用了多少
 	fd_set              rfds;
 	fd_set              wfds;
 	struct lua_socket  *head;         // 遍历所有socket
@@ -88,7 +88,7 @@ typedef struct lua_gate {
 	struct lua_socket   socks[0];     // 分配的所有socket
 } lua_gate;
 
-// 增加到head
+///////////////////////////////////////////////////////////////////// 处理poll
 static void
 gate_add(struct lua_gate *g, struct lua_socket *so) {
 	assert(g != NULL && so != NULL);
@@ -113,14 +113,15 @@ gate_del(struct lua_gate *g, struct lua_socket *so) {
 	} else if (g->head == so) {
 		assert(so->type != SOCKET_TYPE_INVALID);
 		g->head = g->head->next;
+		g->count--;
 		so->type = SOCKET_TYPE_INVALID;
 		return so;
 	} else {
 		struct lua_socket *ptr = g->head;
-		while (ptr->next) {
+		while (ptr != NULL && ptr->next != NULL) {
 			if (ptr->next == so) {
 				ptr->next = so->next;
-				so->next = g->freelist;
+				so->next = NULL;
 				so->type = SOCKET_TYPE_INVALID;
 				g->freelist = so;
 				return so;
@@ -130,6 +131,7 @@ gate_del(struct lua_gate *g, struct lua_socket *so) {
 	}
 	return NULL;
 }
+///////////////////////////////////////////////////////////////////// 结束poll
 
 
 static void
@@ -137,10 +139,14 @@ gate_add_disconected(struct lua_gate *g, struct lua_socket *so) {
 	assert(g != NULL && so != NULL);
 	if (g->disconn == NULL) {
 		g->disconn = so;
-		g->disconn->extra = NULL;
+		so->next = NULL;
 	} else {
-		so->extra = g->disconn;
-		g->disconn = so;
+		struct lua_socket *pp = g->disconn;
+		while (pp != NULL && pp->next != NULL) {
+			pp = pp->next;
+		}
+		pp->next = so;
+		so->next = NULL;
 	}
 }
 
@@ -149,7 +155,6 @@ on_disconnected(lua_State *L, struct lua_gate *g) {
 	struct lua_socket *so = g->disconn;
 	g->disconn = NULL;
 	while (so) {
-		gate_del(g, so);
 		lua_getglobal(L, "xluasocket");
 		lua_rawgetp(L, -1, g);
 		luaL_checktype(L, -1, LUA_TFUNCTION);
@@ -159,7 +164,7 @@ on_disconnected(lua_State *L, struct lua_gate *g) {
 		lua_pcall(L, 3, 0, 0);
 		lua_pop(L, 1);
 
-		so = so->extra;
+		so = so->next;
 	}
 	return 0;
 }
@@ -184,7 +189,6 @@ on_error(lua_State *L, struct lua_gate *g) {
 	struct lua_socket *so = g->error;
 	g->error = NULL;
 	while (so) {
-		gate_del(g, so);
 		lua_getglobal(L, "xluasocket");
 		lua_rawgetp(L, -1, g);
 		luaL_checktype(L, -1, LUA_TFUNCTION);
@@ -193,11 +197,10 @@ on_error(lua_State *L, struct lua_gate *g) {
 		lua_pushinteger(L, 0);
 		lua_pcall(L, 3, 0, 0);
 		lua_pop(L, 1);
-		so = so->extra;
+		so = so->next;
 	}
 	return 0;
 }
-
 
 static int
 on_accept(lua_State *L, struct lua_gate *g) {
@@ -218,9 +221,9 @@ on_accept(lua_State *L, struct lua_gate *g) {
 			lua_pcall(L, 3, 0, 0);
 			lua_pop(L, 1);
 
-			so = so->extra;
+			so = so->next;
 		}
-		l = l->extra;
+		l = l->listen;
 	}
 	return 0;
 }
@@ -242,9 +245,8 @@ lnew(lua_State *L) {
 
 	init_lib(L);
 	struct lua_gate *g = (struct lua_gate *)lua_newuserdata(L, sizeof(*g) + ((MAX_SOCKET_NUM + 1) * sizeof(struct lua_socket)));
-	memset(g, 0, sizeof(*g) + ((MAX_SOCKET_NUM + 1) * sizeof(struct lua_socket)));
-	g->head = NULL;
-	g->freelist = &g->socks[MAX_SOCKET_NUM - 1];
+	memset(g, 0, sizeof(*g) + ((MAX_SOCKET_NUM + 1) * sizeof(struct lua_socket)));          // 分配了1024个，0作为一个标记
+	g->freelist = &g->socks[MAX_SOCKET_NUM];
 	for (size_t i = 1; i <= MAX_SOCKET_NUM; i++) {
 		g->socks[i].id = i;
 		g->socks[i].wl = wb_list_new(WRITE_BUFFER_SIZE);
@@ -267,17 +269,17 @@ lnew(lua_State *L) {
 
 /*
 ** @return 0 resiv
-           1 ~ 1023
+		   [1, MAX_SOCKET_NUM]
 */
 static int
 lsocket(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-	if (g->count >= (MAX_SOCKET_NUM - 1)) {
+	if (g->count > MAX_SOCKET_NUM) {
 		lua_pushinteger(L, 0);
 		return 1;
 	}
 	struct lua_socket *so = g->freelist;
-	if (++g->count >= (MAX_SOCKET_NUM - 1)) {
+	if (++g->count > MAX_SOCKET_NUM) {
 		g->freelist = &g->socks[0];
 	} else {
 		for (size_t i = (so->id - 1); i != so->id; ) {
@@ -291,7 +293,7 @@ lsocket(lua_State *L) {
 	}
 
 	so->next = NULL;
-	so->extra = NULL;
+	//so->extra = NULL;
 	so->type = SOCKET_TYPE_RESERVE;
 	so->protocol = luaL_checkinteger(L, 2);
 	so->header = luaL_checkinteger(L, 3);
@@ -398,7 +400,7 @@ lstart(lua_State *L) {
 		   -1 1  socet type is wrong.
 		   -1 2  socket not connectd
 		   -1 3  send socket socket error.
-		      4  send buffer less than 0.
+			  4  send buffer less than 0.
 			  5  header type is wrong.
 */
 static int
@@ -413,7 +415,7 @@ lsend(lua_State *L) {
 	if (so->type != SOCKET_TYPE_CONNECTED) {
 		lua_pushinteger(L, 1);
 		return 1;
-	} 
+	}
 
 	size_t sz;
 	const char *buffer = luaL_checklstring(L, 3, &sz);
@@ -459,7 +461,7 @@ lpoll(lua_State *L) {
 		max = (max > ptr->fd) ? max : ptr->fd;
 		FD_SET(ptr->fd, &g->rfds);
 		FD_SET(ptr->fd, &g->wfds);
-		ptr->extra = NULL;
+		//ptr->extra = NULL;
 		ptr = ptr->next;
 	}
 	if (max <= 0) {
@@ -472,8 +474,16 @@ lpoll(lua_State *L) {
 	if (res <= 0) {
 		return 0;
 	}
+	
+	struct lua_socket *next = NULL, *prev = NULL;
+	prev = g->head;
 	ptr = g->head;
 	while (ptr != NULL) {
+		if (ptr->next != NULL)
+			next = ptr->next;
+		else
+			next = NULL;
+
 		if (FD_ISSET(ptr->fd, &g->rfds)) {
 			if (ptr->type == SOCKET_TYPE_LISTEN) {
 				if (g->count > MAX_SOCKET_NUM) {
@@ -484,7 +494,7 @@ lpoll(lua_State *L) {
 					continue;
 				}
 				struct lua_socket *so = g->freelist;
-				if (++g->count >(MAX_SOCKET_NUM)) {
+				if (++g->count > (MAX_SOCKET_NUM)) {
 					g->freelist = &g->socks[0];
 				} else {
 					for (size_t i = (so->id - 1); i != so->id; ) {
@@ -499,19 +509,26 @@ lpoll(lua_State *L) {
 				so->type = SOCKET_TYPE_CONNECTED;
 				int addlen;
 				so->fd = fd;
-				if (g->accept == NULL) {
-					g->accept = ptr;
-					ptr->extra = NULL;
-				} else {
-					ptr->extra = g->accept;
-					g->accept = ptr;
-				}
+				
 				if (ptr->accept == NULL) {
 					ptr->accept = so;
-					so->extra = NULL;
+					if (g->accept == NULL) {
+						g->accept = ptr;
+					} else {
+						struct lua_socket *pp = g->accept;
+						while (pp != NULL && pp->listen != NULL) {
+							pp = pp->listen;
+						}
+						pp->listen = ptr;
+						ptr->listen = NULL;
+					}
 				} else {
-					so->extra = ptr->accept;
-					ptr->accept = so;
+					struct lua_socket *pp = ptr->accept;
+					while (pp != NULL && pp->accept != NULL) {
+						pp = pp->accept;
+					}
+					pp->next = so;
+					so->next = NULL;
 				}
 			} else if (ptr->type == SOCKET_TYPE_CONNECTED) {
 				if (ptr->protocol == PROTOCOL_TCP) {
@@ -524,7 +541,9 @@ lpoll(lua_State *L) {
 						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
 #endif
 							// 当前so不处理
-							break;
+							prev = ptr;
+							ptr = next;
+							continue;
 #if defined(_WIN32)
 						} else if (e == WSAECONNRESET) {
 							closesocket(ptr->fd);
@@ -533,8 +552,11 @@ lpoll(lua_State *L) {
 							close(ptr->fd);
 #endif
 							ptr->type = SOCKET_TYPE_CLOSE;
+							prev->next = next;
+							ptr->next = NULL;
 							gate_add_disconected(g, ptr);
-							break;
+							ptr = next;
+							continue;
 						} else {
 #if defined(_WIN32)
 							closesocket(ptr->fd);
@@ -542,8 +564,11 @@ lpoll(lua_State *L) {
 							close(ptr->fd);
 #endif
 							ptr->type = SOCKET_TYPE_CLOSE;
+							prev->next = next;
+							ptr->next = NULL;
 							gate_add_disconected(g, ptr);
-							break;
+							ptr = next;
+							continue;
 						}
 					} else if (res == 0) {
 #if defined(_WIN32)
@@ -552,32 +577,35 @@ lpoll(lua_State *L) {
 						close(ptr->fd);
 #endif
 						ptr->type = SOCKET_TYPE_CLOSE;
+						prev->next = next;
+						ptr->next = NULL;
 						gate_add_disconected(g, ptr);
-						break;
+						ptr = next;
+						continue;
 					}
 
 					if (ptr->header == HEADER_TYPE_PG) {
-							int count = 0;
-							int size = 0;
-							uint8_t *buf = NULL;
-							while (ringbuf_read_string(ptr->rb, &buf, &size) > 0 && count <= 50) {
-								on_data(L, g, ptr, (char *)buf, size);
-								count++;
-							}
-					} else {
-							int count = 0;
-							int size = 0;
-							uint8_t *buf = NULL;
-							while (ringbuf_read_line(ptr->rb, &buf, &size) > 0 && count <= 50) {
-								on_data(L, g, ptr, (char *)buf, size);
-								count++;
-							}
+						int count = 0;
+						int size = 0;
+						uint8_t *buf = NULL;
+						while (ringbuf_read_string(ptr->rb, &buf, &size) > 0 && count <= 50) {
+							on_data(L, g, ptr, (char *)buf, size);
+							count++;
 						}
-					} else if (ptr->protocol == PROTOCOL_UDP) {
-					} else if (ptr->protocol == PROTOCOL_UDPv6) {
+					} else {
+						int count = 0;
+						int size = 0;
+						uint8_t *buf = NULL;
+						while (ringbuf_read_line(ptr->rb, &buf, &size) > 0 && count <= 50) {
+							on_data(L, g, ptr, (char *)buf, size);
+							count++;
+						}
 					}
+				} else if (ptr->protocol == PROTOCOL_UDP) {
+				} else if (ptr->protocol == PROTOCOL_UDPv6) {
 				}
 			}
+		}
 
 		if (FD_ISSET(ptr->fd, &g->wfds)) {
 			if (ptr->type == SOCKET_TYPE_CONNECTED) {
@@ -590,7 +618,7 @@ lpoll(lua_State *L) {
 						if (e == WSAEINTR || e == WSAEINPROGRESS) {
 #else 
 						if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) {
-							
+
 #endif
 							break;
 						} else {
@@ -600,8 +628,11 @@ lpoll(lua_State *L) {
 							close(ptr->fd);
 #endif
 							ptr->type = SOCKET_TYPE_CLOSE;
+							prev->next = next;
+							ptr->next = NULL;
 							gate_add_disconected(g, ptr);
-							break;
+							ptr = next;
+							continue;
 						}
 					} else if (res == 0) {
 #if defined(_WIN32)
@@ -610,8 +641,11 @@ lpoll(lua_State *L) {
 						close(ptr->fd);
 #endif
 						ptr->type = SOCKET_TYPE_CLOSE;
+						prev->next = next;
+						ptr->next = NULL;
 						gate_add_disconected(g, ptr);
-						break;
+						ptr = next;
+						continue;
 					}
 					if (wb_is_empty(wb)) {
 						wb_list_free_wb(ptr->wl, wb);
@@ -620,8 +654,8 @@ lpoll(lua_State *L) {
 				}
 			}
 		}
-
-		ptr = ptr->next;
+		prev = ptr;
+		ptr = next;
 	}
 
 	on_accept(L, g);
@@ -644,7 +678,7 @@ static int
 lclosesocket(lua_State *L) {
 	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
 	lua_Integer id = luaL_checkinteger(L, 2);
-	if (id < 1 && id > MAX_SOCKET_NUM) {
+	if (id < 1 || id > MAX_SOCKET_NUM) {
 		return 0;
 	}
 	struct lua_socket * so = &g->socks[id];

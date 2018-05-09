@@ -1,14 +1,15 @@
 local crypt = require "skynet.crypt"
 local ps = require "xluasocket"
 local log = require "log"
+local assert = assert
 
 local cls = class("clientlogin")
 
-function cls:ctor(network, ... )
+function cls:ctor(network)
 	-- body
 	assert(network)
 	self._network = network
-	
+
 	self._login_fd = false
 	self._login_step = 0
 
@@ -22,14 +23,15 @@ function cls:ctor(network, ... )
 	return self
 end
 
-function cls:login_connected( ... )
+function cls:login_connected()
 	-- body
+	assert(self)
 	-- self._state = state.LOGIN
 	-- self._login_step = 1
 end
 
-function cls:login_data(line, ... )
-	-- body	
+function cls:login_data(line)
+	-- body
 	if self._login_step == 1 then
 		local challenge = crypt.base64decode(line)
 		local clientkey = crypt.randomkey()
@@ -101,8 +103,9 @@ function cls:login_data(line, ... )
 	end
 end
 
-function cls:login_disconnected( ... )
+function cls:login_disconnected()
 	-- body
+	assert(self)
 	log.info("login_disconnected")
 end
 
@@ -128,7 +131,7 @@ end
 
 function cls:close()
 	-- body
-	ps:closesocket(self._login_fd)
+	ps.closesocket(self._network._g, self._login_fd)
 end
 
 return cls

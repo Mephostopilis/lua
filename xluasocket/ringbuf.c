@@ -241,7 +241,11 @@ ringbuf_memcpy_into(ringbuf_t *dst, const uint8_t *src, size_t count) {
 		/* don't copy beyond the end of the buffer */
 		assert(bufend > dst->head);
 		size_t n = MIN(bufend - dst->head, count - nread);
-		memcpy((void *)dst->head, (const void *)u8src + nread, n);
+#if defined(WIN32)
+		memcpy(dst->head, u8src + nread, n);
+#elif defined(ANDROID)
+		memcpy((void *)dst->head, (const void *)u8src + nread, n);		
+#endif
 		dst->head += n;
 		nread += n;
 

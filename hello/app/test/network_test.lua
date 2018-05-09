@@ -4,55 +4,68 @@ local timer = require "timer"
 local function run()
 	-- body
 	-- begain to connect
+	local network = NetworkMgr.new()
+	network:Startup()
 	local username = "hello"
 	local password = "Password"
 	local server = "sample1"
-
-
-	local user = User.new()
-	user.username = username
-	user.password = password
-	user.server = server
-	NetworkMgr:getInstance():RegNetwork(user)
+	local TI = 10000
+	local count = 100
 
 	local t = {
-		OnLoginAuthed = function (self, code, ... )
+		OnLoginAuthed = function (self, code, uid, subid, secret)
 			-- body
+			assert(self)
 			if code == 200 then
 				print("OnLoginAuthed ---------------------")
-				print(user.server)
-				print(user.uid)
-				print(user.subid)
-				print(user.secret)
+				-- print(user.server)
+				-- print(user.uid)
+				-- print(user.subid)
+				-- print(user.secret)
 				print("gate Auth ---------------------")
-				NetworkMgr:getInstance():GateAuth("127.0.0.1", 3301, user.server, user.uid, user.subid, user.secret)
+
+				network:GateAuth("127.0.0.1", 3301, server, uid, subid, secret)
 			end
 		end,
-		OnGateAuthed = function (self, ... )
+		OnGateAuthed = function (self)
 			-- body
+			assert(self)
 			print("OnGateAuthed")
-			timer.timeout(NetworkMgr:getInstance(), "timeout", 10)
+			timer.timeout(network, "timeout", TI)
 		end,
 		OnGateDisconnected = function (self, ... )
 			-- body
 		end
 	}
-	NetworkMgr:getInstance():RegNetwork(t)
-	NetworkMgr:getInstance():LoginAuth("127.0.0.1", "3002", server, username, password)
+	local r = {
+		handshake = function (self, responseObj, ... )
+			-- body
+			print('responseObj ===>', responseObj.errorcode)
+		end
+	}
+	network:RegNetwork(t)
+	network.client:register_response("handshake", r.handshake, r)
+	network:LoginAuth("127.0.0.1", "3002", server, username, password)
 
-	local function execute(obj, message, arg, ... )
+	local function execute(obj, message, arg)
 		-- body
 		print(timer.now())
-		if obj == NetworkMgr:getInstance() then
+		if obj == network then
 			if message == "timeout" then
-				NetworkMgr:getInstance().client:send_request("handshake")
+				network.client:send_request("handshake")
+				timer.timeout(network, "timeout", TI)
+				count = count - 1
 			end
 		end
 	end
-	while true do 
-		NetworkMgr:getInstance():Update()
+	while true do
+		network:Update()
 		timer.update(1, execute)
+		if count <= 0 then
+			break
+		end
 	end
+	network:Cleanup()
 end
 
 local ok, err = pcall(run)

@@ -51,6 +51,7 @@ end
 
 function cls:Startup()
 	-- body
+	assert(self)
 end
 
 function cls:Cleanup()

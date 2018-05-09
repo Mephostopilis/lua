@@ -11,7 +11,7 @@ local debug = debug
 
 local cls = class("clientsock")
 
-function cls:ctor(network, ... )
+function cls:ctor(network)
 	-- body
 	self._network = network
 
@@ -26,18 +26,18 @@ function cls:ctor(network, ... )
 	-- sproto
 	local proto = {}
 	local utils = FileUtils:getInstance()
-	if true then
-		proto.c2s = res.LoadTextAsset("XLua/app/proto", "proto.c2s.sproto").text
-	else
-		proto.c2s = utils:getStringFromFile("../hello/src/proto/proto.c2s.sproto")
+	if DEBUG_TEST then
+		proto.c2s = utils:getStringFromFile("../hello/app/proto/proto.c2s.sproto")
 		-- proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
+	else
+		proto.c2s = res.LoadTextAsset("XLua/app/proto", "proto.c2s.sproto").text
 	end
 	assert(type(proto.c2s) == "string")
-	if true then
-		proto.s2c = res.LoadTextAsset("XLua/app/proto", "proto.s2c.sproto").text
-	else
-		proto.s2c = utils:getStringFromFile("../hello/src/proto/proto.s2c.sproto")
+	if DEBUG_TEST then
+		proto.s2c = utils:getStringFromFile("../hello/app/proto/proto.s2c.sproto")
 		-- proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
+	else
+		proto.s2c = res.LoadTextAsset("XLua/app/proto", "proto.s2c.sproto").text
 	end
 	assert(type(proto.s2c) == "string")
 	local s2c_sp = core.newproto(parser.parse(proto.s2c))
@@ -244,7 +244,7 @@ end
 
 function cls:close()
 	-- body
-	ps:closesocket(self._gate_fd)
+	ps.closesocket(self._network._g, self._gate_fd)
 end
 
 return cls
