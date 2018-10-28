@@ -31,29 +31,6 @@ SOFTWARE.
 	#define luaL_newlib(L, l) ( lua_newtable(L), luaL_register(L, NULL, l))
 #endif
 
-
-#if defined(__APPLE__) && defined(__MACH__)
- #include <mach/mach_time.h>
- #ifdef CHRONOS_USE_COREAUDIO
-  #include <CoreAudio/HostTime.h>
- #endif
-#elif defined(_WIN32)
- #define WIN32_LEAN_AND_MEAN
- #include <windows.h>
-#elif defined(__unix__) || defined(__linux__) && !defined(__APPLE__)
- #include <unistd.h>
- #if defined (_POSIX_TIMERS) && _POSIX_TIMERS > 0
-  #ifdef _POSIX_MONOTONIC_CLOCK
-   #define HAVE_CLOCK_GETTIME
-   #include <time.h>
-  #else
-   #warning "A nanosecond resolution monotonic clock is not available;"
-   #warning "falling back to microsecond gettimeofday()"
-   #include <sys/time.h>
-  #endif
- #endif
-#endif
-
 # if !defined(__APPLE__) && (defined(__unix__) || defined(__linux__))
 static int chronos_nanotime(lua_State *L)
 {
@@ -106,28 +83,34 @@ static int chronos_nanotime(lua_State *L)
 
 
 #elif defined(_WIN32)
-static int chronos_nanotime(lua_State * L)
-{
-    // See http://msdn.microsoft.com/en-us/library/windows/desktop/dn553408(v=vs.85).aspx
-    LARGE_INTEGER timer;
-    LARGE_INTEGER freq;
-    static double multiplier;
-    static int init = 1;
+#pragma comment( lib,"winmm.lib" )
 
-    /* Though bool, guaranteed to not return an error after WinXP,
-     and the alternatives have fairly crappy resolution.
-     However, if you're on XP, you've got bigger problems than timing.
-    */
-    (void) QueryPerformanceCounter(&timer);
-    if(init){
-        QueryPerformanceFrequency(&freq);
-        multiplier = 1.0 / (double)freq.QuadPart;
-        init = 0;
-    }
-    lua_pushnumber(L, (lua_Number)(timer.QuadPart * multiplier));
-    return 1;
+void clock_gettime_mono(struct timespec *ti) {
+	// See http://msdn.microsoft.com/en-us/library/windows/desktop/dn553408(v=vs.85).aspx
+
+	LARGE_INTEGER timer;
+	LARGE_INTEGER freq;
+	static LARGE_INTEGER start;
+	static double multiplier;
+	static int init = 1;
+
+	/* Though bool, guaranteed to not return an error after WinXP,
+	and the alternatives have fairly crappy resolution.
+	However, if you're on XP, you've got bigger problems than timing.
+	*/
+	if (init) {
+		QueryPerformanceFrequency(&freq);
+		multiplier = 1.0 / (double)freq.QuadPart;
+		(void)QueryPerformanceCounter(&start);
+		init = 0;
+	}
+	(void)QueryPerformanceCounter(&timer);
+	timer.QuadPart = timer.QuadPart - start.QuadPart;
+	timer.QuadPart *= 1000000; // us
+	timer.QuadPart *= multiplier;
+	ti->tv_sec = timer.QuadPart / 1000000;
+	ti->tv_nsec = timer.QuadPart * 1000;
 }
-
 
 #elif defined(__APPLE__) && defined(__MACH__)
 static int chronos_nanotime(lua_State * L)
@@ -163,14 +146,3 @@ static int chronos_nanotime(lua_State * L)
 #error Your platform is not supported
 #endif
 
-
-static const struct luaL_Reg chronos_reg[] = {
-    {"nanotime", chronos_nanotime},
-    {NULL, NULL}
-};
-
-
-LUA_API int luaopen_chronos(lua_State *L){
-    luaL_newlib(L, chronos_reg);
-    return 1;
-}

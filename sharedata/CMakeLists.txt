@@ -1,5 +1,0 @@
-cmake_minimum_required(VERSION 2.8.5)
-project(lua)
-include_directories(src)
-aux_source_directory(src/SRC_LIST)
-add_executable(lua $(SRC_LIST))
