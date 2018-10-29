@@ -1,3 +1,4 @@
+#include "mt_rand.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -15,7 +16,7 @@
 #define mixBits(u, v) (hiBit(u)|loBits(v)) /* move hi bit of u to hi bit of v */
 
 
-#define N             (624)                /* length of state vector */
+// #define N             (624)                /* length of state vector */
 #define M             (397)                /* a period parameter */
 
 
@@ -25,11 +26,11 @@
 #define PHP_MT_RAND_MAX ((long) (0x7FFFFFFF)) /* (1<<31) - 1 */
 
 
-typedef struct {
-  uint32_t state[N];
-  uint32_t left;
-  uint32_t *next;  
-} MTState;
+// typedef struct {
+//   uint32_t state[N];
+//   uint32_t left;
+//   uint32_t *next;  
+// } MTState;
 
 // Will define if the PHP generator will be used, change at compile time
 unsigned short int PHPMtRand = 1;
