@@ -17,7 +17,7 @@
 
 
 // #define N             (624)                /* length of state vector */
-#define M             (397)                /* a period parameter */
+// #define M             (397)                /* a period parameter */
 
 
 #define RAND_RANGE(__n, __min, __max, __tmax)				\
@@ -141,17 +141,17 @@ php_mt_rand_range(MTState *mtInfo, uint32_t min, uint32_t max)
 
 
 // A simple test main
-int 
-main(int argc, char *argv[1])
-{
-  MTState info;
-  int i;
-  uint32_t seed = (argc > 1)? atoi(argv[1]) : 1000;
-  
-  mt_srand(seed, &info);
-  printf("%u\n", php_mt_rand_range(&info, 1000, 2000));
-  for (i = 0; i < 10; i ++)
-    printf("%u\n", php_mt_rand(&info));
-  return 0;
-}
+//int 
+//main(int argc, char *argv[1])
+//{
+//  MTState info;
+//  int i;
+//  uint32_t seed = (argc > 1)? atoi(argv[1]) : 1000;
+//  
+//  mt_srand(seed, &info);
+//  printf("%u\n", php_mt_rand_range(&info, 1000, 2000));
+//  for (i = 0; i < 10; i ++)
+//    printf("%u\n", php_mt_rand(&info));
+//  return 0;
+//}
 

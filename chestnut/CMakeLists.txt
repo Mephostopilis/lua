@@ -1,9 +1,10 @@
 project(chestnut)
+SET(CHESTNUT_H ./timeutils.h)
 aux_source_directory(. SRC_LIST)
-message(STATUS ${SRC_LIST})
+
 include_directories(../src)
 ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
-add_library(chestnut SHARED ${SRC_LIST})
+add_library(chestnut SHARED ${CHESTNUT_H} ${SRC_LIST})
 set_target_properties(chestnut PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin)
 set_target_properties(chestnut PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
 target_link_libraries(chestnut ../../bin/liblua)
