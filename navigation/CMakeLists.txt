@@ -2,7 +2,7 @@ file(GLOB navigation_ROOT_Cpp *.cpp)
 file(GLOB navigation_ROOT_Hpp *.hpp)
 file(GLOB navigation_ROOT_H *.h)
 
-include_directories(../src)
+include_directories(../lua-5.3.5/src)
 add_library(navigation SHARED ${navigation_ROOT_Cpp} ${navigation_ROOT_H} ${navigation_ROOT_Hpp})
 add_definitions(-DNF_NONCLIENT_BUILD -D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DLUA_BUILD_AS_DLL)

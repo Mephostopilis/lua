@@ -3,7 +3,7 @@ project(lpeg)
 file(GLOB LPEG_H *.h)
 aux_source_directory(. LPEG_C)
 
-include_directories(../src)
+include_directories(../lua-5.3.5/src)
 
 ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 IF(MSVC)

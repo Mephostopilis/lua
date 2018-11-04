@@ -3,7 +3,7 @@ project(md5)
 SET(MD5_C ./md5.c)
 
 include_directories(.)
-include_directories(../src)
+include_directories(../lua-5.3.5/src)
 
 ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 IF(MSVC)
