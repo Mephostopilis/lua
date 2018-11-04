@@ -2,7 +2,7 @@ project(config)
 
 SET(CONFIG_C ./config.cpp ./csv.cpp ./strhtable.cpp ./value_t.cpp)
 
-include_directories(../lua-5.3.5/src)
+include_directories(../lua/src)
 
 add_definitions(-DLUA_BUILD_AS_DLL)
 

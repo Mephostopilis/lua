@@ -3,7 +3,7 @@ project(skynet)
 SET(SKYNET_C ./lsha1.c ./lua-crypt.c)
 
 include_directories(.)
-include_directories(../lua-5.3.5/src)
+include_directories(../lua/src)
 
 ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 IF(MSVC)
