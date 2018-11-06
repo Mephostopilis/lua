@@ -1,0 +1,1 @@
+lua.exe ./test_main.lua

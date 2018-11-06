@@ -1,13 +1,13 @@
 project(xluasocket)
 SET(XLUASOCKET_H ./xluaconf.h ./write_buffer.h ./ringbuf.h ./protoc.h)
 SET(XLUASOCKET_C ./lxluasocket.c ./ringbuf.c ./write_buffer.c)
-message(STATUS ${XLUASOCKET_C})
-include_directories(.)
+
+
 include_directories(../lua/src)
-ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
+add_definitions(-DLUA_BUILD_AS_DLL -DXLUASOCKET)
 add_library(xluasocket SHARED ${XLUASOCKET_H} ${XLUASOCKET_C})
-set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin)
-set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin)
+set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(xluasocket ../../bin/liblua)
 ADD_DEPENDENCIES(xluasocket lua)
 

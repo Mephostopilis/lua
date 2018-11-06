@@ -1,0 +1,1 @@
+lua.exe ./test/test_server.lua

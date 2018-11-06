@@ -62,7 +62,7 @@ namespace {
 	}
 
 	TEST(WriteBufferTest, Write) {
-		struct wb_list* list = wb_list_new(10);
+		struct wb_list* list = wb_list_new();
 		wb_list_push_line(list, "hello world, ni hao.", 21);
 		EXPECT_EQ(wb_list_size(list), 3);
 		struct write_buffer *wb = NULL;

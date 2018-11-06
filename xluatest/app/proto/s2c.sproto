@@ -1,0 +1,715 @@
+.package {
+	type 0 : integer
+	session 1 : integer
+    index 2 : integer
+    version 3 : integer
+}
+
+.card {
+    pos   0 : integer
+    value 1 : integer
+}
+
+# 背包
+.item {
+    id  0 : integer
+    num 1 : integer
+}
+
+####################################### 
+# 邮件
+.mail {
+    id       0 : integer
+    from     1 : integer
+    to       2 : integer
+    title    3 : string
+    content  4 : string
+    viewed   5 : integer
+    datetime 6 : integer
+}
+
+.outbox {
+    all 0 : *mail
+}
+
+.record {
+    id            0 : integer
+    datetime      1 : integer
+    player1       2 : string
+    player2       3 : string
+    player3       4 : string
+    player4       5 : string
+}
+####################################### 
+# poker
+
+.pokerplayer {
+    idx 0 : integer
+    chip 1 : integer
+    sex 2 : integer
+    name 3 : string
+    state 4 : string
+    online 5 : boolean
+    cards 6 : *card         # 手上的牌
+    opcode 7 : integer
+    sitdown 8 : boolean
+}
+
+.perflop_card {
+    idx 0 : integer
+    cards 1 : *card
+}
+
+.pokerrule {
+}
+
+.pokersettleitem {
+    idx 0 : integer
+}
+
+.pokersettle {
+    ps 0 : *pokersettleitem
+}
+
+# poker
+####################################### 
+####################################### 
+# 麻将玩家信息，在重新链接的时候
+.player {
+    idx          0 : integer
+    chip         1 : integer
+    sex          3 : integer
+    name         4 : string
+    state        5 : integer
+    last_state   6 : integer
+    que          7 : integer
+    takecardsidx 8 : integer
+    takecardscnt 9 : integer
+    takecardslen 10 : integer
+    takecards    11 : *card
+    cards        12 : *card
+    leadcards    13 : *card
+    putcards     14 : *card
+    putidx       15 : integer  # 无用
+    hold_card    16 : card
+    hucards      17 : *card
+}
+
+.huinfo {
+    idx        0 : integer
+    card       1 : integer
+    dian       2 : integer
+    hutype     3 : integer
+    jiaotype   4 : integer
+}
+
+.opinfo {
+    idx        0 : integer      # 谁有操作
+    opcode     1 : integer      # 什么操作
+    card       2 : integer      # 针对那张牌
+    dian       3 : integer      # 谁打的，可能自摸
+    gangtype   4 : integer
+    hutype     5 : integer      # 如果是胡，请判断下
+    jiaotype   6 : integer      # 如果是胡，请判断下
+}
+
+.crsc {
+    hujiaozhuanyi 0 : integer
+    zimo          1 : integer
+    dianganghua   2 : integer
+    daiyaojiu     3 : integer
+    duanyaojiu    4 : integer
+    jiangdui      5 : integer
+    tiandihu      6 : integer
+    top           7 : integer
+}
+
+.crsx {
+    huqidui       0 : integer
+    qingyise      1 : integer
+}
+
+.rule {
+    id 0 : integer
+}
+
+.settlementitem {
+    idx       0 : integer           # 关于谁的
+    chip      1 : integer           # 赢与输，多少
+    opcode    2 : integer           # 什么原因，若是胡，请还要判断小面两个
+    gangtype  3 : integer
+    hutype    4 : integer           
+    jiaotype  5 : integer
+    them      6 : *integer          # 针对谁
+    huazhu    7 : boolean           # 是否是花猪
+    dajiao    8 : boolean           # 是否是大叫
+    tuisui    9 : boolean           # 是否是退税
+}
+
+.settle {
+    p1 0 : settlementitem
+    p2 1 : settlementitem
+    p3 2 : settlementitem
+    p4 3 : settlementitem
+}
+
+# 麻将
+#######################################
+####################################### 
+# 一般模块 [1, 100)
+handshake 1 {
+    response {
+        errorcode 0 : integer
+    }
+}
+
+logout 2 {
+    request {
+        subid 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+online 3 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+offline 4 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+match 5 {
+    request {
+        id 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 系统模块 [100, 500)
+rcard 101 {
+    request {
+        num       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+radio 102 {
+    request {
+        board     0 : string
+        adver     1 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+inbox 103 {
+    request {
+        list      0 : *mail
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+board 104 {
+    request {
+        text      0 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+adver 105  {
+    request {
+        text      0 : string
+    }
+    response {
+        errorcode 0 : integer
+    }   
+}
+
+records 106 {
+    request {
+        list      0 : *record
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+add_item 107 {
+    request {
+        i 0 : item
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+sub_item 108 {
+    request {
+        i 0 : item
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+rchat 109 {
+    request {
+        idx       0 : integer
+        type      1 : integer
+        textid    2 : integer
+        sdsteam   3 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+####################################### 
+# 德州模块 [720, 800)
+
+# 轮到你做出选择，是出牌还是放弃
+pokertake_turn 720 {
+    request {
+        idx       0 : integer
+        countdown 1 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokercall 721 {
+    request {
+        idx        0 : integer
+        opcode     1 : integer
+        coin       2 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# 洗牌(deprecated)
+# pokershuffle 722 {
+#     request {
+#     }
+#     response {
+#         errorcode 0 : integer
+#     }
+# }
+
+# 发牌
+pokerdeal 723 {
+    request {
+        sblindidx  0 : integer
+        bblindidx  1 : integer
+        state      2 : string
+        perflop    3 : *perflop_card # 每个玩家两张牌
+        flop       4 : *card         # 三张
+        turn       5 : card          # 第四张
+        river      6 : card          # 第五张
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# (deprecated)
+pokertake_ready 724 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }   
+}
+
+# (deprecated)
+pokerready 725 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokerover 726 {
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# 请求确认重新开始(deprecated)
+pokertake_restart 727 {
+    response { 
+        errorcode 0 : integer
+    }
+}
+
+pokerrestart 728 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# 结算
+pokersettle 729 {
+    request {
+        settles 0 : *pokersettle
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokermatch 730 {
+    request {
+        roomid 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokerrejoin 731 {
+    request {
+        p 0 : pokerplayer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokerjoin 732 {
+    request {
+        p 0 : pokerplayer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokerleave 733 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+pokersitdown 734 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }   
+}
+
+pokerstandup 735 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }   
+}
+
+# 德州模块结束
+####################################### 
+####################################### 
+# 麻将模块 [500, 600)
+
+take_turn 500 {
+    request {
+        your_turn 0 : integer
+        countdown 1 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+peng 501 {
+    request {
+        idx       0 : integer
+        code      1 : integer
+        card      2 : integer
+        hor       3 : integer
+        dian      4 : integer
+        holdcard  5 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+gang 502 {
+    request {
+        idx       0 : integer
+        code      1 : integer
+        card      2 : integer
+        hor       3 : integer
+        dian      4 : integer
+        isHoldcard 5 : boolean
+        isHoldcardInsLast 6 : boolean
+        settles   7 : settle
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+hu 503 {
+    request {
+        hus       0 : *huinfo
+        settles   1 : settle
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+ocall 504 {
+    request {
+        opcodes   0 : *opinfo
+        countdown  1 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+shuffle 505 {
+    request {
+        first     0 : integer
+        p1        1 : *integer
+        p2        2 : *integer
+        p3        3 : *integer
+        p4        4 : *integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+dice 506 {
+    request {
+        first     0 : integer
+        firsttake 1 : integer
+        d1        2 : integer
+        d2        3 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+lead 507 {
+    request {
+        idx       0 : integer
+        card      1 : integer
+        isHoldcard 2 : boolean
+    } 
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# 麻将发牌
+deal 508 {
+    request {
+        firstidx  0 : integer
+        firsttake 1 : integer
+        p1        2 : *integer
+        p2        3 : *integer
+        p3        4 : *integer
+        p4        5 : *integer
+        card      6 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+ready 509 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+over 510 {
+    response {
+        errorcode 0 : integer
+    }
+}
+
+restart 511 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+take_restart 512 {
+    response { 
+        errorcode 0 : integer
+    }
+}
+
+# rchat 513 {
+#     request {
+#         idx       0 : integer
+#         type      1 : integer
+#         textid    2 : integer
+#         sdsteam   3 : string
+#     }
+#     response {
+#         errorcode 0 : integer
+#     }
+# }
+
+take_xuanpao 514 {
+    request {
+        countdown 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+xuanpao 515 {
+    request {
+        idx       0 : integer
+        fen       1 : integer
+    } 
+    response {
+        errorcode 0 : integer
+    }
+}
+
+take_xuanque 516 {
+    request {
+        countdown 0 : integer
+        your_turn 1 : integer
+        card      2 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+xuanque 517 {
+    request {
+        p1       0 : integer
+        p2       1 : integer
+        p3       2 : integer
+        p4       3 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+settle 518 {
+    request {
+        settles 0 : *settle
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+final_settle 519 {
+    request {
+        p1 0 : *settlementitem
+        p2 1 : *settlementitem
+        p3 2 : *settlementitem
+        p4 3 : *settlementitem
+        over    4 : boolean
+    } 
+    response {
+        errorcode 0 : integer
+    }
+}
+
+mcall 520 {
+    request {
+        opcodes   0 : opinfo
+        countdown  1 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+take_card 521 {
+    request {
+        idx 0 : integer
+        card 1 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+rejoin 522 {
+    request {
+        p         0 : player
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+join 523 {
+    request {
+        p         0 : player
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+leave 524 {
+    request {
+        idx       0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+# 麻将模块结束
+####################################### 
