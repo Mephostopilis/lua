@@ -27,17 +27,17 @@ function cls:ctor(network, ... )
 	-- sproto
 	local proto = {}
 	local utils = FileUtils:getInstance()
-	if true then
+	if false then
 		proto.c2s = res.LoadTextAsset("XLua/app/proto", "c2s.sproto").text
 	else
-		proto.c2s = utils:getStringFromFile("../hello/src/proto/proto.c2s.sproto")
+		proto.c2s = utils:getStringFromFile("app/proto/c2s.sproto")
 		-- proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
 	end
 	assert(type(proto.c2s) == "string")
-	if true then
+	if false then
 		proto.s2c = res.LoadTextAsset("XLua/app/proto", "s2c.sproto").text
 	else
-		proto.s2c = utils:getStringFromFile("../hello/src/proto/proto.s2c.sproto")
+		proto.s2c = utils:getStringFromFile("app/proto/s2c.sproto")
 		-- proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
 	end
 	assert(type(proto.s2c) == "string")

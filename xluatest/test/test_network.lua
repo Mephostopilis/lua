@@ -61,9 +61,9 @@ local function run()
 	while true do
 		network:Update()
 		timer.update(1, execute)
-		if count <= 0 then
-			break
-		end
+		-- if count <= 0 then
+		-- 	break
+		-- end
 	end
 	network:Cleanup()
 end

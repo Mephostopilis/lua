@@ -18,17 +18,21 @@ class = cc.class
 DEBUG_TEST = true
 
 -- require "main"
-print('TEST LIST --------------')
-require "list_test"
-print('TEST TIMER --------------')
-require "timer_test"
--- require "random_test"
--- require "test.queue_test"
--- require "test.stack_test"
--- require "test.test_entity_system"
+print('[[ -------------- TEST LIST -------------- ]]')
+-- require "test_list"
+print('[[ -------------- TEST TIMER -------------- ]]')
+require "test_timer"
+print('[[ -------------- TEST RANDOM -------------- ]]')
+require "test_random"
+print('[[ -------------- TEST QUEUE -------------- ]]')
+require "test.test_chestnut"
+print('[[ -------------- TEST ENTITIES -------------- ]]')
+require "test.test_entity_system"
 -- require "test.server"
 -- require "test.client"
--- require "test.network_test"
--- require "test.dbpack_test"
+print('[[ -------------- TEST NETWORK -------------- ]]')
+require "test.test_network"
+print('[[ -------------- TEST RAPIDJSON -------------- ]]')
+require "test.test_dbpack"
 
 -- os.execute("pause")

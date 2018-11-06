@@ -36,7 +36,7 @@ function cls:login_data(line, ... )
 		local g = assert(self._network._g)
 		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(crypt.dhexchange(clientkey)))
 		if err == 0 then
-			log.info("login send bytes = %d", bytes)
+			log.info("login send randomkey bytes = %d", bytes)
 		else
 			self._login_step = 0
 			log.error("login send error.")
@@ -52,7 +52,7 @@ function cls:login_data(line, ... )
 		local g = assert(self._network._g)
 		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(hmac))
 		if err == 0 then
-			log.info("login send bytes = %d", bytes)
+			log.info("login send challenge bytes = %d", bytes)
 		else
 			self._login_step = 0
 			log.error("login send error.")

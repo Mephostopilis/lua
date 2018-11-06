@@ -34,17 +34,19 @@ struct wb_list {
 
 #if defined(XLUASOCKET)
 int
-wb_write_fd(struct write_buffer *ptr, int fd) {
-	assert(ptr != NULL);
-	char buffer[1024] = { 0 };
-	int count = MIN(1024, (ptr->buffer + ptr->len - ptr->ptr));
-	memcpy(buffer, ptr->ptr, count);
-#if defined(_DEBUG)
-	printf("prof write fd [[%s]] ---------- \n", buffer);
-#endif
-	int n = send(fd, ptr->ptr, count, 0);
+wb_write_fd(struct write_buffer *wb, int fd) {
+	assert(wb != NULL);
+	int n = send(fd, wb->ptr, (wb->buffer + wb->len - wb->ptr), 0);
 	if (n > 0) {
-		ptr->ptr = ptr->ptr + n;
+#if defined(_DEBUG)
+		int sz = (wb->buffer + wb->len - wb->ptr);
+		char *buffer = (char *)malloc(sz + 1);
+		memset(buffer, 0, sz + 1);
+		memcpy(buffer, wb->ptr, sz);
+		printf("prof write fd [[%s]] ---------- \n", buffer);
+		free(buffer);
+#endif
+		wb->ptr += n;
 	}
 	return n;
 }
@@ -106,23 +108,24 @@ struct write_buffer *
 			++offset;
 		}
 		ptr = MALLOC(sizeof(*ptr) + (1 << offset));
+		list->count++;
 		goto LABLE;
 	}
 
 	// 寻找大于此内存的
 	if (ptr->cap < hint) {
-		while (ptr->next != NULL) {
-			if (ptr->next->cap > hint) {
-				struct write_buffer *tmp = ptr->next;
-				ptr->next = ptr->next->next;
-				ptr = tmp;
+		for (struct write_buffer *p = ptr->next; p != NULL; ptr = p, p = p->next) {
+			if (p->cap > hint) {
+				ptr->next = p->next;
+				ptr = p;
 				goto LABLE;
 			}
-			ptr = ptr->next;
 		}
-		if (ptr->next == NULL) {
-			ptr = NULL;
-		}
+		// foreach over
+		assert(ptr->next == NULL);
+		ptr = NULL;
+	} else {
+		list->freelist = ptr->next;
 	}
 LABLE:
 	if (ptr == NULL) {
@@ -130,10 +133,12 @@ LABLE:
 			++offset;
 		}
 		ptr = MALLOC(sizeof(*ptr) + (1 << offset));
+		list->count++;
 	}
 
 	ptr->next = NULL;
 	ptr->cap = 1 << offset;
+	ptr->len = 0;
 	ptr->ptr = ptr->buffer;
 	memset(ptr->buffer, 0, ptr->cap);
 	return ptr;
@@ -150,65 +155,39 @@ wb_list_free_wb(struct wb_list* list, struct write_buffer *wb) {
 
 void
 wb_list_push_string(struct wb_list* list, char *buffer, int sz) {
-	struct write_buffer *wb = wb_list_pop(list);
-	if (wb == NULL) {
-		wb = wb_list_alloc_wb(list, sz);
+	assert(list != NULL);
+	if (buffer == NULL) {
+		return;
 	}
-	if (wb_bytes_free(wb) < 2) {
-		wb_list_push_wb(list, wb);
-		wb = wb_list_alloc_wb(list, sz);
+	if (sz <= 0) {
+		return;
 	}
+
+	struct write_buffer *wb = wb_list_alloc_wb(list, sz + 2);
 	int ofs = WriteInt16(wb->buffer + wb->len, 0, sz);
 	wb->len += ofs;
-	int n = 0;
-	int realsz = ((sz - n) > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz - n);
-	memcpy(wb->buffer + wb->len, buffer, realsz);
-	n += realsz;
-	wb->len += realsz;
+	assert(wb_bytes_free(wb) >= sz);
+	memcpy(wb->buffer + wb->len, buffer, sz);
+	wb->len += sz;
 	wb_list_push_wb(list, wb);
-
-	while (n < sz) {
-		wb = wb_list_pop(list);
-		if (wb_bytes_free(wb) < (sz - n)) {
-			wb_list_push_wb(list, wb);
-			wb = wb_list_alloc_wb(list, sz);
-		}
-		realsz = ((sz - n) > (wb_bytes_free(wb))) ? (wb_bytes_free(wb)) : (sz - n);
-		memcpy(wb->buffer + wb->len, buffer + n, realsz);
-		n += realsz;
-		wb->len += realsz;
-		wb_list_push_wb(list, wb);
-	}
 }
 
 void
 wb_list_push_line(struct wb_list* list, char *buffer, int sz) {
-	struct write_buffer *wb = wb_list_pop(list);
-	int n = 0;
-	while (n < sz) {
-		if (wb == NULL) {
-			wb = wb_list_alloc_wb(list, sz);
-		} else if (wb_bytes_free(wb) < sz) {
-			wb_list_push_wb(list, wb);
-			wb = wb_list_alloc_wb(list, sz);
-		}
-
-		int realsz = ((sz - n) > wb_bytes_free(wb)) ? (wb_bytes_free(wb)) : (sz - n);
-		memcpy(wb->buffer + wb->len, buffer + n, realsz);
-		n += realsz;
-		wb->len += realsz;
+	assert(list != NULL);
+	if (buffer == NULL) {
+		return;
 	}
-	if (wb->len < wb->cap) {
-		wb->buffer[wb->len] = '\n';
-		wb->len = wb->len + 1;
-		wb_list_push_wb(list, wb);
-	} else {
-		wb_list_push_wb(list, wb);
-		wb = wb_list_alloc_wb(list, sz);
-		wb->buffer[0] = '\n';
-		wb->len = 1;
-		wb_list_push_wb(list, wb);
+	if (sz <= 0) {
+		return;
 	}
+	struct write_buffer *wb = wb_list_alloc_wb(list, sz + 1);
+	assert(wb != NULL);
+	assert(wb->cap > sz);
+	memcpy(wb->buffer, buffer, sz);
+	wb->buffer[sz] = '\n';
+	wb->len = sz + 1;
+	wb_list_push_wb(list, wb);
 }
 
 void

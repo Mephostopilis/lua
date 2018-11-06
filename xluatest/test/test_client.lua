@@ -28,8 +28,8 @@ local function run( ... )
 	while true do 
 		xluasocket.poll(g)
 		local err = xluasocket.send(g, id, "hello world")
-		if err == 1 then
-			-- print(string.format("id = %d send failtrue.", id))
+		if err == -1 then
+			print(string.format("id = %d send failtrue.", id))
 		end
 	end
 end
