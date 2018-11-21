@@ -1,4 +1,4 @@
-#include "write_buffer.h"
+ï»¿#include "write_buffer.h"
 #include "protoc.h"
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +29,7 @@ struct wb_list {
 	struct write_buffer * head;
 	struct write_buffer * tail;
 	struct write_buffer * freelist;
-	int count;  // Í³¼Æ·ÖÅäµÄwbÊýÁ¿
+	int count;  // ç»Ÿè®¡åˆ†é…çš„wbæ•°é‡
 };
 
 #if defined(XLUASOCKET)
@@ -112,7 +112,7 @@ struct write_buffer *
 		goto LABLE;
 	}
 
-	// Ñ°ÕÒ´óÓÚ´ËÄÚ´æµÄ
+	// å¯»æ‰¾å¤§äºŽæ­¤å†…å­˜çš„
 	if (ptr->cap < hint) {
 		for (struct write_buffer *p = ptr->next; p != NULL; ptr = p, p = p->next) {
 			if (p->cap > hint) {
@@ -187,6 +187,23 @@ wb_list_push_line(struct wb_list* list, char *buffer, int sz) {
 	memcpy(wb->buffer, buffer, sz);
 	wb->buffer[sz] = '\n';
 	wb->len = sz + 1;
+	wb_list_push_wb(list, wb);
+}
+
+void
+wb_list_push_buffer(struct wb_list* list, char *buffer, int sz) {
+	assert(list != NULL);
+	if (buffer == NULL) {
+		return;
+	}
+	if (sz <= 0) {
+		return;
+	}
+	struct write_buffer *wb = wb_list_alloc_wb(list, sz + 1);
+	assert(wb != NULL);
+	assert(wb->cap > sz);
+	memcpy(wb->buffer, buffer, sz);
+	wb->len = sz;
 	wb_list_push_wb(list, wb);
 }
 

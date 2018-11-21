@@ -1,4 +1,4 @@
-extern "C" {
+﻿extern "C" {
 #include "ringbuf.h"
 #include "write_buffer.h"
 }
@@ -8,9 +8,11 @@ extern "C" {
 namespace {
 
 	TEST(RINGBUFTest, Write) {
-		ringbuf_t *rb = ringbuf_new(5);
-		EXPECT_EQ(ringbuf_capacity(rb), 5);
-		EXPECT_EQ(ringbuf_buffer_size(rb), 6);
+		int cap = 5;
+		ringbuf_t *rb = ringbuf_new(cap);
+		EXPECT_EQ(ringbuf_capacity(rb), cap);
+		EXPECT_EQ(ringbuf_buffer_size(rb), cap + 1);
+
 
 		// write
 		EXPECT_EQ(ringbuf_write_int16(rb, 1), 2);

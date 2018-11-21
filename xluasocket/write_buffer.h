@@ -54,6 +54,9 @@ void
 wb_list_push_line(struct wb_list* list, char *buffer, int sz);
 
 void
+wb_list_push_buffer(struct wb_list* list, char *buffer, int sz);
+
+void
 wb_list_push_wb(struct wb_list* list, struct write_buffer *wb);
 
 struct write_buffer*

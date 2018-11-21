@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ringbuf.c - C ring buffer (FIFO) implementation.
  *
  * Written in 2011 by Drew Hess <dhess-src@bothan.net>.
@@ -292,6 +292,34 @@ ringbuf_read_fd(ringbuf_t *rb, int fd, size_t hint_max) {
 	return n;
 }
 
+ssize_t
+ringbuf_read_fd_dagram(ringbuf_t *rb, int fd, size_t hint_max, struct sockaddr * from, int * fromlen) {
+	if (ringbuf_is_full(rb)) {
+		ringbuf_ext(rb);
+	}
+	const uint8_t *bufend = ringbuf_end(rb);
+	size_t nfree = ringbuf_bytes_free(rb);
+
+	/* don't write beyond the end of the buffer */
+	assert(bufend > rb->head);
+	int count = MIN(bufend - rb->head, nfree);
+	ssize_t n = recvfrom(fd, rb->head, count, 0, from, fromlen);
+	if (n > 0) {
+		assert(rb->head + n <= bufend);
+		rb->head += n;
+
+		/* wrap? */
+		if (rb->head == bufend)
+			rb->head = rb->buf;
+
+		/* fix up the tail pointer if an overflow occurred */
+		if (n > nfree) {
+			rb->tail = ringbuf_nextp(rb, rb->head);
+			assert(ringbuf_is_full(rb));
+		}
+	}
+}
+
 int
 ringbuf_read_string(ringbuf_t *rb, uint8_t **out, int *size) {
 	if (ringbuf_bytes_used(rb) < 2) {
@@ -351,7 +379,7 @@ ringbuf_read_int64(ringbuf_t *rb, int64_t *out) {
 	*out = 0;
 	int len = 8;
 	if (ringbuf_bytes_used(rb) >= len) {
-		if (!CheckEnd()) { // ��λ�ֽڴ��λ
+		if (!CheckEnd()) { // 低位字节存高位
 			for (size_t i = 0; i < len; i++) {
 				uint8_t *c = rb->tail;
 				*out |= (*c << ((len - i - 1) * 8)) & 0xffffffff;
@@ -376,7 +404,7 @@ ringbuf_read_int32(ringbuf_t *rb, int32_t *out) {
 	*out = 0;
 	int len = 4;
 	if (ringbuf_bytes_used(rb) >= len) {
-		if (!CheckEnd()) { // ��λ�ֽڴ��λ
+		if (!CheckEnd()) { // 低位字节存高位
 			for (size_t i = 0; i < len; i++) {
 				uint8_t *c = rb->tail;
 				*out |= (*c << ((len - i - 1) * 8)) & 0xffffffff;
@@ -401,7 +429,7 @@ ringbuf_read_int16(ringbuf_t *rb, int16_t *out) {
 	*out = 0;
 	int len = 2;
 	if (ringbuf_bytes_used(rb) >= len) {
-		if (!CheckEnd()) { // ��λ�ֽڴ��λ,ld
+		if (!CheckEnd()) { // 低位字节存高位,ld
 			for (size_t i = 0; i < len; i++) {
 				uint8_t *c = rb->tail;
 				*out |= (*c << ((len - i - 1) * 8)) & 0xffffffff;
@@ -426,7 +454,7 @@ ringbuf_read_int8(ringbuf_t *rb, int8_t *out) {
 	*out = 0;
 	int len = 1;
 	if (ringbuf_bytes_used(rb) >= len) {
-		if (!CheckEnd()) { // ��λ�ֽڴ��λ
+		if (!CheckEnd()) { // 低位字节存高位
 			for (size_t i = 0; i < len; i++) {
 				uint8_t *c = rb->tail;
 				*out |= (*c << ((len - i - 1) * 8)) & 0xffffffff;

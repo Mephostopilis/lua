@@ -444,29 +444,22 @@ lsend(lua_State *L) {
 		return 1;
 	}
 
-	assert(so->protocol == PROTOCOL_TCP);
-	if (so->header == HEADER_TYPE_LINE) {
-		wb_list_push_line(so->wl, (char *)buffer, sz);
-	} else if (so->header == HEADER_TYPE_PG) {
-		wb_list_push_string(so->wl, (char *)buffer, sz);
-	} else {
-		lua_pushinteger(L, -1);
-		lua_pushinteger(L, 5);
-		return 2;
+	if (so->protocol == PROTOCOL_TCP) {
+		if (so->header == HEADER_TYPE_LINE) {
+			wb_list_push_line(so->wl, (char *)buffer, sz);
+		} else if (so->header == HEADER_TYPE_PG) {
+			wb_list_push_string(so->wl, (char *)buffer, sz);
+		} else {
+			lua_pushinteger(L, -1);
+			lua_pushinteger(L, 5);
+			return 2;
+		}
+	} else if (so->protocol == PROTOCOL_UDP || so->protocol == PROTOCOL_UDPv6) {
+		wb_list_push_buffer(so->wl, buffer, sz);
 	}
 	lua_pushinteger(L, 0);
 	lua_pushinteger(L, sz);
 	return 2;
-}
-
-static int
-lsendto(lua_State *L) {
-	struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-	struct lua_socket * so = (struct lua_socket*)lua_touserdata(L, 2);
-	size_t len = 0;
-	const char *buffer = lua_tolstring(L, 3, &len);
-	sendto(so->fd, buffer, len, 0, &so->remote, sizeof(so->remote));
-	return 0;
 }
 
 static int
@@ -557,6 +550,42 @@ lpoll(lua_State *L) {
 
 				}
 			} else if (ptr->protocol == PROTOCOL_UDP || ptr->protocol == PROTOCOL_UDPv6) {
+				// must call 1th
+				for (size_t i = 0; i < MAX_RECVPACK_NUM; i++) {
+					int res = ringbuf_read_fd(ptr->rb, ptr->fd, RINGBUF_SIZE);
+					if (res == -1) {
+						on_handle_error(L, g, ptr);
+						break;
+					} else if (res == 0) {
+#if defined(_WIN32)
+						closesocket(ptr->fd);
+#else
+						close(ptr->fd);
+#endif
+						ptr->type = SOCKET_TYPE_CLOSE;
+						ptr->prev->next = ptr->next;
+						if (ptr->next != NULL) {
+							ptr->next->prev = ptr->prev;
+						}
+						on_disconnected(L, g, ptr);
+						break;
+					}
+					if (ptr->header == HEADER_TYPE_PG) {
+						int size = 0;
+						uint8_t *buf = NULL;
+						for (size_t j = 0; ringbuf_read_string(ptr->rb, &buf, &size) > 0 && j < MAX_SLICEPACK_NUM; j++) {
+							on_data(L, g, ptr, (char *)buf, size);
+						}
+					} else if (ptr->header == HEADER_TYPE_LINE) {
+						int size = 0;
+						uint8_t *buf = NULL;
+						for (size_t j = 0; ringbuf_read_line(ptr->rb, &buf, &size) > 0 && j < MAX_SLICEPACK_NUM; j++) {
+							on_data(L, g, ptr, (char *)buf, size);
+						}
+					} else {
+						assert(0);
+					}
+				}
 			}
 			// read over
 		}
@@ -635,7 +664,6 @@ luaopen_xluasocket(lua_State *L) {
 		{ "connect", lconnect },
 		{ "start", lstart },
 		{ "send", lsend },
-		{ "sendto", lsendto },
 		{ "poll", lpoll },
 		{ "keepalive", lkeepalive },
 		{ "closesocket", lclosesocket },

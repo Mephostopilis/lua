@@ -1,4 +1,4 @@
-#ifndef INCLUDED_RINGBUF_H
+﻿#ifndef INCLUDED_RINGBUF_H
 #define INCLUDED_RINGBUF_H
 
 /*
@@ -176,6 +176,8 @@ ringbuf_memcpy_into(ringbuf_t *dst, const uint8_t *src, size_t count);
  */
 ssize_t
 ringbuf_read_fd(ringbuf_t *rb, int fd, size_t hint_max);
+ssize_t
+ringbuf_read_fd_dagram(ringbuf_t *rb, int fd, size_t hint_max);
 
 int
 ringbuf_read_string(ringbuf_t *rb, uint8_t **out, int *size);

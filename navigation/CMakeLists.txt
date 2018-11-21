@@ -1,4 +1,4 @@
-file(GLOB navigation_ROOT_Cpp *.cpp)
+﻿file(GLOB navigation_ROOT_Cpp *.cpp)
 file(GLOB navigation_ROOT_Hpp *.hpp)
 file(GLOB navigation_ROOT_H *.h)
 
@@ -13,9 +13,9 @@ if( WIN32 )
 endif()
 
 set_target_properties( navigation PROPERTIES
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../bin
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../bin
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../bin)
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 	
 if(UNIX)
 	if (CMAKE_BUILD_TYPE MATCHES "Release")
@@ -24,7 +24,7 @@ if(UNIX)
 		target_link_libraries(navigation )
 	endif()
 else()
-	target_link_libraries(navigation ../../bin/liblua)
+	target_link_libraries(navigation ../../xluatest/liblua)
 	ADD_DEPENDENCIES(navigation lua)
 endif()
 
