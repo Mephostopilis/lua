@@ -24,6 +24,7 @@
 #include "..\Common\b3Time.h"
 #include "Contacts\b3ContactGraph.h"
 #include "Joints\b3JointGraph.h"
+#include <lua.hpp>
 
 struct b3BodyDef;
 class b3Body;

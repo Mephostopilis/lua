@@ -45,13 +45,12 @@ struct b3R32 {
 	b3R32(const b3R32 &b);
 	b3R32(const int16_t b);
 	b3R32(const int32_t b);
+	b3R32(const int64_t b);
 	b3R32(const uint32_t b);
 	b3R32(const uint64_t b);
 	b3R32(const float b);
 	b3R32(const double b);
 	
-	
-
 	// Assing other vector to this vector.
 	b3R32& operator=(const b3R32& b) {
 		i = b.i;
@@ -80,7 +79,7 @@ struct b3R32 {
 	b3R32 & operator++(int);
 
 	operator bool();
-	operator int32_t();
+	operator int32_t() const;
 
 	// Set to the zero vector.
 	void SetZero();

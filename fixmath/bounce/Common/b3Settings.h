@@ -33,9 +33,14 @@ typedef unsigned char u8;
 typedef unsigned short u6;
 typedef unsigned int u32;
 typedef unsigned long long u64;
-//typedef float r32;
+#if defined(B3_NO_FIXMATH)
+typedef float r32;
+#else
 typedef b3R32 r32;
-//typedef double r64;
+#endif
+#if !defined(B3_NO_PROFILE)
+typedef double r64;
+#endif
 
 
 // You can modify the following parameters as long

@@ -44,6 +44,10 @@ b3R32::b3R32(const int32_t v) {
 	i = fix16_from_int(v);
 }
 
+b3R32::b3R32(const int64_t b) {
+	i = fix16_from_int(b);
+}
+
 b3R32::b3R32(const uint32_t b) {
 	i = fix16_from_int(b);
 }
@@ -151,8 +155,8 @@ b3R32::operator bool() {
 	return (i > 0);
 }
 
-b3R32::operator int32_t() {
-	return i;
+b3R32::operator int32_t() const {
+	return fix16_to_int(i);
 }
 
 // Set to the zero vector.
