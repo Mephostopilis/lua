@@ -1,9 +1,20 @@
-#define LUA_LIB
+﻿#define LUA_LIB
 
-#include "lua.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <lua.h>
+#include <lauxlib.h>
+
+LUAMOD_API int luaopen_navigation(lua_State *L);
+
+#ifdef __cplusplus
+}
+#endif
+
 #include "NFCNavigationModule.h"
 
-struct pathfinding {
+struct navigation {
 	NFCNavigationHandle *handle;
 };
 
@@ -11,17 +22,23 @@ static int
 lalloc(lua_State *L) {
 	size_t l;
 	const char *respath = luaL_checklstring(L, 1, &l);
-	struct pathfinding *nav = (struct pathfinding *)lua_newuserdata(L, sizeof(struct pathfinding));
+	struct navigation *nav = (struct navigation *)lua_newuserdata(L, sizeof(struct navigation));
 	nav->handle = NFCNavigationHandle::Create(respath);
-
 	lua_pushvalue(L, lua_upvalueindex(1));
 	lua_setmetatable(L, -1);
 	return 1;
 }
 
+static int
+lgc(lua_State *L) {
+	struct navigation *nav = (struct navigation *)lua_touserdata(L, 1);
+	delete nav->handle;
+	return 0;
+}
+
 static int 
 lFindStraightPath(lua_State *L) {
-	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
+	struct navigation *nav = (struct navigation *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 2);
 	lua_Number start_y = luaL_checknumber(L, 3);
 	lua_Number start_z = luaL_checknumber(L, 4);
@@ -51,7 +68,7 @@ lFindStraightPath(lua_State *L) {
 
 static int
 lFindRandomPointAroundCircle(lua_State *L/*, const float* centerPos, std::vector<float[3]>& points, int32_t max_points, float maxRadius*/) {
-	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
+	struct navigation *nav = (struct navigation *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 1);
 	lua_Number start_y = luaL_checknumber(L, 2);
 	lua_Number start_z = luaL_checknumber(L, 3);
@@ -60,7 +77,7 @@ lFindRandomPointAroundCircle(lua_State *L/*, const float* centerPos, std::vector
 
 static int 
 lRaycast(lua_State *L) {
-	struct pathfinding *nav = (struct pathfinding *)lua_touserdata(L, 1);
+	struct navigation *nav = (struct navigation *)lua_touserdata(L, 1);
 	lua_Number start_x = luaL_checknumber(L, 2);
 	lua_Number start_y = luaL_checknumber(L, 3);
 	lua_Number start_z = luaL_checknumber(L, 4);
@@ -95,20 +112,25 @@ lRaycast(lua_State *L) {
 	return 2;
 }
 
-extern "C" {
-LUAMOD_API int luaopen_navigation(lua_State *L);
-}
-
 LUAMOD_API int
 luaopen_navigation(lua_State *L) {
 	luaL_checkversion(L);
+
 	luaL_Reg metatable[] = {
+		{ "__gc", lgc },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, metatable);
+
+	luaL_Reg indextable[] = {
 		{ "FindStraightPath", lFindStraightPath },
 		{ "FindRandomPointAroundCircle", lFindRandomPointAroundCircle },
 		{ "Raycast", lRaycast },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, metatable);
+	luaL_newlib(L, indextable);
+	lua_setfield(L, -2, "__index");
+
 	lua_pushcclosure(L, lalloc, 1);
 
 	return 1;

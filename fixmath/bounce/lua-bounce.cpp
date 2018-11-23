@@ -79,6 +79,47 @@ namespace luabridge {
 	struct Stack <b3Vec3 const&> : Stack <b3Vec3 > {};
 
 	template <>
+	struct Stack <b3Quaternion> {
+		static void push(lua_State* L, b3Quaternion const& quat) {
+			lua_createtable(L, 0, 4);
+			Stack<b3R32>::push(L, quat.a);
+			lua_setfield(L, -2, "a");
+			Stack<b3R32>::push(L, quat.b);
+			lua_setfield(L, -2, "b");
+			Stack<b3R32>::push(L, quat.c);
+			lua_setfield(L, -2, "c");
+			Stack<b3R32>::push(L, quat.d);
+			lua_setfield(L, -2, "d");
+
+			// create meta bable
+		}
+
+		static b3Quaternion get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+			b3Quaternion quat;
+			lua_pushvalue(L, index);
+			lua_getfield(L, -1, "a");
+			quat.a = Stack<b3R32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "b");
+			quat.b = Stack<b3R32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "c");
+			quat.c = Stack<b3R32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "d");
+			quat.d = Stack<b3R32>::get(L, -1);
+			lua_pop(L, 2);
+			return quat;
+		}
+	};
+
+	template <>
+	struct Stack <b3Quaternion const&> : Stack <b3Quaternion > {};
+
+	template <>
 	struct Stack <b3TimeStep> {
 		static void push(lua_State* L, b3TimeStep const& step) {
 			lua_createtable(L, 0, 3);
@@ -143,6 +184,70 @@ namespace luabridge {
 
 	template <>
 	struct Stack <b3Velocity const&> : Stack <b3Velocity > {};
+
+	template <>
+	struct Stack <b3BodyDef> {
+		static void push(lua_State* L, b3BodyDef const& def) {
+			lua_createtable(L, 0, 8);
+			lua_pushinteger(L, (lua_Integer)def.type);
+			lua_setfield(L, -2, "type");
+			lua_pushboolean(L, def.awake);
+			lua_setfield(L, -2, "awake");
+			lua_pushlightuserdata(L, def.userData);
+			lua_setfield(L, -2, "userData");
+			Stack<b3Vec3>::push(L, def.position);
+			lua_setfield(L, -2, "position");
+			Stack<b3Quaternion>::push(L, def.orientation);
+			lua_setfield(L, -2, "orientation");
+			Stack<b3Vec3>::push(L, def.linearVelocity);
+			lua_setfield(L, -2, "linearVelocity");
+			Stack<b3Vec3>::push(L, def.angularVelocity);
+			lua_setfield(L, -2, "angularVelocity");
+			Stack<r32>::push(L, def.gravityScale);
+			lua_setfield(L, -2, "gravityScale");
+		}
+
+		static b3BodyDef get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+
+			b3BodyDef def;
+			lua_pushvalue(L, index);
+			lua_getfield(L, -1, "type");
+			def.type = (b3BodyType)lua_tointeger(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "awake");
+			def.awake = lua_toboolean(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "userData");
+			def.userData = lua_touserdata(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "position");
+			def.position = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "orientation");
+			def.orientation = Stack<b3Quaternion>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "linearVelocity");
+			def.linearVelocity = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "angularVelocity");
+			def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "angularVelocity");
+			def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "gravityScale");
+			def.gravityScale = Stack<r32>::get(L, -1);
+			lua_pop(L, 2);
+			return def;
+		}
+	};
+
+	template <>
+	struct Stack <b3BodyDef const&> : Stack <b3BodyDef > {};
+
 } // namespace luabridge
 
 int
