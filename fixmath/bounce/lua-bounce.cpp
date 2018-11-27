@@ -6,7 +6,7 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-	LUAMOD_API int luaopen_fixmath_bounce(lua_State *L);
+LUAMOD_API int luaopen_fixmath_bounce(lua_State *L);
 
 #ifdef __cplusplus
 }
@@ -15,6 +15,49 @@ extern "C" {
 #include "Bounce.h"
 #include "Common/Math/b3r32.h"
 #include <LuaBridge\LuaBridge.h>
+
+struct ltable {};
+
+class lb3QueryListener : b3QueryListener {
+public:
+	lb3QueryListener() : b3QueryListener() {}
+	virtual ~lb3QueryListener() {}
+	int Register(lua_State *L) {
+		this->L = L;
+		if (!lua_istable(L, 2)) {
+			lua_error(L);
+		} else {
+			lua_settop(L, 2);
+			lua_setglobal(L, "");
+		}
+		return 0;
+	}
+	virtual bool ReportShape(b3Shape* shape) {
+		lua_getglobal(L, "");
+	}
+private:
+	lua_State * L;
+};
+
+class lb3RayCastListener {
+public:
+	// The user must return the new ray cast fraction.
+	// If fraction == zero then the ray cast query will be canceled.
+	virtual ~lb3RayCastListener() {}
+	virtual r32 ReportShape(b3Shape* shape, const b3Vec3& point, const b3Vec3& normal, r32 fraction) {
+
+	}
+};
+
+class lb3ContactListener {
+public:
+	// Inherit from this class and set it in the world to listen for collision events.	
+	// Call the functions below to inspect when a shape start/end colliding with another shape.
+	/// @warning You cannot create/destroy Bounc3 objects inside these callbacks.
+	virtual void BeginContact(b3Contact* contact) = 0;
+	virtual void EndContact(b3Contact* contact) = 0;
+	virtual void Persisting(b3Contact* contact) = 0;
+};
 
 namespace luabridge {
 
@@ -120,6 +163,74 @@ namespace luabridge {
 	struct Stack <b3Quaternion const&> : Stack <b3Quaternion > {};
 
 	template <>
+	struct Stack <b3Mat33> {
+		static void push(lua_State* L, b3Mat33 const& mat) {
+			lua_createtable(L, 0, 3);
+			Stack<b3Vec3>::push(L, mat.x);
+			lua_setfield(L, -2, "x");
+			Stack<b3Vec3>::push(L, mat.y);
+			lua_setfield(L, -2, "y");
+			Stack<b3Vec3>::push(L, mat.z);
+			lua_setfield(L, -2, "z");
+
+
+			// create meta bable
+		}
+
+		static b3Mat33 get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+			b3Mat33 mat;
+			lua_pushvalue(L, index);
+			lua_getfield(L, -1, "x");
+			mat.x = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "y");
+			mat.y = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "z");
+			mat.z = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 2);
+			return mat;
+		}
+	};
+
+	template <>
+	struct Stack <b3Mat33 const&> : Stack <b3Mat33 > {};
+
+	template <>
+	struct Stack <b3Transform> {
+		static void push(lua_State* L, b3Transform const& trans) {
+			lua_createtable(L, 0, 4);
+			Stack<b3Vec3>::push(L, trans.translation);
+			lua_setfield(L, -2, "translation");
+			Stack<b3Mat33>::push(L, trans.rotation);
+			lua_setfield(L, -2, "rotation");
+
+			// create meta bable
+		}
+
+		static b3Transform get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+			b3Transform trans;
+			lua_pushvalue(L, index);
+			lua_getfield(L, -1, "translation");
+			trans.translation = Stack<b3Vec3>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "rotation");
+			trans.rotation = Stack<b3Mat33>::get(L, -1);
+			lua_pop(L, 2);
+			return trans;
+		}
+	};
+
+	template <>
+	struct Stack <b3Transform const&> : Stack <b3Transform > {};
+
+	template <>
 	struct Stack <b3TimeStep> {
 		static void push(lua_State* L, b3TimeStep const& step) {
 			lua_createtable(L, 0, 3);
@@ -153,7 +264,6 @@ namespace luabridge {
 
 	template <>
 	struct Stack <b3TimeStep const&> : Stack <b3TimeStep > {};
-
 
 	template <>
 	struct Stack <b3Velocity> {
@@ -215,7 +325,7 @@ namespace luabridge {
 			b3BodyDef def;
 			lua_pushvalue(L, index);
 			lua_getfield(L, -1, "type");
-			def.type = (b3BodyType)lua_tointeger(L, -1);
+			def.type = (b3BodyType)luaL_checkinteger(L, -1);
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "awake");
 			def.awake = lua_toboolean(L, -1);
@@ -248,17 +358,101 @@ namespace luabridge {
 	template <>
 	struct Stack <b3BodyDef const&> : Stack <b3BodyDef > {};
 
+	template <>
+	struct Stack <b3SphericalJointDef> {
+		static void push(lua_State* L, b3SphericalJointDef const& def) {
+			lua_createtable(L, 0, 3);
+			lua_pushlightuserdata(L, def.bodyA);
+			lua_setfield(L, -2, "bodyA");
+			lua_pushlightuserdata(L, def.bodyB);
+			lua_setfield(L, -2, "bodyB");
+			lua_pushlightuserdata(L, def.userData);
+			lua_setfield(L, -2, "userData");
+		}
+
+		static b3SphericalJointDef get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+
+			b3SphericalJointDef def;
+			lua_pushvalue(L, index);
+			lua_getfield(L, -1, "bodyA");
+			def.bodyA = static_cast<b3Body*>(lua_touserdata(L, -1));
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "bodyB");
+			def.bodyB = static_cast<b3Body*>(lua_touserdata(L, -1));
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "userData");
+			def.userData = lua_touserdata(L, -1);
+			lua_pop(L, 2);
+			return def;
+		}
+	};
+
+	template <>
+	struct Stack <b3SphericalJointDef const&> : Stack <b3SphericalJointDef > {};
+
+	template <>
+	struct Stack <b3ShapeDef> {
+		static void push(lua_State* L, b3ShapeDef const& def) {
+			lua_createtable(L, 0, 8);
+			Stack<const b3Shape*>::push(L, def.shape);
+			lua_setfield(L, -2, "shape");
+			lua_pushlightuserdata(L, def.userData);
+			lua_setfield(L, -2, "userData");
+			lua_pushboolean(L, def.sensor);
+			lua_setfield(L, -2, "sensor");
+			Stack<b3R32>::push(L, def.density);
+			lua_setfield(L, -2, "density");
+			Stack<b3R32>::push(L, def.friction);
+			lua_setfield(L, -2, "friction");
+			Stack<b3R32>::push(L, def.restitution);
+			lua_setfield(L, -2, "restitution");
+			Stack<b3Transform>::push(L, def.local);
+			lua_setfield(L, -2, "local");
+		}
+
+		static b3ShapeDef get(lua_State* L, int index) {
+			if (!lua_istable(L, index)) {
+				luaL_error(L, "#%d argments must be table", index);
+			}
+
+			b3ShapeDef def;
+			lua_pushvalue(L, index);
+
+			lua_getfield(L, -1, "shape");
+			int idx = lua_absindex(L, -1); 
+			const b3Shape *shape = Stack<b3Polyhedron *>::get(L, idx);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "sensor");
+			def.sensor = lua_toboolean(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "density");
+			def.density = Stack<r32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "friction");
+			def.friction = Stack<r32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "restitution");
+			def.restitution = Stack<r32>::get(L, -1);
+			lua_pop(L, 1);
+			lua_getfield(L, -1, "local");
+			def.local = Stack<b3Transform>::get(L, -1);
+			lua_pop(L, 2);
+			return def;
+		}
+	};
+
+	template <>
+	struct Stack <b3ShapeDef const&> : Stack <b3ShapeDef > {};
+
 } // namespace luabridge
 
 int
 luaopen_fixmath_bounce(lua_State *L) {
 	luabridge::getGlobalNamespace(L)
 		.beginNamespace("bounce")
-		.beginClass<b3Velocity>("b3Velocity")
-		.addData("v", &b3Velocity::v, true)
-		.addData("w", &b3Velocity::w, true)
-		.endClass()
-
 		.beginClass<b3Time>("b3Time")
 		.addStaticFunction("GetRealTime", &b3Time::GetRealTime)
 		.addConstructor<void(*) ()>()
@@ -272,55 +466,40 @@ luaopen_fixmath_bounce(lua_State *L) {
 		.addConstructor<void(*) ()>()
 		.addFunction("CreateBody", &b3World::CreateBody)
 		.addFunction("DestroyBody", &b3World::DestroyBody)
+		//.addFunction("CreateJoint", &b3World::CreateJoint)
+		.addFunction("DestroyJoint", &b3World::DestroyJoint)
+		.addFunction("QueryAABB", &b3World::QueryAABB)
+		.addFunction("RayCast", &b3World::RayCast)
 		.addFunction("Step", &b3World::Step)
 		.endClass()
 		.beginClass<b3Body>("b3Body")
 		.addFunction("CreateShape", &b3Body::CreateShape)
+		.addFunction("DestroyShape", &b3Body::DestroyShape)
+		//.addFunction("DestroyContacts", &b3Body::DestroyContacts)
+		.addFunction("DestroyJoints", &b3Body::DestroyJoints)
+		.addFunction("DestroyShapes", &b3Body::DestroyShapes)
+		.addFunction("GetTransform", &b3Body::GetTransform)
+		.addFunction("ApplyForce", &b3Body::ApplyForce)
+		.addFunction("ApplyForceToCenter", &b3Body::ApplyForceToCenter)
+		.addFunction("ApplyTorque", &b3Body::ApplyTorque)
 		.endClass()
 		.beginClass<b3Shape>("b3Shape")
+		//.addConstructor<void(*)()>()
+		.endClass()
+		.deriveClass<b3Polyhedron, b3Shape>("b3Polyhedron")
+		.addConstructor<void(*) ()>()
+		.addFunction("GetHull", &b3Polyhedron::GetHull)
+		.addFunction("SetHull", &b3Polyhedron::SetHull)
+		.endClass()
+		.beginClass<b3Hull>("b3Hull")
+		.addConstructor<void(*) ()>()
+		.addFunction("SetFromFaces", &b3Hull::SetFromFaces)
+		.addFunction("CreateFacesPlanes", &b3Hull::CreateFacesPlanes)
+		.addFunction("SetAsBox", &b3Hull::SetAsBox)
+		.endClass()
+		.beginClass<lb3QueryListener>("lb3QueryListener")
+		.addCFunction("Register", &lb3QueryListener::Register)
 		.endClass()
 		.endNamespace();
-	//.beginClass<Chestnut::EntitasPP::ISystem>("ISystem")
-	//.endClass()
-	//.beginClass<Chestnut::EntitasPP::ISetRefPoolSystem>("ISetRefPoolSystem")
-	//.addFunction("SetPool", &Chestnut::EntitasPP::ISetPoolSystem::SetPool)
-	//.endClass()
-	//.beginClass<Chestnut::EntitasPP::IInitializeSystem>("IInitializeSystem")
-	//.addFunction("Initialize", &Chestnut::EntitasPP::IInitializeSystem::Initialize)
-	//.endClass()
-	//.beginClass<Chestnut::EntitasPP::IExecuteSystem>("IExecuteSystem")
-	//.addFunction("Execute", &Chestnut::EntitasPP::IExecuteSystem::Execute)
-	//.endClass()
-	//.beginClass<Chestnut::EntitasPP::IFixedExecuteSystem>("IFixedExecuteSystem")
-	//.addFunction("FixedExecute", &Chestnut::EntitasPP::IFixedExecuteSystem::FixedExecute)
-	//.endClass()
-	//.endNamespace()
-	//.beginNamespace("Ball")
-	//.beginClass<Chestnut::Ball::Systems>("Systems")
-	////.addFunction("GetIndexSystem", &Chestnut::Ball::Systems::GetIndexSystem)
-	//.endClass()
-	//.deriveClass<Chestnut::Ball::MoveSystem, Chestnut::EntitasPP::ISystem>("MoveSystem")
-	//.addFunction("SetPool", &Chestnut::Ball::MoveSystem::SetPool)
-	//.addFunction("FixedExecute", &Chestnut::Ball::MoveSystem::FixedExecute)
-	//.endClass()
-	//.deriveClass<Chestnut::Ball::JoinSystem, Chestnut::EntitasPP::ISystem>("JoinSystem")
-
-	//.addFunction("SetPool", &Chestnut::Ball::JoinSystem::SetPool)
-	//.addFunction("Join", &Chestnut::Ball::JoinSystem::Join)
-	//.addFunction("Leave", &Chestnut::Ball::JoinSystem::Leave)
-	//.endClass()
-	//.deriveClass<Chestnut::Ball::IndexSystem, Chestnut::EntitasPP::ISystem>("IndexSystem")
-	//.addFunction("SetPool", &Chestnut::Ball::IndexSystem::SetPool)
-	//.addFunction("Initialize", &Chestnut::Ball::IndexSystem::Initialize)
-	//.addFunction("FixedExecute", &Chestnut::Ball::IndexSystem::FixedExecute)
-	//.endClass()
-	//.deriveClass<Chestnut::Ball::MapSystem, Chestnut::EntitasPP::ISystem>("MapSystem")
-	//.addFunction("SetPool", &Chestnut::Ball::MapSystem::SetPool)
-	//.addFunction("Initialize", &Chestnut::Ball::MapSystem::Initialize)
-	//.addFunction("FixedExecute", &Chestnut::Ball::MapSystem::FixedExecute)
-	//.endClass()
-	//.endNamespace()
-	//.endNamespace();
-
 	return 0;
 }

@@ -28,7 +28,7 @@ set (BOUNCE_CORE
 	./bounce/Collision/Shapes/b3Hull.cpp ./bounce/Collision/Shapes/b3Polyhedron.cpp ./bounce/Collision/Shapes/b3Shape.cpp
 	./bounce/Common/b3Time.h ./bounce/Common/b3Settings.h
 	./bounce/Common/b3Time.cpp ./bounce/Common/b3Settings.cpp
-	./bounce/Common/Math/b3Vec3.h
+	./bounce/Common/Math/b3Vec3.h ./bounce/Common/Math/b3Quaternion.h ./bounce/Common/Math/b3Mat33.h
 	./bounce/Common/Memory/b3BlockAllocator.h ./bounce/Common/Memory/b3StackAllocator.h
 	./bounce/Common/Memory/b3BlockAllocator.cpp ./bounce/Common/Memory/b3StackAllocator.cpp
 	./bounce/Dynamics/b3World.h ./bounce/Dynamics/b3Island.h ./bounce/Dynamics/b3Body.h

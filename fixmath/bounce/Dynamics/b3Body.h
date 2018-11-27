@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2015-2015 Irlan Robson http://www.irlans.wordpress.com
 *
 * This software is provided 'as-is', without any express or implied

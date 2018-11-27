@@ -22,5 +22,28 @@ m_step.velocityIterations = 10
  m_step.allowSleeping = false
 
 
--- // Call the function below to simulate a single physics step.
-m_world:Step( m_step )
+local hull = bounce.b3Hull()
+hull:SetAsBox({ x = 1, y = 1, z = 1})
+local polyhedron = bounce.b3Polyhedron()
+polyhedron:SetHull(hull)
+
+local bodydef = {}
+bodydef.type = 3
+bodydef.awake = true
+bodydef.position = { x = 5, y = 2, z = 5 }
+bodydef.orientation = { a = 0, b = 0, c = 0, d = 1}
+bodydef.linearVelocity = { x = 0, y = 0, z = 0}
+bodydef.angularVelocity = { x = 0, y = 0, z = 0}
+bodydef.gravityScale = 1
+local body = m_world:CreateBody(bodydef)
+
+
+body:CreateShape( { shape = polyhedron }, polyhedron )
+
+
+
+for i=1,10 do
+	-- // Call the function below to simulate a single physics step.
+	m_world:Step( m_step )
+end
+
