@@ -19,6 +19,13 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	# message (${CMAKE_CXX_FLAGS})
 endif ()
 
+set (BOUNCE_CORE
+	./bounce/src/bounce/cloth/cloth.cpp ./bounce/src/bounce/cloth/cloth_contact_solver.cpp ./bounce/src/bounce/cloth/mesh.cpp
+	./bounce/src/bounce/cloth/cloth_solver.cpp ./bounce/src/bounce/cloth/force.cpp ./bounce/src/bounce/cloth/particle.cpp
+	./bounce/src/bounce/cloth/spring_force.cpp
+	./bounce/lua-bounce.cpp
+)
+
 set (BOUNCELITE_CORE
 	./bouncelite/Collision/b3BroadPhase.h ./bouncelite/Collision/b3DynamicAABBTree.h ./bouncelite/Collision/b3SAT.h
 	./bouncelite/Collision/b3BroadPhase.cpp ./bouncelite/Collision/b3DynamicAABBTree.cpp ./bouncelite/Collision/b3SAT.cpp
@@ -75,6 +82,7 @@ source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} MATH3D_CORE)
 
 add_library(fixmath SHARED ${BOUNCELITE_CORE} ${LIBFIXEDPTMATH_CORE} ${MATH3D_CORE})
 target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
+target_compile_definitions(fixmath PRIVATE B3_NO_FIXMATH)
 #target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
 set_target_properties(fixmath
     PROPERTIES

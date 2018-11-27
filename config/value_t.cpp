@@ -1,6 +1,5 @@
-#include "value_t.h"
+﻿#include "value_t.h"
 #include <cassert>
-
 
 bool operator == (const value_t &left, const value_t & right) {
 	assert(left.tt == right.tt);

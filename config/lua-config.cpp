@@ -1,4 +1,5 @@
-#include "config.h"
+﻿#define LUA_LIB
+
 #include "csv.h"
 
 #include <cstdlib>
@@ -164,7 +165,7 @@ ltest(lua_State *L) {
 	return 0;
 }
 
-CONFIG_API int
+LUAMOD_API int
 luaopen_config(lua_State *L) {
 	luaL_checkversion(L);
 	lua_createtable(L, 0, 2); // met

@@ -2,6 +2,7 @@ require "fixmath.bouncelite"
 
  -- Create a b3World object.
 local m_world = bouncelite.b3World()
+m_world:SetGravityDirection({ x = 0, y = -1, z = 0})
 
 -- // Create a b3TimeStep object to define the configuration of a single
 -- simulation step.
@@ -18,8 +19,7 @@ m_step.velocityIterations = 10
 
 -- // Optionally allow rigid bodies to sleep under unconsiderable motion.
 -- // This increases the performance of the application substantially.
- -- m_step.allowSleeping = true;
- m_step.allowSleeping = false
+ m_step.allowSleeping = true
 
 
 local hull = bouncelite.b3Hull()
@@ -45,6 +45,7 @@ body:CreateShape( shapedef )
 
 
 body:ApplyForceToCenter({ x = 0, y = 10, z = 0}, false)
+body:SetLinearVelocity({ x = 100, y = 0, z = 100 })
 for i=1,10 do
 	-- // Call the function below to simulate a single physics step.
 	m_world:Step( m_step )
