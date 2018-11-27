@@ -30,6 +30,10 @@
 
 # Debug files
 *.dSYM/
+*.exp
+*.ilk
+*.pdb
+
 
 # folder
 /bin
@@ -43,4 +47,6 @@
 !googletest/Debug/gtestd.dll
 !googletest/Debug/gtest_maind.lib
 !googletest/Debug/gtest_maind.dll
+!xluatest/gtestd.pdb
+!xluatest/gtest_maind.pdb
 
