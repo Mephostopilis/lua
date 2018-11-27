@@ -19,24 +19,23 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	# message (${CMAKE_CXX_FLAGS})
 endif ()
 
-set (BOUNCE_R32 ./bounce/Common/Math/b3r32.h ./bounce/Common/Math/b3r32.cpp)
-
-set (BOUNCE_CORE
-	./bounce/Collision/b3BroadPhase.h ./bounce/Collision/b3DynamicAABBTree.h ./bounce/Collision/b3SAT.h
-	./bounce/Collision/b3BroadPhase.cpp ./bounce/Collision/b3DynamicAABBTree.cpp ./bounce/Collision/b3SAT.cpp
-	./bounce/Collision/Shapes/b3Hull.h ./bounce/Collision/Shapes/b3Polyhedron.h ./bounce/Collision/Shapes/b3Shape.h
-	./bounce/Collision/Shapes/b3Hull.cpp ./bounce/Collision/Shapes/b3Polyhedron.cpp ./bounce/Collision/Shapes/b3Shape.cpp
-	./bounce/Common/b3Time.h ./bounce/Common/b3Settings.h
-	./bounce/Common/b3Time.cpp ./bounce/Common/b3Settings.cpp
-	./bounce/Common/Math/b3Vec3.h ./bounce/Common/Math/b3Quaternion.h ./bounce/Common/Math/b3Mat33.h
-	./bounce/Common/Memory/b3BlockAllocator.h ./bounce/Common/Memory/b3StackAllocator.h
-	./bounce/Common/Memory/b3BlockAllocator.cpp ./bounce/Common/Memory/b3StackAllocator.cpp
-	./bounce/Dynamics/b3World.h ./bounce/Dynamics/b3Island.h ./bounce/Dynamics/b3Body.h
-	./bounce/Dynamics/b3World.cpp ./bounce/Dynamics/b3Island.cpp ./bounce/Dynamics/b3Body.cpp
-	./bounce/Dynamics/Joints/b3JointGraph.cpp ./bounce/Dynamics/Joints/b3JointSolver.cpp ./bounce/Dynamics/Joints/b3MouseJoint.cpp
-	./bounce/Dynamics/Joints/b3RevoluteJoint.cpp ./bounce/Dynamics/Joints/b3SphericalJoint.cpp
-	./bounce/Dynamics/Contacts/b3ContactGraph.cpp ./bounce/Dynamics/Contacts/b3ContactSolver.cpp
-	./bounce/lua-bounce.cpp
+set (BOUNCELITE_CORE
+	./bouncelite/Collision/b3BroadPhase.h ./bouncelite/Collision/b3DynamicAABBTree.h ./bouncelite/Collision/b3SAT.h
+	./bouncelite/Collision/b3BroadPhase.cpp ./bouncelite/Collision/b3DynamicAABBTree.cpp ./bouncelite/Collision/b3SAT.cpp
+	./bouncelite/Collision/Shapes/b3Hull.h ./bouncelite/Collision/Shapes/b3Polyhedron.h ./bouncelite/Collision/Shapes/b3Shape.h
+	./bouncelite/Collision/Shapes/b3Hull.cpp ./bouncelite/Collision/Shapes/b3Polyhedron.cpp ./bouncelite/Collision/Shapes/b3Shape.cpp
+	./bouncelite/Common/b3Time.h ./bouncelite/Common/b3Settings.h
+	./bouncelite/Common/b3Time.cpp ./bouncelite/Common/b3Settings.cpp
+	./bouncelite/Common/Math/b3r32.h ./bouncelite/Common/Math/b3r32.cpp
+	./bouncelite/Common/Math/b3Vec3.h ./bouncelite/Common/Math/b3Quaternion.h ./bouncelite/Common/Math/b3Mat33.h
+	./bouncelite/Common/Memory/b3BlockAllocator.h ./bouncelite/Common/Memory/b3StackAllocator.h
+	./bouncelite/Common/Memory/b3BlockAllocator.cpp ./bouncelite/Common/Memory/b3StackAllocator.cpp
+	./bouncelite/Dynamics/b3World.h ./bouncelite/Dynamics/b3Island.h ./bouncelite/Dynamics/b3Body.h
+	./bouncelite/Dynamics/b3World.cpp ./bouncelite/Dynamics/b3Island.cpp ./bouncelite/Dynamics/b3Body.cpp
+	./bouncelite/Dynamics/Joints/b3JointGraph.cpp ./bouncelite/Dynamics/Joints/b3JointSolver.cpp ./bouncelite/Dynamics/Joints/b3MouseJoint.cpp
+	./bouncelite/Dynamics/Joints/b3RevoluteJoint.cpp ./bouncelite/Dynamics/Joints/b3SphericalJoint.cpp
+	./bouncelite/Dynamics/Contacts/b3ContactGraph.cpp ./bouncelite/Dynamics/Contacts/b3ContactSolver.cpp
+	./bouncelite/lua-bouncelite.cpp
 )
 
 set (LIBFIXEDPTMATH_CORE
@@ -47,8 +46,8 @@ set (LIBFIXEDPTMATH_CORE
 
 set (GNULIBFIXMATH_CORE
 	fixmath/fix16.h
-	fixmath/fix16.c ./bounce/Common/Math/libfixmath/fix16_exp.c ./bounce/Common/Math/libfixmath/fix16_sqrt.c ./bounce/Common/Math/libfixmath/fix16_str.c 
-	./bounce/Common/Math/libfixmath/fix16_trig.c ./bounce/Common/Math/libfixmath/fract32.c ./bounce/Common/Math/libfixmath/uint32.c
+	fixmath/fix16.c ./bouncelite/Common/Math/libfixmath/fix16_exp.c ./bouncelite/Common/Math/libfixmath/fix16_sqrt.c ./bouncelite/Common/Math/libfixmath/fix16_str.c 
+	./bouncelite/Common/Math/libfixmath/fix16_trig.c ./bouncelite/Common/Math/libfixmath/fract32.c ./bouncelite/Common/Math/libfixmath/uint32.c
 )
 
 set (MATH3D_CORE ./math3d/fixedptmath3d.h ./math3d/lua-fixedptmath.c)
@@ -70,12 +69,11 @@ macro(source_group_by_dir proj_dir source_files)
     endif(MSVC OR APPLE)
 endmacro(source_group_by_dir)
 
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCE_CORE)
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCE_R32)
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCELITE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} LIBFIXEDPTMATH_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} MATH3D_CORE)
 
-add_library(fixmath SHARED ${BOUNCE_CORE} ${BOUNCE_R32} ${LIBFIXEDPTMATH_CORE} ${MATH3D_CORE})
+add_library(fixmath SHARED ${BOUNCELITE_CORE} ${LIBFIXEDPTMATH_CORE} ${MATH3D_CORE})
 target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
 #target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
 set_target_properties(fixmath

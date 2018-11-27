@@ -6,7 +6,7 @@ extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
 
-LUAMOD_API int luaopen_fixmath_bounce(lua_State *L);
+	LUAMOD_API int luaopen_fixmath_bounce(lua_State *L);
 
 #ifdef __cplusplus
 }
@@ -420,25 +420,38 @@ namespace luabridge {
 
 			b3ShapeDef def;
 			lua_pushvalue(L, index);
-
 			lua_getfield(L, -1, "shape");
-			int idx = lua_absindex(L, -1); 
+			int idx = lua_absindex(L, -1);
 			const b3Shape *shape = Stack<b3Polyhedron *>::get(L, idx);
+			if (shape == NULL) {
+				luaL_error(L, "shape must be");
+			}
+			def.shape = shape;
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "sensor");
-			def.sensor = lua_toboolean(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.sensor = lua_toboolean(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "density");
-			def.density = Stack<r32>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.density = Stack<r32>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "friction");
-			def.friction = Stack<r32>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.friction = Stack<r32>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "restitution");
-			def.restitution = Stack<r32>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.restitution = Stack<r32>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "local");
-			def.local = Stack<b3Transform>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.local = Stack<b3Transform>::get(L, -1);
+			}
 			lua_pop(L, 2);
 			return def;
 		}
@@ -482,6 +495,10 @@ luaopen_fixmath_bounce(lua_State *L) {
 		.addFunction("ApplyForce", &b3Body::ApplyForce)
 		.addFunction("ApplyForceToCenter", &b3Body::ApplyForceToCenter)
 		.addFunction("ApplyTorque", &b3Body::ApplyTorque)
+		.addFunction("ApplyLinearImpulse", &b3Body::ApplyLinearImpulse)
+		.addFunction("ApplyAngularImpulse", &b3Body::ApplyLinearImpulse)
+		.addFunction("SetLinearVelocity", &b3Body::SetLinearVelocity)
+		.addFunction("SetAngularVelocity", &b3Body::SetAngularVelocity)
 		.endClass()
 		.beginClass<b3Shape>("b3Shape")
 		//.addConstructor<void(*)()>()
