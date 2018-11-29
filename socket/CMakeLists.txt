@@ -6,7 +6,7 @@ set ( SOCKET_CORE luasocket.c timeout.c buffer.c io.c auxiliar.c compat.c option
 
 if (MSVC)
     add_library(socket SHARED ${SOCKET_CORE} wsocket.c)
-	target_compile_definitions (socket PRIVATE LUA_BUILD_AS_DLL)
+	target_compile_definitions (socket PRIVATE LUA_BUILD_AS_DLL _WINSOCK_DEPRECATED_NO_WARNINGS)
 else (MSVC)
     add_library(socket SHARED ${SOCKET_CORE} usocket.c)
 endif ()

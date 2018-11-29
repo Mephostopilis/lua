@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2016-2016 Irlan Robson http://www.irlan.net
 *
 * This software is provided 'as-is', without any express or implied
@@ -248,8 +248,13 @@ inline b3Mat33 b3Basis(const b3Vec3& a)
 // Rotation about the x-axis.
 inline b3Mat33 b3Mat33RotationX(float32 angle)
 {
+#if defined(B3_NO_FIXMATH)
 	float32 c = cos(angle);
 	float32 s = sin(angle);
+#else
+	float32 c = b3Cos(angle);
+	float32 s = b3Sin(angle);
+#endif
 
 	b3Mat33 R;
 	R.x.Set(1.0f, 0.0f, 0.0f);
@@ -261,8 +266,13 @@ inline b3Mat33 b3Mat33RotationX(float32 angle)
 // Rotation about the y-axis.
 inline b3Mat33 b3Mat33RotationY(float32 angle)
 {
+#if defined(B3_NO_FIXMATH)
 	float32 c = cos(angle);
 	float32 s = sin(angle);
+#else
+	float32 c = b3Cos(angle);
+	float32 s = b3Sin(angle);
+#endif
 
 	b3Mat33 R;
 	R.x.Set(c, 0.0f, -s);
@@ -274,8 +284,13 @@ inline b3Mat33 b3Mat33RotationY(float32 angle)
 // Rotation about the z-axis.
 inline b3Mat33 b3Mat33RotationZ(float32 angle)
 {
+#if defined(B3_NO_FIXMATH)
 	float32 c = cos(angle);
 	float32 s = sin(angle);
+#else
+	float32 c = b3Cos(angle);
+	float32 s = b3Sin(angle);
+#endif
 
 	b3Mat33 R;
 	R.x.Set(c, s, 0.0f);

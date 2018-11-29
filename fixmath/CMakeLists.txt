@@ -5,6 +5,7 @@ project(fixmath)
 include_directories(libfixmath)
 include_directories(..)
 include_directories(../lua/src)
+include_directories(bounce/include)
 
 if (MSVC)
 	add_definitions(-DLUA_BUILD_AS_DLL)
@@ -20,16 +21,108 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif ()
 
 set (BOUNCE_CORE
-	./bounce/src/bounce/cloth/cloth.cpp ./bounce/src/bounce/cloth/cloth_contact_solver.cpp ./bounce/src/bounce/cloth/mesh.cpp
-	./bounce/src/bounce/cloth/cloth_solver.cpp ./bounce/src/bounce/cloth/force.cpp ./bounce/src/bounce/cloth/particle.cpp
+	./bounce/include/bounce/collision/shapes/aabb3.h
+	./bounce/include/bounce/collision/shapes/box_hull.h
+	./bounce/include/bounce/collision/shapes/capsule.h
+	./bounce/include/bounce/collision/shapes/grid_mesh.h
+	./bounce/include/bounce/collision/shapes/hull.h
+	./bounce/include/bounce/collision/shapes/mesh.h
+	./bounce/include/bounce/collision/shapes/qhull.h
+	./bounce/include/bounce/collision/shapes/sphere.h
+	./bounce/include/bounce/common/math/b3r32.h
+	./bounce/include/bounce/common/math/mat.h
+	./bounce/include/bounce/common/math/mat22.h
+	./bounce/include/bounce/common/math/mat33.h
+	./bounce/include/bounce/common/math/mat44.h
+	./bounce/include/bounce/common/math/math.h
+	./bounce/include/bounce/common/math/quat.h
+	./bounce/include/bounce/common/math/transform.h
+	./bounce/include/bounce/common/math/vec2.h
+	./bounce/include/bounce/common/math/vec3.h
+	./bounce/include/bounce/common/math/vec4.h
+	./bounce/include/bounce/common/time.h
+	./bounce/include/bounce/common/settings.h
+	./bounce/include/bounce/dynamics/shapes/hull_shape.h
+	./bounce/include/bounce/dynamics/shapes/shape.h
+	./bounce/include/bounce/dynamics/body.h
+	./bounce/include/bounce/dynamics/contact_manager.h
+	./bounce/include/bounce/dynamics/island.h
+	./bounce/include/bounce/dynamics/joint_manager.h
+	./bounce/include/bounce/dynamics/time_step.h
+	./bounce/include/bounce/dynamics/world.h
+	#./bounce/src/bounce/cloth/garment/garment_mesh.cpp 
+	./bounce/src/bounce/cloth/cloth.cpp 
+	./bounce/src/bounce/cloth/cloth_contact_solver.cpp 
+	./bounce/src/bounce/cloth/cloth_mesh.cpp
+	./bounce/src/bounce/cloth/cloth_solver.cpp 
+	./bounce/src/bounce/cloth/force.cpp 
+	./bounce/src/bounce/cloth/particle.cpp
 	./bounce/src/bounce/cloth/spring_force.cpp
+	./bounce/src/bounce/collision/gjk/gjk.cpp
+	./bounce/src/bounce/collision/gjk/gjk_feature_pair.cpp
+	./bounce/src/bounce/collision/sat/sat.cpp
+	./bounce/src/bounce/collision/sat/sat_edge_and_hull.cpp
+	./bounce/src/bounce/collision/sat/sat_vertex_and_hull.cpp
+	./bounce/src/bounce/collision/shapes/hull.cpp
+	./bounce/src/bounce/collision/shapes/qhull.cpp
+	./bounce/src/bounce/collision/trees/dynamic_tree.cpp
+	./bounce/src/bounce/collision/trees/static_tree.cpp
+	./bounce/src/bounce/collision/broad_phase.cpp
+	./bounce/src/bounce/collision/collision.cpp
+	./bounce/src/bounce/common/math/b3r32.cpp
+	./bounce/src/bounce/common/math/math.cpp
+	./bounce/src/bounce/common/memory/block_pool.cpp
+	./bounce/src/bounce/common/memory/stack_allocator.cpp
+	./bounce/src/bounce/common/settings.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/clip.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_capsule_hull.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_capsules.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_hulls.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_hulls_cache.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_sphere_capsule.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_sphere_hull.cpp
+	./bounce/src/bounce/dynamics/contacts/collide/collide_spheres.cpp
+	./bounce/src/bounce/dynamics/contacts/contact.cpp
+	./bounce/src/bounce/dynamics/contacts/contact_cluster.cpp
+	./bounce/src/bounce/dynamics/contacts/contact_solver.cpp
+	./bounce/src/bounce/dynamics/contacts/convex_contact.cpp
+	./bounce/src/bounce/dynamics/contacts/manifold.cpp
+	./bounce/src/bounce/dynamics/contacts/mesh_contact.cpp
+	./bounce/src/bounce/dynamics/joints/cone_joint.cpp
+	./bounce/src/bounce/dynamics/joints/joint.cpp
+	./bounce/src/bounce/dynamics/joints/joint_solver.cpp
+	./bounce/src/bounce/dynamics/joints/mouse_joint.cpp
+	./bounce/src/bounce/dynamics/joints/revolute_joint.cpp
+	./bounce/src/bounce/dynamics/joints/sphere_joint.cpp
+	./bounce/src/bounce/dynamics/joints/spring_joint.cpp
+	./bounce/src/bounce/dynamics/joints/weld_joint.cpp
+	./bounce/src/bounce/dynamics/shapes/capsule_shape.cpp
+	./bounce/src/bounce/dynamics/shapes/hull_shape.cpp
+	./bounce/src/bounce/dynamics/shapes/mesh_shape.cpp
+	./bounce/src/bounce/dynamics/shapes/shape.cpp
+	./bounce/src/bounce/dynamics/shapes/sphere_shape.cpp
+	./bounce/src/bounce/dynamics/body.cpp
+	./bounce/src/bounce/dynamics/contact_manager.cpp
+	./bounce/src/bounce/dynamics/draw_world.cpp
+	./bounce/src/bounce/dynamics/island.cpp
+	./bounce/src/bounce/dynamics/joint_manager.cpp
+	./bounce/src/bounce/dynamics/world.cpp
+	./bounce/src/bounce/quickhull/qh_hull.cpp
+	./bounce/src/bounce/rope/rope.cpp
 	./bounce/lua-bounce.cpp
 )
 
 set (BOUNCELITE_CORE
-	./bouncelite/Collision/b3BroadPhase.h ./bouncelite/Collision/b3DynamicAABBTree.h ./bouncelite/Collision/b3SAT.h
-	./bouncelite/Collision/b3BroadPhase.cpp ./bouncelite/Collision/b3DynamicAABBTree.cpp ./bouncelite/Collision/b3SAT.cpp
-	./bouncelite/Collision/Shapes/b3Hull.h ./bouncelite/Collision/Shapes/b3Polyhedron.h ./bouncelite/Collision/Shapes/b3Shape.h
+	./bouncelite/Collision/b3BroadPhase.h 
+	./bouncelite/Collision/b3DynamicAABBTree.h 
+	./bouncelite/Collision/b3SAT.h
+	./bouncelite/Collision/b3BroadPhase.cpp 
+	./bouncelite/Collision/b3DynamicAABBTree.cpp 
+	./bouncelite/Collision/b3SAT.cpp
+	./bouncelite/Collision/Shapes/b3Hull.h 
+	./bouncelite/Collision/Shapes/b3Polyhedron.h 
+	./bouncelite/Collision/Shapes/b3Shape.h
 	./bouncelite/Collision/Shapes/b3Hull.cpp ./bouncelite/Collision/Shapes/b3Polyhedron.cpp ./bouncelite/Collision/Shapes/b3Shape.cpp
 	./bouncelite/Common/b3Time.h ./bouncelite/Common/b3Settings.h
 	./bouncelite/Common/b3Time.cpp ./bouncelite/Common/b3Settings.cpp
@@ -47,13 +140,19 @@ set (BOUNCELITE_CORE
 
 set (LIBFIXEDPTMATH_CORE
 	./libfixmath/fix16.h
-	./libfixmath/fix16.c ./libfixmath/fix16_exp.c ./libfixmath/fix16_sqrt.c ./libfixmath/fix16_str.c 
-	./libfixmath/fix16_trig.c ./libfixmath/fract32.c ./libfixmath/uint32.c
+	./libfixmath/fix16.c 
+	./libfixmath/fix16_exp.c 
+	./libfixmath/fix16_sqrt.c 
+	./libfixmath/fix16_str.c 
+	./libfixmath/fix16_trig.c 
+	./libfixmath/fract32.c 
+	./libfixmath/uint32.c
 )
 
 set (GNULIBFIXMATH_CORE
 	fixmath/fix16.h
-	fixmath/fix16.c ./bouncelite/Common/Math/libfixmath/fix16_exp.c ./bouncelite/Common/Math/libfixmath/fix16_sqrt.c ./bouncelite/Common/Math/libfixmath/fix16_str.c 
+	fixmath/fix16.c 
+	./bouncelite/Common/Math/libfixmath/fix16_exp.c ./bouncelite/Common/Math/libfixmath/fix16_sqrt.c ./bouncelite/Common/Math/libfixmath/fix16_str.c 
 	./bouncelite/Common/Math/libfixmath/fix16_trig.c ./bouncelite/Common/Math/libfixmath/fract32.c ./bouncelite/Common/Math/libfixmath/uint32.c
 )
 
@@ -76,14 +175,16 @@ macro(source_group_by_dir proj_dir source_files)
     endif(MSVC OR APPLE)
 endmacro(source_group_by_dir)
 
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCELITE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} LIBFIXEDPTMATH_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} MATH3D_CORE)
 
 add_library(fixmath SHARED ${BOUNCELITE_CORE} ${LIBFIXEDPTMATH_CORE} ${MATH3D_CORE})
-target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
-target_compile_definitions(fixmath PRIVATE B3_NO_FIXMATH)
+#target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
+#target_compile_definitions(fixmath PRIVATE B3_NO_FIXMATH)
 #target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
+target_compile_definitions(fixmath PRIVATE B3_DEBUG_R32)
 set_target_properties(fixmath
     PROPERTIES
     PREFIX ""

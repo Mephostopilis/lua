@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2016-2016 Irlan Robson http://www.irlan.net
 *
 * This software is provided 'as-is', without any express or implied
@@ -41,7 +41,11 @@ inline bool b3IsValid(float32 fx)
 
 inline float32 b3Sqrt(float32 x) 
 {
+#if defined(B3_NO_FIXMATH)
 	return std::sqrt(x);
+#else
+	return b3R32::Sqrt(x);
+#endif
 }
 
 template <class T>

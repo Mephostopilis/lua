@@ -20,25 +20,26 @@
 #define __B3_R32_H__
 
 #include <stdint.h>
-#include <float.h>
 
 struct b3R32;
 
 // Negate a vector.
 b3R32 operator-(const b3R32& a);
-b3R32 operator+(const b3R32& a, const b3R32& b);
-b3R32 operator-(const b3R32& a, const b3R32& b);
-b3R32 operator*(const b3R32& a, const b3R32& b);
-b3R32 operator*(const float& a, const b3R32& b);
-b3R32 operator*(const double& a, const b3R32& b);
-b3R32 operator/(const b3R32& a, const b3R32& b);
-b3R32 operator/(const float& a, const b3R32& b);
-bool  operator==(const b3R32& a, const b3R32& b);
-bool  operator!=(const b3R32& a, const b3R32& b);
-bool  operator<(const b3R32& a, const b3R32& b);
-bool  operator<=(const b3R32& a, const b3R32& b);
-bool  operator>(const b3R32& a, const b3R32& b);
-bool  operator>=(const b3R32& a, const b3R32& b);
+
+// Compute sum of two vectors.
+b3R32 operator+(const b3R32 a, const b3R32 b);
+b3R32 operator-(const b3R32 a, const b3R32 b);
+b3R32 operator*(const b3R32 a, const b3R32 b);
+b3R32 operator*(const float a, const b3R32 b);
+b3R32 operator*(const double a, const b3R32 b);
+b3R32 operator/(const b3R32 a, const b3R32 b);
+b3R32 operator/(const float a, const b3R32 b);
+bool  operator==(const b3R32 a, const b3R32 b);
+bool  operator!=(const b3R32 a, const b3R32 b);
+bool  operator<(const b3R32 a, const b3R32 b);
+bool  operator<=(const b3R32 a, const b3R32 b);
+bool  operator>(const b3R32 a, const b3R32 b);
+bool  operator>=(const b3R32 a, const b3R32 b);
 
 struct b3R32 {
 	b3R32();
@@ -52,8 +53,7 @@ struct b3R32 {
 	b3R32(const b3R32 &b);
 	
 	// Assing other vector to this vector.
-	//b3R32& operator=(const b3R32& b);
-	b3R32& operator=(b3R32 const & b);
+	b3R32& operator=(const b3R32& b);
 
 	// Add this vector with another vector.
 	b3R32& operator+=(const b3R32& b);
@@ -98,22 +98,21 @@ struct b3R32 {
 	static b3R32 zero();
 
 	friend b3R32 operator-(const b3R32& a);
-	friend b3R32 operator+(const b3R32& a, const b3R32& b);
-	friend b3R32 operator-(const b3R32& a, const b3R32& b);
-	friend b3R32 operator*(const b3R32& a, const b3R32& b);
-	friend b3R32 operator*(const float& a, const b3R32& b);
-	friend b3R32 operator*(const double& a, const b3R32& b);
-	friend b3R32 operator/(const b3R32& a, const b3R32& b);
-	friend b3R32 operator/(const float& a, const b3R32& b);
-	friend bool  operator==(const b3R32& a, const b3R32& b);
-	friend bool  operator!=(const b3R32& a, const b3R32& b);
-	friend bool  operator<(const b3R32& a, const b3R32& b);
-	friend bool  operator<=(const b3R32& a, const b3R32& b);
-	friend bool  operator>(const b3R32& a, const b3R32& b);
-	friend bool  operator>=(const b3R32& a, const b3R32& b);
+	friend b3R32 operator+(const b3R32 a, const b3R32 b);
+	friend b3R32 operator-(const b3R32 a, const b3R32 b);
+	friend b3R32 operator*(const b3R32 a, const b3R32 b);
+	friend b3R32 operator*(const float a, const b3R32 b);
+	friend b3R32 operator*(const double a, const b3R32 b);
+	friend b3R32 operator/(const b3R32 a, const b3R32 b);
+	friend b3R32 operator/(const float a, const b3R32 b);
+	friend bool  operator==(const b3R32 a, const b3R32 b);
+	friend bool  operator!=(const b3R32 a, const b3R32 b);
+	friend bool  operator<(const b3R32 a, const b3R32 b);
+	friend bool  operator<=(const b3R32 a, const b3R32 b);
+	friend bool  operator>(const b3R32 a, const b3R32 b);
+	friend bool  operator>=(const b3R32 a, const b3R32 b);
 
 	int32_t _i;
-	float _f;
 };
 
 #endif

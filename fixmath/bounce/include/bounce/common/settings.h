@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (c) 2016-2016 Irlan Robson http://www.irlan.net
 *
 * This software is provided 'as-is', without any express or implied
@@ -19,6 +19,7 @@
 #ifndef B3_SETTINGS_H
 #define B3_SETTINGS_H
 
+#include <bounce/common/math/b3r32.h>
 #include <assert.h>
 #include <cstring>
 #include <new>
@@ -31,21 +32,34 @@ typedef unsigned int u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
 typedef unsigned long long u64;
+#if !defined(B3_NO_PROFILE)
 typedef double float64;
-typedef float float32;
+#endif
+#if defined(B3_NO_FIXMATH)
+typedef float  float32;
+#else 
+typedef struct b3R32 float32;
+#endif
+
 
 // You can modify the following parameters as long
 // as you know what you're doing.
 
+#if defined(B3_NO_FIXMATH)
 #define B3_PI (3.14159265359f)
 #define	B3_MAX_FLOAT (FLT_MAX)
-#define	B3_EPSILON (FLT_EPSILON)
+#define	B3_EPSILON   (FLT_EPSILON)
+#else
+#define B3_PI        b3R32(3.14159265359f)
+#define	B3_MAX_FLOAT (b3R32::max())
+#define	B3_EPSILON   (b3R32::zero())
+#endif
 
 #define	B3_MAX_U8 (0xFF)
 #define	B3_MAX_U32 (0xFFFFFFFF)
 
 // Collision
-
+#if defined(B3_NO_FIXMATH)
 // How much an AABB in the broad-phase should be extended by 
 // to disallow unecessary proxy updates.
 // A larger value increases performance when there are 
@@ -65,9 +79,25 @@ typedef float float32;
 // The radius of the hull shape skin.
 #define B3_HULL_RADIUS (0.0f * B3_LINEAR_SLOP)
 #define B3_HULL_RADIUS_SUM (2.0f * B3_HULL_RADIUS)
+#else
+#define B3_AABB_EXTENSION (b3R32(0.2f))
+
+// This is used to extend AABBs in the broad-phase. 
+// Is used to predict the future position based on the current displacement.
+// This is a dimensionless multiplier.
+#define B3_AABB_MULTIPLIER (b3R32(2.0f))
+
+// Collision and constraint tolerance.
+#define B3_LINEAR_SLOP  (b3R32(0.005f))
+#define B3_ANGULAR_SLOP (b3R32(2.0f) / b3R32(180.0f) * B3_PI)
+
+// The radius of the hull shape skin.
+#define B3_HULL_RADIUS     (b3R32(0.0f) * B3_LINEAR_SLOP)
+#define B3_HULL_RADIUS_SUM (b3R32(2.0f) * B3_HULL_RADIUS)
+#endif
 
 // Dynamics
-
+#if defined(B3_NO_FIXMATH)
 // The maximum number of manifolds that can be build 
 // for all contacts. 
 #define B3_MAX_MANIFOLDS (3)
@@ -105,9 +135,53 @@ typedef float float32;
 #define B3_VELOCITY_THRESHOLD (1.0f)
 
 // Sleep
+
 #define B3_TIME_TO_SLEEP (0.2f)
 #define B3_SLEEP_LINEAR_TOL (0.05f)
 #define B3_SLEEP_ANGULAR_TOL (2.0f / 180.0f * B3_PI)
+#else
+// The maximum number of manifolds that can be build 
+// for all contacts. 
+#define B3_MAX_MANIFOLDS (3)
+
+// If this is equal to 4 then the contact generator
+// will keep the hull-hull manifold clipped points up to 4 such that 
+// still creates a stable manifold to the solver. More points 
+// usually means better torque balance but can decrease 
+// the performance of the solver significantly. 
+// Therefore, keep this to 4 for greater performance.
+#define B3_MAX_MANIFOLD_POINTS (4)
+
+// Maximum translation per step to prevent numerical instability 
+// due to large linear velocity.
+#define B3_MAX_TRANSLATION         (b3R32(2.0f))
+#define B3_MAX_TRANSLATION_SQUARED (B3_MAX_TRANSLATION * B3_MAX_TRANSLATION)
+
+// Maximum rotation per step to prevent numerical instability due to 
+// large angular velocity.
+#define B3_MAX_ROTATION         (b3R32(0.5f) * B3_PI)
+#define B3_MAX_ROTATION_SQUARED (B3_MAX_ROTATION * B3_MAX_ROTATION)
+
+// The maximum position correction used when solving constraints. This helps to
+// prevent overshoot.
+#define B3_MAX_LINEAR_CORRECTION  (b3R32(0.2f))
+#define B3_MAX_ANGULAR_CORRECTION (b3R32(8.0f) / b3R32(180.0f) * B3_PI)
+
+// This controls how faster overlaps should be resolved per step.
+// This is less than and would be close to 1, so that the all overlap is resolved per step.
+// However values very close to 1 may lead to overshoot.
+#define B3_BAUMGARTE (b3R32(0.1f))
+
+// If the relative velocity of a contact point is below 
+// the threshold then restitution is not applied.
+#define B3_VELOCITY_THRESHOLD (b3R32(1.0f))
+
+// Sleep
+
+#define B3_TIME_TO_SLEEP     (b3R32(0.2f))
+#define B3_SLEEP_LINEAR_TOL  (b3R32(0.05f))
+#define B3_SLEEP_ANGULAR_TOL (b3R32(2.0f) / b3R32(180.0f) * B3_PI)
+#endif
 
 // Memory
 
@@ -150,23 +224,27 @@ void b3BeginProfileScope(const char* name);
 // Implement this function to listen when a profile scope is closed.
 void b3EndProfileScope();
 
+inline b3R32 b3Cos(b3R32 x) {
+	return b3R32::Cos(x);
+}
+
+inline b3R32 b3Sin(b3R32 x) {
+	return b3R32::Sin(x);
+}
+
 // 
-struct b3ProfileScope
-{
-	b3ProfileScope(const char* name)
-	{
+struct b3ProfileScope {
+	b3ProfileScope(const char* name) {
 		b3BeginProfileScope(name);
 	}
 
-	~b3ProfileScope()
-	{
+	~b3ProfileScope() {
 		b3EndProfileScope();
 	}
 };
 
 // The current version this software.
-struct b3Version
-{
+struct b3Version {
 	u32 major; //significant changes 
 	u32 minor; //minor features
 	u32 revision; //patches

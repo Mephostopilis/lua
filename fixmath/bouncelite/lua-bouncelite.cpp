@@ -63,9 +63,9 @@ namespace luabridge {
 
 	template <>
 	struct Stack <b3R32> {
-		static void push(lua_State* L, b3R32 const& step) {
-			int32_t i = step;
-			lua_pushinteger(L, i);
+		static void push(lua_State* L, b3R32 const& r) {
+			// 跟多是查看数据
+			lua_pushnumber(L, (float)r);
 		}
 
 		static b3R32 get(lua_State* L, int index) {
@@ -78,7 +78,7 @@ namespace luabridge {
 			} else {
 				luaL_error(L, "#%d argments must be table", index);
 			}
-			return b3R32::zero;
+			return b3R32::zero();
 		}
 	};
 
@@ -325,31 +325,49 @@ namespace luabridge {
 			b3BodyDef def;
 			lua_pushvalue(L, index);
 			lua_getfield(L, -1, "type");
-			def.type = (b3BodyType)luaL_checkinteger(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.type = (b3BodyType)luaL_checkinteger(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "awake");
-			def.awake = lua_toboolean(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.awake = lua_toboolean(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "userData");
-			def.userData = lua_touserdata(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.userData = lua_touserdata(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "position");
-			def.position = Stack<b3Vec3>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.position = Stack<b3Vec3>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "orientation");
-			def.orientation = Stack<b3Quaternion>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.orientation = Stack<b3Quaternion>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "linearVelocity");
-			def.linearVelocity = Stack<b3Vec3>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.linearVelocity = Stack<b3Vec3>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "angularVelocity");
-			def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			if (!lua_isnil(L,-1)) {
+				def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "angularVelocity");
-			def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.angularVelocity = Stack<b3Vec3>::get(L, -1);
+			}
 			lua_pop(L, 1);
 			lua_getfield(L, -1, "gravityScale");
-			def.gravityScale = Stack<r32>::get(L, -1);
+			if (!lua_isnil(L, -1)) {
+				def.gravityScale = Stack<r32>::get(L, -1);
+			}
 			lua_pop(L, 2);
 			return def;
 		}
@@ -466,6 +484,33 @@ int
 luaopen_fixmath_bouncelite(lua_State *L) {
 	luabridge::getGlobalNamespace(L)
 		.beginNamespace("bouncelite")
+		.beginClass<b3Hull>("b3Hull")
+		.addConstructor<void(*) ()>()
+		.addFunction("SetFromFaces", &b3Hull::SetFromFaces)
+		.addFunction("CreateFacesPlanes", &b3Hull::CreateFacesPlanes)
+		.addFunction("SetAsBox", &b3Hull::SetAsBox)
+		.endClass()
+		.beginClass<b3Shape>("b3Shape")
+		//.addConstructor<void(*)()>()
+		.addFunction("GetType", &b3Shape::GetType)
+		.addFunction("GetTransform", &b3Shape::GetTransform)
+		.addFunction("IsSensor", &b3Shape::IsSensor)
+		.addFunction("SetSensor", &b3Shape::SetSensor)
+		.endClass()
+		.deriveClass<b3Polyhedron, b3Shape>("b3Polyhedron")
+		.addConstructor<void(*) ()>()
+		.addFunction("GetHull", &b3Polyhedron::GetHull)
+		.addFunction("SetHull", &b3Polyhedron::SetHull)
+		.endClass()
+		.beginClass<b3R32>("b3R32")
+		.addStaticFunction("ToFloat32", &b3R32::ToFloat32)
+		.addStaticFunction("ToFloat64", &b3R32::ToFloat64)
+		.addStaticFunction("MAX", &b3R32::max)
+		.addStaticFunction("MIN", &b3R32::min)
+		.addStaticFunction("PI", &b3R32::pi)
+		.addStaticFunction("E", &b3R32::e)
+		.addStaticFunction("ONE", &b3R32::one)
+		.endClass()
 		.beginClass<b3Time>("b3Time")
 		.addStaticFunction("GetRealTime", &b3Time::GetRealTime)
 		.addConstructor<void(*) ()>()
@@ -504,20 +549,6 @@ luaopen_fixmath_bouncelite(lua_State *L) {
 		.addFunction("ApplyAngularImpulse", &b3Body::ApplyLinearImpulse)
 		.addFunction("SetLinearVelocity", &b3Body::SetLinearVelocity)
 		.addFunction("SetAngularVelocity", &b3Body::SetAngularVelocity)
-		.endClass()
-		.beginClass<b3Shape>("b3Shape")
-		//.addConstructor<void(*)()>()
-		.endClass()
-		.deriveClass<b3Polyhedron, b3Shape>("b3Polyhedron")
-		.addConstructor<void(*) ()>()
-		.addFunction("GetHull", &b3Polyhedron::GetHull)
-		.addFunction("SetHull", &b3Polyhedron::SetHull)
-		.endClass()
-		.beginClass<b3Hull>("b3Hull")
-		.addConstructor<void(*) ()>()
-		.addFunction("SetFromFaces", &b3Hull::SetFromFaces)
-		.addFunction("CreateFacesPlanes", &b3Hull::CreateFacesPlanes)
-		.addFunction("SetAsBox", &b3Hull::SetAsBox)
 		.endClass()
 		.beginClass<lb3QueryListener>("lb3QueryListener")
 		.addCFunction("Register", &lb3QueryListener::Register)
