@@ -76,8 +76,10 @@ struct b3R32 {
 	//postfix ++ : fetch and increment
 	b3R32 & operator++(int);
 
-	operator bool();
+	operator bool() const;
 	operator int32_t() const;
+	operator float() const;
+	operator double() const;
 
 	// Set to the zero vector.
 	void SetZero();
@@ -88,6 +90,7 @@ struct b3R32 {
 	static b3R32 Sin(const b3R32& b);
 	static b3R32 Cos(const b3R32& b);
 	static b3R32 Atan2(const b3R32& a, const b3R32& b);
+	static b3R32 Abs(const b3R32& a);
 	static float ToFloat32(int32_t i);
 	static double ToFloat64(int32_t i);
 	static b3R32 max();

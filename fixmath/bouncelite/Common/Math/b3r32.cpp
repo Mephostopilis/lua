@@ -16,7 +16,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <bounce/common/math/b3r32.h>
+#include "b3r32.h"
 #if defined(GNUFIXMATH)
 #include <fixmath.h>
 #else
@@ -26,6 +26,7 @@
 
 b3R32::b3R32() {
 	_i = 0;
+	_f = 0.0f;
 }
 
 b3R32::b3R32(const int16_t b) {
@@ -35,24 +36,38 @@ b3R32::b3R32(const int16_t b) {
 #endif
 }
 
-b3R32::b3R32(const int32_t v) {
-	_i = fix16_from_int(v);
+b3R32::b3R32(const int32_t b) {
+	_i = fix16_from_int(b);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 b3R32::b3R32(const int64_t b) {
-	_i = fix16_from_int(b);
+	int32_t b_ = (int32_t)b;
+	_i = fix16_from_int(b_);
 }
 
 b3R32::b3R32(const uint32_t b) {
 	_i = fix16_from_int(b);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 b3R32::b3R32(const uint64_t b) {
-	_i = fix16_from_int(b);
+	int32_t b_ = (int32_t)b;
+	_i = fix16_from_int(b_);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 b3R32::b3R32(const float b) {
 	_i = fix16_from_float(b);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 b3R32::b3R32(const double b) {
@@ -64,10 +79,16 @@ b3R32::b3R32(const double b) {
 		assert(i < fix16_maximum);
 	}
 	_i = i;
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 b3R32::b3R32(const b3R32 &b) {
 	_i = b._i;
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 }
 
 //b3R32& b3R32::operator=(const b3R32& b) {
@@ -77,6 +98,9 @@ b3R32::b3R32(const b3R32 &b) {
 
 b3R32& b3R32::operator=(b3R32 const & b) {
 	_i = b._i;
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return(*this);
 }
 
@@ -87,6 +111,9 @@ b3R32& b3R32::operator+=(const b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_sadd(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -97,6 +124,9 @@ b3R32& b3R32::operator+=(b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_sadd(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -108,6 +138,9 @@ b3R32& b3R32::operator-=(const b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_ssub(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -118,6 +151,9 @@ b3R32& b3R32::operator-=(b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_ssub(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -129,6 +165,9 @@ b3R32& b3R32::operator*=(const b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_smul(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -139,6 +178,9 @@ b3R32& b3R32::operator*=(b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_smul(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -150,6 +192,9 @@ b3R32& b3R32::operator/=(const b3R32& b) {
 	return (*this);
 #else
 	_i = fix16_smul(_i, b._i);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -160,6 +205,9 @@ b3R32 & b3R32::operator++() {
 	return (*this);
 #else
 	_i = fix16_sadd(_i, fix16_one);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
@@ -170,16 +218,27 @@ b3R32 & b3R32::operator++(int) {
 	return (*this);
 #else
 	_i = fix16_sadd(_i, fix16_one);
+#if defined(B3_DEBUG_R32)
+	_f = fix16_to_float(_i);
+#endif
 	return (*this);
 #endif
 }
 
-b3R32::operator bool() {
+b3R32::operator bool() const {
 	return (_i > 0);
 }
 
 b3R32::operator int32_t() const {
 	return fix16_to_int(_i);
+}
+
+b3R32::operator float() const {
+	return fix16_to_float(_i);
+}
+
+b3R32::operator double() const {
+	return fix16_to_dbl(_i);
 }
 
 // Set to the zero vector.
@@ -200,6 +259,7 @@ b3R32 b3R32::Sqrt(const b3R32& b) {
 	fix16_t v = fix16_sqrt(b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -212,6 +272,7 @@ b3R32 b3R32::Sin(const b3R32& b) {
 	fix16_t v = fix16_sin(b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -224,6 +285,7 @@ b3R32 b3R32::Cos(const b3R32& b) {
 	fix16_t v = fix16_sin(b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -236,8 +298,17 @@ b3R32 b3R32::Atan2(const b3R32& a, const b3R32& b) {
 	fix16_t v = fix16_atan2(a._i, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
+}
+
+b3R32 b3R32::Abs(const b3R32& a) {
+	fix16_t v = fix16_abs(a._i);
+	b3R32 r;
+	r._i = v;
+	r._f = fix16_to_float(v);
+	return r;
 }
 
 float b3R32::ToFloat32(int32_t i) {
@@ -251,36 +322,42 @@ double b3R32::ToFloat64(int32_t i) {
 b3R32 b3R32::max() {
 	b3R32 r;
 	r._i = fix16_maximum;
+	r._f = fix16_to_float(fix16_maximum);
 	return r;
 }
 
 b3R32 b3R32::min() {
 	b3R32 r;
 	r._i = fix16_minimum;
+	r._f = fix16_to_float(fix16_minimum);
 	return r;
 }
 
 b3R32 b3R32::pi() {
 	b3R32 r;
 	r._i = fix16_pi;
+	r._f = fix16_to_float(fix16_pi);
 	return r;
 }
 
 b3R32 b3R32::e() {
 	b3R32 r;
 	r._i = fix16_e;
+	r._f = fix16_to_float(fix16_e);
 	return r;
 }
 
 b3R32 b3R32::one() {
 	b3R32 r;
 	r._i = fix16_one;
+	r._f = fix16_to_float(fix16_e);
 	return r;
 }
 
 b3R32 b3R32::zero() {
 	b3R32 r;
 	r._i = 0;
+	r._f = 0;
 	return r;
 }
 
@@ -295,6 +372,7 @@ b3R32 operator-(const b3R32& a) {
 	fix16_t v = fix16_ssub(0, a._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -308,6 +386,7 @@ b3R32 operator+(const b3R32& a, const b3R32& b) {
 	fix16_t v = fix16_sadd(a._i, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -321,6 +400,7 @@ b3R32 operator-(const b3R32& a, const b3R32& b) {
 	fix16_t v = fix16_ssub(a._i, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -333,6 +413,7 @@ b3R32 operator*(const b3R32& a, const b3R32& b) {
 	fix16_t v = fix16_smul(a._i, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -347,6 +428,7 @@ b3R32 operator*(const float& a, const b3R32& b) {
 	fix16_t v = fix16_smul(a_, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -360,6 +442,7 @@ b3R32 operator*(const double& a, const b3R32& b) {
 	fix16_t v = fix16_smul(a_, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -372,6 +455,7 @@ b3R32 operator/(const b3R32& a, const b3R32& b) {
 	fix16_t v = fix16_sdiv(a._i, b._i);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }
@@ -386,6 +470,7 @@ b3R32 operator/(const float& a, const b3R32& b) {
 	fix16_t v = fix16_sdiv(a_, b_);
 	b3R32 r;
 	r._i = v;
+	r._f = fix16_to_float(v);
 	return r;
 #endif
 }

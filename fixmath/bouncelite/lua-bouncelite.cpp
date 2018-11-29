@@ -65,7 +65,8 @@ namespace luabridge {
 	struct Stack <b3R32> {
 		static void push(lua_State* L, b3R32 const& r) {
 			// 跟多是查看数据
-			lua_pushnumber(L, (float)r);
+			float x = static_cast<float>(r);
+			lua_pushnumber(L, x);
 		}
 
 		static b3R32 get(lua_State* L, int index) {

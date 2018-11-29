@@ -73,11 +73,11 @@ typedef double r64;
 #define B3_SLEEP_LINEAR_TOL static_cast<r32>( 0.05 ) //50cm
 #define B3_SLEEP_ANGULAR_TOL static_cast<r32>( (2.0 / 180.0) * B3_PI )
 #else
-#define B3_ZERO r32(0.0)
-#define B3_HALF r32(0.5)
-#define B3_ONE  r32(1.0)
-#define B3_TWO  r32(2.0)
-#define B3_PI	r32(3.14159265359)
+#define B3_ZERO (r32::zero())
+#define B3_HALF (r32::one() / r32(2.0))
+#define B3_ONE  (r32::one())
+#define B3_TWO  (r32(2.0))
+#define B3_PI	(r32::pi())
 #define	B3_EPSILON r32(FLT_EPSILON)
 
 #define	B3_MAX_FLOAT (r32::max())
@@ -97,7 +97,7 @@ typedef double r64;
 #define B3_TIME_TO_SLEEP r32(1.0)
 
 #define B3_SLEEP_LINEAR_TOL  r32( 0.05 ) //50cm
-#define B3_SLEEP_ANGULAR_TOL ( (r32( 2.0) / r32(180.0)) * B3_PI )
+#define B3_SLEEP_ANGULAR_TOL ((r32( 2.0) / r32(180.0)) * B3_PI )
 #endif
 
 #define b3Assert(c) assert(c)
@@ -127,6 +127,10 @@ inline r32 b3Cos(r32 x) {
 
 inline r32 b3Atan2(r32 a, r32 b) {
 	return b3R32::Atan2(a, b);
+}
+
+inline r32 b3Abs(r32 x) {
+	return b3R32::Abs(x);
 }
 
 template <class T>

@@ -2,7 +2,7 @@ require "fixmath.bouncelite"
 
  -- Create a b3World object.
 local m_world = bouncelite.b3World()
--- m_world:SetGravityDirection({ x = 0, y = -1, z = 0})
+m_world:SetGravityDirection({ x = 0, y = -1, z = 0})
 
 -- // Create a b3TimeStep object to define the configuration of a single
 -- simulation step.
@@ -22,11 +22,6 @@ m_step.velocityIterations = 10
  m_step.allowSleeping = true
 
 
-local hull = bouncelite.b3Hull()
-hull:SetAsBox({ x = 1, y = 1, z = 1})
-local polyhedron = bouncelite.b3Polyhedron()
-polyhedron:SetHull(hull)
-
 local bodydef = {}
 bodydef.type = 3
 -- bodydef.awake = true
@@ -38,20 +33,22 @@ bodydef.linearVelocity = { x = 0, y = 0, z = 0}
 local body = m_world:CreateBody(bodydef)
 
 
+local hull = bouncelite.b3Hull()
+hull:SetAsBox({ x = 1, y = 1, z = 1})
+local polyhedron = bouncelite.b3Polyhedron()
+polyhedron:SetHull(hull)
 local shapedef = { shape = polyhedron }
 shapedef.sensor = false
-shapedef.density = 10
+shapedef.density = 100
 body:CreateShape( shapedef )
 
 
 -- body:ApplyForceToCenter({ x = 0, y = 10, z = 0}, false)
-body:SetLinearVelocity({ x = 100, y = 0, z = 0 })
+-- body:SetLinearVelocity({ x = 100, y = 0, z = 0 })
 for i=1,10 do
 	-- // Call the function below to simulate a single physics step.
 	m_world:Step( m_step )
 	local trans = body:GetTransform()
-	for k,v in pairs(trans.translation) do
-		print(k,v)
-	end
+	print(trans.translation.y)
 end
 

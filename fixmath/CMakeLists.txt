@@ -5,10 +5,11 @@ project(fixmath)
 include_directories(libfixmath)
 include_directories(..)
 include_directories(../lua/src)
-include_directories(bounce/include)
+include_directories(reactphysics3d)
+#include_directories(bounce/include)
 
 if (MSVC)
-	add_definitions(-DLUA_BUILD_AS_DLL)
+	add_definitions(-DLUA_BUILD_AS_DLL -D_SCL_SECURE_NO_WARNINGS)
 endif (MSVC)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
@@ -19,6 +20,138 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	# message (${CMAKE_C_FLAGS})
 	# message (${CMAKE_CXX_FLAGS})
 endif ()
+
+set (REACTPHYSICS3D_CORE
+	./reactphysics3d/body/Body.cpp
+	./reactphysics3d/body/Body.h
+	./reactphysics3d/body/CollisionBody.cpp
+	./reactphysics3d/body/CollisionBody.h
+	./reactphysics3d/body/RigidBody.cpp
+	./reactphysics3d/body/RigidBody.h
+	./reactphysics3d/collision/broadphase/BroadPhaseAlgorithm.cpp
+	./reactphysics3d/collision/broadphase/BroadPhaseAlgorithm.h
+	./reactphysics3d/collision/broadphase/DynamicAABBTree.cpp
+	./reactphysics3d/collision/broadphase/DynamicAABBTree.h
+	./reactphysics3d/collision/narrowphase/GJK/GJKAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/GJK/GJKAlgorithm.h
+	./reactphysics3d/collision/narrowphase/GJK/VoronoiSimplex.cpp
+	./reactphysics3d/collision/narrowphase/GJK/VoronoiSimplex.h
+	./reactphysics3d/collision/narrowphase/SAT/SATAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/SAT/SATAlgorithm.h
+	./reactphysics3d/collision/narrowphase/CapsuleVsCapsuleAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/CapsuleVsCapsuleAlgorithm.h
+	./reactphysics3d/collision/narrowphase/CapsuleVsConvexPolyhedronAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/CapsuleVsConvexPolyhedronAlgorithm.h
+	./reactphysics3d/collision/narrowphase/CollisionDispatch.h
+	./reactphysics3d/collision/narrowphase/ConvexPolyhedronVsConvexPolyhedronAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/ConvexPolyhedronVsConvexPolyhedronAlgorithm.h
+	./reactphysics3d/collision/narrowphase/DefaultCollisionDispatch.cpp
+	./reactphysics3d/collision/narrowphase/DefaultCollisionDispatch.h
+	./reactphysics3d/collision/narrowphase/NarrowPhaseAlgorithm.h
+	./reactphysics3d/collision/narrowphase/SphereVsCapsuleAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/SphereVsCapsuleAlgorithm.h
+	./reactphysics3d/collision/narrowphase/SphereVsConvexPolyhedronAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/SphereVsConvexPolyhedronAlgorithm.h
+	./reactphysics3d/collision/narrowphase/SphereVsSphereAlgorithm.cpp
+	./reactphysics3d/collision/narrowphase/SphereVsSphereAlgorithm.h
+	./reactphysics3d/collision/shapes/AABB.cpp
+	./reactphysics3d/collision/shapes/AABB.h
+	./reactphysics3d/collision/shapes/BoxShape.cpp
+	./reactphysics3d/collision/shapes/BoxShape.h
+	./reactphysics3d/collision/shapes/CapsuleShape.cpp
+	./reactphysics3d/collision/shapes/CapsuleShape.h
+	./reactphysics3d/collision/shapes/CollisionShape.cpp
+	./reactphysics3d/collision/shapes/CollisionShape.h
+	./reactphysics3d/collision/shapes/ConcaveMeshShape.cpp
+	./reactphysics3d/collision/shapes/ConcaveMeshShape.h
+	./reactphysics3d/collision/shapes/ConcaveShape.cpp
+	./reactphysics3d/collision/shapes/ConcaveShape.h
+	./reactphysics3d/collision/shapes/ConvexMeshShape.cpp
+	./reactphysics3d/collision/shapes/ConvexMeshShape.h
+	./reactphysics3d/collision/shapes/ConvexPolyhedronShape.cpp
+	./reactphysics3d/collision/shapes/ConvexPolyhedronShape.h
+	./reactphysics3d/collision/shapes/ConvexShape.cpp
+	./reactphysics3d/collision/shapes/ConvexShape.h
+	./reactphysics3d/collision/shapes/HeightFieldShape.cpp
+	./reactphysics3d/collision/shapes/HeightFieldShape.h
+	./reactphysics3d/collision/shapes/SphereShape.cpp
+	./reactphysics3d/collision/shapes/SphereShape.h
+	./reactphysics3d/collision/shapes/TriangleShape.cpp
+	./reactphysics3d/collision/shapes/TriangleShape.h
+	./reactphysics3d/collision/CollisionCallback.cpp
+	./reactphysics3d/collision/CollisionCallback.h
+	./reactphysics3d/collision/CollisionDetection.cpp
+	./reactphysics3d/collision/CollisionDetection.h
+	./reactphysics3d/collision/ContactManifold.cpp
+	./reactphysics3d/collision/ContactManifold.h
+	./reactphysics3d/collision/ContactManifoldInfo.cpp
+	./reactphysics3d/collision/ContactManifoldInfo.h
+	./reactphysics3d/collision/ContactManifoldSet.cpp
+	./reactphysics3d/collision/ContactManifoldSet.h
+	./reactphysics3d/collision/ContactPointInfo.h
+	./reactphysics3d/collision/HalfEdgeStructure.cpp
+	./reactphysics3d/collision/HalfEdgeStructure.h
+	./reactphysics3d/collision/MiddlePhaseTriangleCallback.cpp
+	./reactphysics3d/collision/MiddlePhaseTriangleCallback.h
+	./reactphysics3d/collision/NarrowPhaseInfo.cpp
+	./reactphysics3d/collision/NarrowPhaseInfo.h
+	./reactphysics3d/collision/OverlapCallback.h
+	./reactphysics3d/collision/PolygonVertexArray.cpp
+	./reactphysics3d/collision/PolygonVertexArray.h
+	./reactphysics3d/collision/PolyhedronMesh.cpp
+	./reactphysics3d/collision/PolyhedronMesh.h
+	./reactphysics3d/collision/ProxyShape.cpp
+	./reactphysics3d/collision/ProxyShape.h
+	./reactphysics3d/collision/RaycastInfo.cpp
+	./reactphysics3d/collision/RaycastInfo.h
+	./reactphysics3d/collision/TriangleMesh.cpp
+	./reactphysics3d/collision/TriangleMesh.h
+	./reactphysics3d/collision/TriangleVertexArray.cpp
+	./reactphysics3d/collision/TriangleVertexArray.h
+	./reactphysics3d/constraint/BallAndSocketJoint.cpp
+	./reactphysics3d/constraint/BallAndSocketJoint.h
+	./reactphysics3d/constraint/ContactPoint.cpp
+	./reactphysics3d/constraint/ContactPoint.h
+	./reactphysics3d/constraint/FixedJoint.cpp
+	./reactphysics3d/constraint/FixedJoint.h
+	./reactphysics3d/constraint/HingeJoint.cpp
+	./reactphysics3d/constraint/HingeJoint.h
+	./reactphysics3d/constraint/Joint.cpp
+	./reactphysics3d/constraint/Joint.h
+	./reactphysics3d/constraint/SliderJoint.cpp
+	./reactphysics3d/constraint/SliderJoint.h
+	./reactphysics3d/engine/CollisionWorld.cpp
+	./reactphysics3d/engine/CollisionWorld.h
+	./reactphysics3d/engine/ConstraintSolver.cpp
+	./reactphysics3d/engine/ConstraintSolver.h
+	./reactphysics3d/engine/ContactSolver.cpp
+	./reactphysics3d/engine/ContactSolver.h
+	./reactphysics3d/engine/DynamicsWorld.cpp
+	./reactphysics3d/engine/DynamicsWorld.h
+	./reactphysics3d/engine/Island.cpp
+	./reactphysics3d/engine/Material.cpp
+	./reactphysics3d/engine/OverlappingPair.cpp
+	./reactphysics3d/engine/Timer.cpp
+	./reactphysics3d/mathematics/mathematics_functions.cpp
+	./reactphysics3d/mathematics/Matrix2x2.cpp
+	./reactphysics3d/mathematics/Matrix3x3.cpp
+	./reactphysics3d/mathematics/Quaternion.cpp
+	./reactphysics3d/mathematics/Transform.cpp
+	./reactphysics3d/mathematics/Vector2.cpp
+	./reactphysics3d/mathematics/Vector2.h
+	./reactphysics3d/mathematics/Vector3.cpp
+	./reactphysics3d/mathematics/Vector3.h
+	./reactphysics3d/memory/DefaultPoolAllocator.cpp
+	./reactphysics3d/memory/DefaultSingleFrameAllocator.cpp
+	./reactphysics3d/memory/MemoryManager.cpp
+	./reactphysics3d/utils/Logger.cpp
+	./reactphysics3d/utils/Logger.h
+	./reactphysics3d/utils/Profiler.cpp
+	./reactphysics3d/b3r32.cpp
+	./reactphysics3d/b3r32.h
+	./reactphysics3d/decimal.h
+	./reactphysics3d/lua-reactphysics3d.cpp
+)
 
 set (BOUNCE_CORE
 	./bounce/include/bounce/collision/shapes/aabb3.h
@@ -175,14 +308,16 @@ macro(source_group_by_dir proj_dir source_files)
     endif(MSVC OR APPLE)
 endmacro(source_group_by_dir)
 
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} REACTPHYSICS3D_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCELITE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} LIBFIXEDPTMATH_CORE)
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} MATH3D_CORE)
+#source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} MATH3D_CORE)
 
-add_library(fixmath SHARED ${BOUNCELITE_CORE} ${LIBFIXEDPTMATH_CORE} ${MATH3D_CORE})
+add_library(fixmath SHARED ${REACTPHYSICS3D_CORE} ${LIBFIXEDPTMATH_CORE})
 #target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
 #target_compile_definitions(fixmath PRIVATE B3_NO_FIXMATH)
+#target_compile_definitions(fixmath PRIVATE RP_NO_FIXMATH)
 #target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
 target_compile_definitions(fixmath PRIVATE B3_DEBUG_R32)
 set_target_properties(fixmath
