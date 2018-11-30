@@ -128,6 +128,7 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/engine/ContactSolver.h
 	./reactphysics3d/engine/DynamicsWorld.cpp
 	./reactphysics3d/engine/DynamicsWorld.h
+	./reactphysics3d/engine/EventListener.h
 	./reactphysics3d/engine/Island.cpp
 	./reactphysics3d/engine/Material.cpp
 	./reactphysics3d/engine/OverlappingPair.cpp
@@ -135,8 +136,10 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/mathematics/mathematics_functions.cpp
 	./reactphysics3d/mathematics/Matrix2x2.cpp
 	./reactphysics3d/mathematics/Matrix3x3.cpp
+	./reactphysics3d/mathematics/Matrix3x3.h
 	./reactphysics3d/mathematics/Quaternion.cpp
 	./reactphysics3d/mathematics/Transform.cpp
+	./reactphysics3d/mathematics/Transform.h
 	./reactphysics3d/mathematics/Vector2.cpp
 	./reactphysics3d/mathematics/Vector2.h
 	./reactphysics3d/mathematics/Vector3.cpp

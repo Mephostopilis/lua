@@ -40,7 +40,7 @@ namespace reactphysics3d {
  */
 class Matrix3x3 {
 
-    private :
+    public :
 
         // -------------------- Attributes -------------------- //
 
