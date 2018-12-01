@@ -381,6 +381,17 @@ b3R32 b3R32::min(const b3R32& a, const b3R32& b) {
 	return r;
 }
 
+b3R32 b3R32::fromInt(int i) {
+	return b3R32(i);
+}
+
+b3R32 b3R32::fromFlt32(float f) {
+	return b3R32(f);
+}
+
+b3R32 b3R32::fromFlt64(double f) {
+	return b3R32(f);
+}
 
 //float b3R32::ToFloat32(int32_t i) {
 //	return fix16_to_float(i);

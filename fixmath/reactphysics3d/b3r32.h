@@ -104,6 +104,9 @@ struct b3R32 {
 	static b3R32 pow(const b3R32& a, const b3R32& b);
 	static b3R32 max(const b3R32& a, const b3R32& b);
 	static b3R32 min(const b3R32& a, const b3R32& b);
+	static b3R32 fromInt(int);
+	static b3R32 fromFlt32(float);
+	static b3R32 fromFlt64(double);
 	/*static float ToFloat32(int32_t i);
 	static double ToFloat64(int32_t i);*/
 	// 常量

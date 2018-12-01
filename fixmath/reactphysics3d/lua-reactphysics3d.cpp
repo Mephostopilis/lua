@@ -16,6 +16,7 @@ extern "C" {
 #include "b3r32.h"
 #include "decimal.h"
 #include <LuaBridge\LuaBridge.h>
+#include <fix16.h>
 
 struct ltable {};
 
@@ -60,6 +61,139 @@ private:
 	lua_State * L;
 };
 
+class lCollisionCallback : public reactphysics3d::CollisionCallback {
+public:
+	lCollisionCallback() : reactphysics3d::CollisionCallback() {}
+	virtual ~lCollisionCallback() {}
+	int lregister(lua_State *L) {
+		this->L = L;
+		auto l = luabridge::Stack<lCollisionCallback*>::get(L, 1);
+		lua_settop(L, 2);
+		if (lua_isfunction(L, 2)) {
+			lua_getglobal(L, "rp3d");
+			if (lua_isnil(L, -1)) {
+				lua_createtable(L, 0, 2);
+				lua_setglobal(L, "rp3d");
+				lua_getglobal(L, "rp3d");
+			}
+			lua_pushvalue(L, 2);
+			lua_rawsetp(L, -2, l);
+		} else {
+			luaL_error(L, "2th arg must be function.");
+		}
+		return 0;
+	}
+	virtual void notifyContact(const reactphysics3d::CollisionCallback::CollisionCallbackInfo& collisionInfo) {
+		assert(L != NULL);
+		lua_getglobal(L, "rp3d");
+		lua_rawgetp(L, -1, this);
+		lua_createtable(L, 0, 4);
+		luabridge::Stack<reactphysics3d::CollisionBody *>::push(L, collisionInfo.body1);
+		lua_setfield(L, -2, "body1");
+		luabridge::Stack<reactphysics3d::CollisionBody *>::push(L, collisionInfo.body2);
+		lua_setfield(L, -2, "body2");
+		luabridge::Stack<const reactphysics3d::ProxyShape *>::push(L, collisionInfo.proxyShape1);
+		lua_setfield(L, -2, "proxyShape1");
+		luabridge::Stack<const reactphysics3d::ProxyShape *>::push(L, collisionInfo.proxyShape2);
+		lua_setfield(L, -2, "proxyShape2");
+		lua_pcall(L, 1, 0, -2);
+	}
+private:
+	lua_State * L;
+};
+
+static int 
+lr32add(lua_State *L) {
+	lua_settop(L, 2);
+	lua_getfield(L, 1, "__i__");
+	lua_Integer a = luaL_checkinteger(L, -1);
+	lua_getfield(L, 2, "__i__");
+	lua_Integer b = luaL_checkinteger(L, -1);
+	fix16_t v = fix16_sadd((fix16_t)a, (fix16_t)b);
+	lua_createtable(L, 0, 1);
+	lua_pushinteger(L, v);
+	lua_setfield(L, -2, "__i__");
+	lua_getmetatable(L, 1);
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lr32sub(lua_State *L) {
+	lua_settop(L, 2);
+	lua_getfield(L, 1, "__i__");
+	lua_Integer a = luaL_checkinteger(L, -1);
+	lua_getfield(L, 2, "__i__");
+	lua_Integer b = luaL_checkinteger(L, -1);
+	fix16_t v = fix16_ssub((fix16_t)a, (fix16_t)b);
+	lua_createtable(L, 0, 1);
+	lua_pushinteger(L, v);
+	lua_setfield(L, -2, "__i__");
+	lua_getmetatable(L, 1);
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lr32mul(lua_State *L) {
+	lua_settop(L, 2);
+	lua_getfield(L, 1, "__i__");
+	lua_Integer a = luaL_checkinteger(L, -1);
+	lua_getfield(L, 2, "__i__");
+	lua_Integer b = luaL_checkinteger(L, -1);
+	fix16_t v = fix16_smul((fix16_t)a, (fix16_t)b);
+	lua_createtable(L, 0, 1);
+	lua_pushinteger(L, v);
+	lua_setfield(L, -2, "__i__");
+	lua_getmetatable(L, 1);
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lr32div(lua_State *L) {
+	lua_settop(L, 2);
+	lua_getfield(L, 1, "__i__");
+	lua_Integer a = luaL_checkinteger(L, -1);
+	lua_getfield(L, 2, "__i__");
+	lua_Integer b = luaL_checkinteger(L, -1);
+	fix16_t v = fix16_sdiv((fix16_t)a, (fix16_t)b);
+	lua_createtable(L, 0, 1);
+	lua_pushinteger(L, v);
+	lua_setfield(L, -2, "__i__");
+	lua_getmetatable(L, 1);
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+lr32tostring(lua_State *L) {
+	lua_settop(L, 1);
+	lua_getfield(L, 1, "__i__");
+	lua_Integer a = luaL_checkinteger(L, -1);
+	float f = fix16_to_float(a);
+	char buffer[128] = { 0 };
+	snprintf(buffer, 128, "fp: %f", f);
+	lua_pushstring(L, buffer);
+	return 1;
+}
+
+static int 
+printTable(lua_State *L) {
+	lua_pushnil(L);  /* first key */
+	while (lua_next(L, -2) != 0) {
+		/* uses 'key' (at index -2) and 'value' (at index -1) */
+		printf("%s - %s\n",
+			lua_typename(L, lua_type(L, -2)),
+			lua_typename(L, lua_type(L, -1)));
+		/* removes 'value'; keeps 'key' for next iteration */
+		printf("%s - %s\n",
+			lua_tostring(L, -2),
+			"h");
+		lua_pop(L, 1);
+	}
+}
+
 namespace luabridge {
 
 	// math
@@ -67,8 +201,23 @@ namespace luabridge {
 	struct Stack <b3R32> {
 		static void push(lua_State* L, b3R32 const& r) {
 			// 跟多是查看数据
-			float x = static_cast<float>(r);
-			lua_pushnumber(L, x);
+			lua_createtable(L, 0, 1);
+			lua_pushinteger(L, r._i);
+			lua_setfield(L, -2, "__i__");
+			// meta
+			luaL_Reg l[] = {
+				{ "__add", lr32add },
+				{ "__sub", lr32sub },
+				{ "__mul", lr32mul },
+				{ "__div", lr32div },
+				{ "__tostring",  lr32tostring},
+				{ NULL, NULL },
+			};
+			luaL_newlib(L, l);
+			lua_setmetatable(L, -2);
+			lua_getfield(L, -1, "__i__");
+			assert(luaL_checkinteger(L, -1) == r._i);
+			lua_pop(L, 1);
 		}
 
 		static b3R32 get(lua_State* L, int index) {
@@ -78,8 +227,16 @@ namespace luabridge {
 			} else if (lua_isinteger(L, index)) {
 				lua_Integer i = lua_tointeger(L, index);
 				return b3R32(i);
+			} else if (lua_istable(L, index)) {
+				lua_pushvalue(L, index);
+				lua_getfield(L, -1, "__i__");
+				lua_Integer i = luaL_checkinteger(L, -1);
+				lua_pop(L, 2);
+				b3R32 r;
+				r._i = i;
+				return r;
 			} else {
-				luaL_error(L, "#%d argments must be table", index);
+				luaL_error(L, "#%d argments must be table, type is %s", index, lua_typename(L, index));
 			}
 			return b3R32::zero();
 		}
@@ -123,11 +280,11 @@ namespace luabridge {
 	struct Stack <reactphysics3d::Vector3> {
 		static void push(lua_State* L, reactphysics3d::Vector3 const& vec3) {
 			lua_createtable(L, 0, 3);
-			Stack<b3R32>::push(L, vec3.x);
+			Stack<reactphysics3d::decimal>::push(L, vec3.x);
 			lua_setfield(L, -2, "x");
-			Stack<b3R32>::push(L, vec3.y);
+			Stack<reactphysics3d::decimal>::push(L, vec3.y);
 			lua_setfield(L, -2, "y");
-			Stack<b3R32>::push(L, vec3.z);
+			Stack<reactphysics3d::decimal>::push(L, vec3.z);
 			lua_setfield(L, -2, "z");
 
 			// create meta bable
@@ -159,13 +316,13 @@ namespace luabridge {
 	struct Stack <reactphysics3d::Quaternion> {
 		static void push(lua_State* L, reactphysics3d::Quaternion const& quat) {
 			lua_createtable(L, 0, 4);
-			Stack<b3R32>::push(L, quat.x);
+			Stack<reactphysics3d::decimal>::push(L, quat.x);
 			lua_setfield(L, -2, "x");
-			Stack<b3R32>::push(L, quat.y);
+			Stack<reactphysics3d::decimal>::push(L, quat.y);
 			lua_setfield(L, -2, "y");
-			Stack<b3R32>::push(L, quat.z);
+			Stack<reactphysics3d::decimal>::push(L, quat.z);
 			lua_setfield(L, -2, "z");
-			Stack<b3R32>::push(L, quat.w);
+			Stack<reactphysics3d::decimal>::push(L, quat.w);
 			lua_setfield(L, -2, "w");
 
 			// create meta bable
@@ -389,6 +546,14 @@ namespace luabridge {
 
 int
 luaopen_fixmath_reactphysics3d(lua_State *L) {
+	typedef void(reactphysics3d::CollisionWorld::*TestCollisionArg3T)(reactphysics3d::CollisionBody*, reactphysics3d::CollisionBody*, reactphysics3d::CollisionCallback*);
+	TestCollisionArg3T testCollisionArg3 = &reactphysics3d::CollisionWorld::testCollision;
+	typedef void(reactphysics3d::CollisionWorld::*TestCollisionArg2T)(reactphysics3d::CollisionBody*, reactphysics3d::CollisionCallback*, unsigned short categoryMaskBits);
+	TestCollisionArg2T testCollisionArg2 = &reactphysics3d::CollisionWorld::testCollision;
+	typedef void(reactphysics3d::CollisionWorld::*TestCollisionArg1T)(reactphysics3d::CollisionCallback*);
+	TestCollisionArg1T testCollisionArg1 = &reactphysics3d::CollisionWorld::testCollision;
+
+
 	luabridge::getGlobalNamespace(L)
 		.beginNamespace("rp3d")
 		// body
@@ -430,12 +595,14 @@ luaopen_fixmath_reactphysics3d(lua_State *L) {
 		.endClass()
 		.deriveClass<reactphysics3d::TriangleShape, reactphysics3d::ConvexPolyhedronShape>("TriangleShape")
 		.endClass()
+		/*.deriveClass<reactphysics3d::ConvexMeshShape, reactphysics3d::ConvexPolyhedronShape>("ConvexMeshShape")
+		.endClass()*/
 		.deriveClass<reactphysics3d::ConcaveShape, reactphysics3d::CollisionShape>("ConcaveShape")
 		.endClass()
-		.deriveClass<reactphysics3d::ConcaveMeshShape, reactphysics3d::ConcaveShape>("ConcaveMeshShape")
-		.endClass()
-		.deriveClass<reactphysics3d::HeightFieldShape, reactphysics3d::ConcaveShape>("HeightFieldShape")
-		.endClass()
+		/*.deriveClass<reactphysics3d::ConcaveMeshShape, reactphysics3d::ConcaveShape>("ConcaveMeshShape")
+		.endClass()*/
+		/*.deriveClass<reactphysics3d::HeightFieldShape, reactphysics3d::ConcaveShape>("HeightFieldShape")
+		.endClass()*/
 		.beginClass<reactphysics3d::ProxyShape>("ProxyShape")
 		.addFunction("getMass", &reactphysics3d::ProxyShape::getMass)
 		//.addFunction("getLocalToWorldTransform", &reactphysics3d::ProxyShape::getLocalToWorldTransform)
@@ -448,6 +615,11 @@ luaopen_fixmath_reactphysics3d(lua_State *L) {
 		.addFunction("createCollisionBody", &reactphysics3d::CollisionWorld::createCollisionBody)
 		.addFunction("destroyCollisionBody", &reactphysics3d::CollisionWorld::destroyCollisionBody)
 		.addFunction("setCollisionDispatch", &reactphysics3d::CollisionWorld::setCollisionDispatch)
+		.addFunction("raycast", &reactphysics3d::CollisionWorld::raycast)
+		//.addFunction("testAABBOverlap", &reactphysics3d::CollisionWorld::testAABBOverlap)
+		.addFunction("testCollision3", testCollisionArg3)
+		.addFunction("testCollision2", testCollisionArg2)
+		.addFunction("testCollision1", testCollisionArg1)
 		.endClass()
 		.deriveClass<reactphysics3d::DynamicsWorld, reactphysics3d::CollisionWorld>("DynamicsWorld")
 		.addConstructor<void(*)(const reactphysics3d::Vector3 &)>()
@@ -469,12 +641,6 @@ luaopen_fixmath_reactphysics3d(lua_State *L) {
 		.addFunction("enableSleeping", &reactphysics3d::DynamicsWorld::enableSleeping)
 		.addFunction("setEventListener", &reactphysics3d::DynamicsWorld::setEventListener)
 		.endClass()
-		.beginClass<reactphysics3d::EventListener>("EventListener")
-		.endClass()
-		.deriveClass<lEventListener, reactphysics3d::EventListener>("lEventListener")
-		.addConstructor<void(*)()>()
-		.addCFunction("lregister", &lEventListener::lregister)
-		.endClass()
 		// math
 		.beginClass<reactphysics3d::Quaternion>("Quaternion")
 		.addStaticFunction("identity", &reactphysics3d::Quaternion::identity)
@@ -488,11 +654,27 @@ luaopen_fixmath_reactphysics3d(lua_State *L) {
 		.endClass()
 		// r32
 		.beginClass<b3R32>("b3R32")
+		.addStaticFunction("fromInt", &b3R32::fromInt)
+		.addStaticFunction("fromFlt32", &b3R32::fromFlt32)
+		.addStaticFunction("fromFlt64", &b3R32::fromFlt64)
 		.addStaticFunction("MAXIMUM", &b3R32::maximum)
 		.addStaticFunction("MINIMUM", &b3R32::minimum)
 		.addStaticFunction("PI", &b3R32::pi)
 		.addStaticFunction("E", &b3R32::e)
 		.addStaticFunction("ONE", &b3R32::one)
+		.endClass()
+		// l
+		.beginClass<reactphysics3d::EventListener>("EventListener")
+		.endClass()
+		.deriveClass<lEventListener, reactphysics3d::EventListener>("lEventListener")
+		.addConstructor<void(*)()>()
+		.addCFunction("lregister", &lEventListener::lregister)
+		.endClass()
+		.beginClass<reactphysics3d::CollisionCallback>("CollisionCallback")
+		.endClass()
+		.deriveClass<lCollisionCallback, reactphysics3d::CollisionCallback>("lCollisionCallback")
+		.addConstructor<void(*)()>()
+		.addCFunction("lregister", &lCollisionCallback::lregister)
 		.endClass()
 		.endNamespace();
 	return 0;

@@ -302,7 +302,6 @@ bool VoronoiSimplex::recomputeClosestPoint() {
 // Compute point of a line segment that is closest to the origin
 void VoronoiSimplex::computeClosestPointOnSegment(const Vector3& a, const Vector3& b, int& bitUsedVertices,
                                                   decimal& t) const {
-#if defined(RP_NO_FIXMATH)
     Vector3 AP = -a;
     Vector3 AB = b - a;
     decimal APDotAB = AP.dot(AB);
@@ -331,9 +330,6 @@ void VoronoiSimplex::computeClosestPointOnSegment(const Vector3& a, const Vector
 
         bitUsedVertices = 1; // 0001 (only A is used)
     }
-#else
-	assert(false);
-#endif
 }
 
 // Compute point on a triangle that is closest to the origin

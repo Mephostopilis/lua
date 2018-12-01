@@ -62,18 +62,18 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/collision/shapes/CapsuleShape.h
 	./reactphysics3d/collision/shapes/CollisionShape.cpp
 	./reactphysics3d/collision/shapes/CollisionShape.h
-	./reactphysics3d/collision/shapes/ConcaveMeshShape.cpp
-	./reactphysics3d/collision/shapes/ConcaveMeshShape.h
+	#./reactphysics3d/collision/shapes/ConcaveMeshShape.cpp
+	#./reactphysics3d/collision/shapes/ConcaveMeshShape.h
 	./reactphysics3d/collision/shapes/ConcaveShape.cpp
 	./reactphysics3d/collision/shapes/ConcaveShape.h
-	./reactphysics3d/collision/shapes/ConvexMeshShape.cpp
-	./reactphysics3d/collision/shapes/ConvexMeshShape.h
+	#./reactphysics3d/collision/shapes/ConvexMeshShape.cpp
+	#./reactphysics3d/collision/shapes/ConvexMeshShape.h
 	./reactphysics3d/collision/shapes/ConvexPolyhedronShape.cpp
 	./reactphysics3d/collision/shapes/ConvexPolyhedronShape.h
 	./reactphysics3d/collision/shapes/ConvexShape.cpp
 	./reactphysics3d/collision/shapes/ConvexShape.h
-	./reactphysics3d/collision/shapes/HeightFieldShape.cpp
-	./reactphysics3d/collision/shapes/HeightFieldShape.h
+	#./reactphysics3d/collision/shapes/HeightFieldShape.cpp
+	#./reactphysics3d/collision/shapes/HeightFieldShape.h
 	./reactphysics3d/collision/shapes/SphereShape.cpp
 	./reactphysics3d/collision/shapes/SphereShape.h
 	./reactphysics3d/collision/shapes/TriangleShape.cpp
@@ -98,16 +98,16 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/collision/OverlapCallback.h
 	./reactphysics3d/collision/PolygonVertexArray.cpp
 	./reactphysics3d/collision/PolygonVertexArray.h
-	./reactphysics3d/collision/PolyhedronMesh.cpp
-	./reactphysics3d/collision/PolyhedronMesh.h
+	#./reactphysics3d/collision/PolyhedronMesh.cpp
+	#./reactphysics3d/collision/PolyhedronMesh.h
 	./reactphysics3d/collision/ProxyShape.cpp
 	./reactphysics3d/collision/ProxyShape.h
 	./reactphysics3d/collision/RaycastInfo.cpp
 	./reactphysics3d/collision/RaycastInfo.h
 	./reactphysics3d/collision/TriangleMesh.cpp
 	./reactphysics3d/collision/TriangleMesh.h
-	./reactphysics3d/collision/TriangleVertexArray.cpp
-	./reactphysics3d/collision/TriangleVertexArray.h
+	#./reactphysics3d/collision/TriangleVertexArray.cpp
+	#./reactphysics3d/collision/TriangleVertexArray.h
 	./reactphysics3d/constraint/BallAndSocketJoint.cpp
 	./reactphysics3d/constraint/BallAndSocketJoint.h
 	./reactphysics3d/constraint/ContactPoint.cpp
@@ -138,6 +138,7 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/mathematics/Matrix3x3.cpp
 	./reactphysics3d/mathematics/Matrix3x3.h
 	./reactphysics3d/mathematics/Quaternion.cpp
+	./reactphysics3d/mathematics/Quaternion.h
 	./reactphysics3d/mathematics/Transform.cpp
 	./reactphysics3d/mathematics/Transform.h
 	./reactphysics3d/mathematics/Vector2.cpp
