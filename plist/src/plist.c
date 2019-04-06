@@ -22,9 +22,14 @@
  */
 
 
+#include "plist.h"
+#include "hashtable.h"
+
+#include <node.h>
+#include <node_iterator.h>
+
 #include <string.h>
 #include <assert.h>
-#include "plist.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -34,10 +39,6 @@
 #else
 #include <pthread.h>
 #endif
-
-#include <node.h>
-#include <node_iterator.h>
-#include "hashtable.h"
 
 extern void plist_xml_init(void);
 extern void plist_xml_deinit(void);

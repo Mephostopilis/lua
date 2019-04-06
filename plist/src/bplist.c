@@ -24,22 +24,21 @@
 #include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <ctype.h>
-#include <inttypes.h>
-
-#include <plist/plist.h>
 #include "plist.h"
 #include "hashtable.h"
 #include "bytearray.h"
 #include "ptrarray.h"
 
+#include <plist/plist.h>
 #include <node.h>
 #include <node_iterator.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#include <inttypes.h>
 
 #ifndef _MSC_VER
 #define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
