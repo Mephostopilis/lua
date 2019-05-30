@@ -3,7 +3,7 @@
 #include <cassert>
 
 void desk_manager_t::init() {
-	io::CSVReader<3> in("ram.csv");
+	io::CSVReader<3> in("desk.csv");
 	in.read_header(io::ignore_extra_column, "vendor", "size", "speed");
 	std::string vendor; int size; double speed;
 	while (in.read_row(vendor, size, speed)) {

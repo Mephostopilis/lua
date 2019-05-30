@@ -1,6 +1,4 @@
-package.path = ".\\test\\?.lua;" .. package.path
-package.path = ".\\app\\?.lua;" .. package.path
-package.path = ".\\app\\lualib\\?.lua;.\\app\\lualib\\?\\init.lua;" .. package.path
+package.path = ".\\lualib\\?.lua;" .. package.path
 
 if not cc then
 	cc = {}
@@ -21,18 +19,18 @@ DEBUG_TEST = true
 print('[[ -------------- TEST LIST -------------- ]]')
 -- require "test_list"
 print('[[ -------------- TEST TIMER -------------- ]]')
-require "test_timer"
+-- require "test_timer"
 print('[[ -------------- TEST RANDOM -------------- ]]')
-require "test_random"
+-- require "test_random"
 print('[[ -------------- TEST QUEUE -------------- ]]')
-require "test.test_chestnut"
+-- require "test.test_chestnut"
 print('[[ -------------- TEST ENTITIES -------------- ]]')
-require "test.test_entity_system"
--- require "test.server"
+-- require "test.test_entity_system"
+require "test.test_xluasocket"
 -- require "test.client"
 print('[[ -------------- TEST NETWORK -------------- ]]')
-require "test.test_network"
+-- require "test.test_network"
 print('[[ -------------- TEST RAPIDJSON -------------- ]]')
-require "test.test_dbpack"
+-- require "test.test_dbpack"
 
 -- os.execute("pause")

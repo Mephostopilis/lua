@@ -2,7 +2,6 @@
 
 project(plist)
 
-include_directories(..)
 include_directories(../lua/src)
 include_directories(include)
 include_directories(libcnary/include)

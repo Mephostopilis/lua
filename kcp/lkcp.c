@@ -1,4 +1,4 @@
-/**
+﻿/**
  *
  * Copyright (C) 2015 by David Lin
  * 
@@ -21,6 +21,10 @@
  * THE SOFTWARE.
  *
  */
+
+#ifndef ANDROID
+#define LUA_LIB
+#endif // !ANDROID
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -233,6 +237,7 @@ static const struct luaL_Reg l_methods[] = {
     {NULL, NULL},
 };
 
+LUAMOD_API
 int luaopen_lkcp(lua_State* L) {
     luaL_checkversion(L);
 

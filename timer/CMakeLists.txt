@@ -2,28 +2,22 @@
 
 SET(TIMER_C ./timer.c)
 
-include_directories(.)
+#include_directories(.)
 include_directories(../lua/src)
 
-ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
+
 IF(MSVC)
+ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 #ADD_DEFINITIONS(-DNOUSE_JEMALLOC -DHAVE_STRUCT_TIMESPEC -DUSE_PTHREAD_LOCK)
 ENDIF()
 
-add_library(timer SHARED ${TIMER_C})
 IF(CMAKE_CL_64)
-IF(MSVC)
-set_target_properties(timer PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(timer PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-ENDIF(MSVC)
-ELSE(CMAKE_CL_64)
-IF(MSVC)
-set_target_properties(timer PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(timer PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-ENDIF(MSVC)
-ENDIF(CMAKE_CL_64)
-target_link_libraries(timer ../../xluatest/liblua)
-ADD_DEPENDENCIES(timer lua)
+ENDIF()
 
-#ADD_DEPENDENCIES(timer bson)
+add_library(timer SHARED ${TIMER_C})
+set_target_properties(timer PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+set_target_properties(timer PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+target_link_libraries(timer ../../xluatest/liblua)
+ADD_DEPENDENCIES(timer liblua)
+
 #set(BUILD_USE_64BITS on)

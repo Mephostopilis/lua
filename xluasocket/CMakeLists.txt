@@ -1,23 +1,78 @@
 ﻿project(xluasocket)
-SET(XLUASOCKET_H ./xluaconf.h ./write_buffer.h ./ringbuf.h ./protoc.h)
-SET(XLUASOCKET_C ./lxluasocket.c ./ringbuf.c ./write_buffer.c)
+SET(XLUASOCKET_H
+	posix/win/cpoll/cpoll.h
+	posix/win/timeutils.h
+	posix/dlfcn.h
+	posix/unistd.h
+	simplethread/atomic.h
+	simplethread/simplelock.h
+	simplethread/simplethread.h
+	atomic.h
+	message_queue.h
+	protoc.h
+	ringbuf.h
+	skynet_timer.h
+	socket_epoll.h
+	socket_info.h
+	socket_poll.h
+	socket_server.h
+	spinlock.h
+	write_buffer.h 
+	xluaconf.h
+)
+SET(XLUASOCKET_C
+	posix/win/cpoll/cpoll.cpp
+	posix/win/timeutils.c
+	posix/dlfcn.c
+	posix/unistd.c
+	lxluasocket.c 
+	message_queue.c
+	ringbuf.c
+	skynet_timer.c
+	socket_server.c
+	write_buffer.c
+)
 
+macro(source_group_by_dir proj_dir source_files)
+    if(MSVC OR APPLE)
+        get_filename_component(sgbd_cur_dir ${proj_dir} ABSOLUTE)
+        foreach(sgbd_file ${${source_files}})
+			get_filename_component(sgbd_abs_file ${sgbd_file} ABSOLUTE)
+            file(RELATIVE_PATH sgbd_fpath ${sgbd_cur_dir} ${sgbd_abs_file})
+            string(REGEX REPLACE "\(.*\)/.*" \\1 sgbd_group_name ${sgbd_fpath})
+            string(COMPARE EQUAL ${sgbd_fpath} ${sgbd_group_name} sgbd_nogroup)
+            string(REPLACE "/" "\\" sgbd_group_name ${sgbd_group_name})
+            if(sgbd_nogroup)
+                set(sgbd_group_name "\\")
+            endif(sgbd_nogroup)
+            source_group(${sgbd_group_name} FILES ${sgbd_file})
+        endforeach(sgbd_file)
+    endif(MSVC OR APPLE)
+endmacro(source_group_by_dir)
 
-include_directories(../lua/src)
-add_definitions(-DLUA_BUILD_AS_DLL -DXLUASOCKET)
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} XLUASOCKET_H)
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} XLUASOCKET_C)
+
 add_library(xluasocket SHARED ${XLUASOCKET_H} ${XLUASOCKET_C})
+target_include_directories(xluasocket PRIVATE ../lua/src)
+if (WIN32)
+	target_include_directories(xluasocket PRIVATE posix)
+	target_compile_definitions(xluasocket PRIVATE LUA_BUILD_AS_DLL XLUASOCKET)
+endif ()
 set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(xluasocket ../../xluatest/liblua)
-ADD_DEPENDENCIES(xluasocket lua)
+ADD_DEPENDENCIES(xluasocket liblua)
 
 project(ringbuf_unittest)
 SET(RINGBUG_UNITTEST_H ./ringbuf.h ./write_buffer.h)
 set(RINGBUG_UNITTEST_C ./ringbuf_unittest.cc ./ringbuf.c ./write_buffer.c)
-message(STATUS ${RINGBUG_UNITTEST_C})
-include_directories(.)
-include_directories(../googletest/include)
+
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} RINGBUG_UNITTEST_H)
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} RINGBUG_UNITTEST_C)
+
 add_executable(ringbuf_unittest ${RINGBUG_UNITTEST_H} ${RINGBUG_UNITTEST_C})
+target_include_directories(ringbuf_unittest PRIVATE ../googletest/include)
 set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(ringbuf_unittest ../../googletest/Debug/gtestd ../../googletest/Debug/gtest_maind)

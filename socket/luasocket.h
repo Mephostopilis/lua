@@ -1,4 +1,4 @@
-#ifndef LUASOCKET_H
+﻿#ifndef LUASOCKET_H
 #define LUASOCKET_H
 /*=========================================================================*\
 * LuaSocket toolkit
@@ -20,6 +20,9 @@
 #ifndef LUASOCKET_API
 #define LUASOCKET_API extern
 #endif
+#if !defined(LUA_LIB)
+#define LUA_LIB
+#endif // !ANDROID
 
 /*-------------------------------------------------------------------------*\
 * Initializes the library.

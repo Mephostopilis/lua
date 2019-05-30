@@ -2,8 +2,7 @@
 file(GLOB navigation_ROOT_Hpp *.hpp)
 file(GLOB navigation_ROOT_H *.h)
 
-include_directories(./)
-include_directories(../)
+include_directories(.)
 include_directories(../lua/src)
 
 IF(MSVC)
@@ -32,6 +31,6 @@ if(UNIX)
 	endif()
 else()
 	target_link_libraries(navigation ../../xluatest/liblua)
-	ADD_DEPENDENCIES(navigation lua)
+	ADD_DEPENDENCIES(navigation liblua)
 endif()
 

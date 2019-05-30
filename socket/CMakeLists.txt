@@ -24,5 +24,8 @@ set_target_properties(socket PROPERTIES
 )
 
 if (MSVC)
-	target_link_libraries(socket ws2_32 ../../xluatest/liblua)
+	target_link_libraries(socket ws2_32)
 endif (MSVC)
+target_link_libraries(socket ../../xluatest/liblua)
+
+ADD_DEPENDENCIES(socket liblua)

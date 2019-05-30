@@ -1,0 +1,33 @@
+EXPORTS
+	ATOM_CAS
+	ATOM_CAS_POINTER
+
+	cpoll_startup
+	cpoll_create
+	cpoll_ctl
+	cpoll_wait
+	cpoll_close
+	cpoll_cleanup
+
+	dlopen
+	dlerror
+	dlsym
+
+	getpid
+	kill
+	usleep
+	sleep
+	clock_gettime
+	flock
+	sigaction
+	sigfillset
+	sigemptyset
+	pipe
+	daemon
+	strsep
+	write
+	read
+	close
+
+	strwsaerror
+	strsyserror

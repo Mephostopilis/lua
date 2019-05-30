@@ -5,24 +5,16 @@ aux_source_directory(. LPEG_C)
 
 include_directories(../lua/src)
 
-ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 IF(MSVC)
+ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 #ADD_DEFINITIONS(-DNOUSE_JEMALLOC -DHAVE_STRUCT_TIMESPEC -DUSE_PTHREAD_LOCK)
 ENDIF()
 
 add_library(lpeg SHARED ${LPEG_H} ${LPEG_C})
-IF(CMAKE_CL_64)
-IF(MSVC)
 set_target_properties(lpeg PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(lpeg PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-ENDIF()
-ELSE(CMAKE_CL_64)
-IF(MSVC)
-set_target_properties(lpeg PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(lpeg PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-ENDIF()
-ENDIF(CMAKE_CL_64)
+
 target_link_libraries(lpeg ../../xluatest/liblua)
-ADD_DEPENDENCIES(lpeg lua)
+ADD_DEPENDENCIES(lpeg liblua)
 
 #set(BUILD_USE_64BITS on)
