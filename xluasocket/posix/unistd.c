@@ -99,7 +99,7 @@ pipe(int fd[2]) {
 
 	listen(listen_fd, 5);
 	socket_keepalive(listen_fd);
-	printf("Windows sim pipe() listen at %s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+	fprintf(stderr, "Windows sim pipe() listen at %s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
 	sendfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(connect(sendfd, (struct sockaddr*)&sin, sizeof(sin)) == SOCKET_ERROR) {

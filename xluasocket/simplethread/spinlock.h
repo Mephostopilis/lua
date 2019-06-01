@@ -57,7 +57,7 @@ spinlock_lock(struct spinlock *lock) {
 
 static inline int
 spinlock_trylock(struct spinlock *lock) {
-	spin_trylock(lock);
+	return spin_trylock(lock);
 }
 
 static inline void

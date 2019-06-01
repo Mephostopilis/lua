@@ -10,6 +10,7 @@
 #include "simplethread/simplethread.h"
 #include "array.h"
 #include "protoc.h"
+#include "log.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -33,33 +34,12 @@
 #define XLUASOCKET_TYPE_UDP 6
 #define XLUASOCKET_TYPE_WARNING 7
 
-#define MAX_SENDPACK_NUM (10)
-#define MAX_RECVPACK_NUM (4)
+#define MAX_SENDPACK_NUM  (10)
+#define MAX_RECVPACK_NUM  (4)
 #define MAX_SLICEPACK_NUM (20)
 
-static void
-init_lib(lua_State *L) {
-#if defined(_WIN32) || defined(_WIN64)
-	static int inited = 0;
-	if (!inited) {
-		WSADATA wsaData;
-		int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {
-			luaL_error(L, "init win32 failture.");
-		}
-		inited = 1;
-	}
-#endif // WIN32
-}
-
-static void
-close_lib(lua_State *L) {
-#if defined(_WIN32) || defined(_WIN64)
-	WSACleanup();
-#endif // WIN32
-}
-
 #define THREADS 1
+static bool inited = false;
 static struct socket_server *ss;
 static struct message_queue *q;
 struct args {
@@ -71,6 +51,19 @@ static struct thread t[THREADS];
 struct thread_event ev[THREADS];
 static struct args args[THREADS];
 
+static void *
+soi_buffer(void *ptr) {
+	return NULL;
+}
+
+static int
+soi_size(void *ptr) {
+	return 0;
+}
+
+static void
+soi_free(void *ptr) {
+}
 
 static void
 on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
@@ -85,6 +78,7 @@ on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
 	{
 		lua_getglobal(L, "xluasocket");
 		lua_getfield(L, -1, "unpack");
+		assert(lua_istable(L, -1));
 		lua_geti(L, -1, msg->id);
 		if (lua_isnoneornil(L, -1)) {
 			lua_pushlstring(L, msg->buffer, msg->ud);
@@ -109,6 +103,7 @@ on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
 			lua_geti(L, -1, msg->id);
 		}
 		ringbuf_t *rb = lua_touserdata(L, -1);
+		lua_pop(L, 3);
 		ringbuf_memcpy_into(rb, msg->buffer, msg->ud);
 		for (size_t i = 0; i < MAX_SLICEPACK_NUM; i++) {
 			if (ringbuf_is_empty(rb)) {
@@ -131,14 +126,13 @@ on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
 
 		break;
 	}
-	case SOCKET_OPEN:
 	case SOCKET_ERR:
+	case SOCKET_OPEN:
 	case SOCKET_ACCEPT:
 		lua_pushlstring(L, msg + 1, msg->sz - sizeof(*msg));
 		lua_pcall(L, 4, 0, 0);
 		break;
 	default:
-
 		lua_pcall(L, 3, 0, 0);
 		break;
 	}
@@ -162,6 +156,7 @@ forward_message(int type, bool padding, struct socket_message * result) {
 		}
 	}
 	sm = (struct xluasocket_message *)MALLOC(sz);
+	memset(sm, 0, sz);
 	sm->type = type;
 	sm->id = result->id;
 	sm->ud = result->ud;
@@ -207,7 +202,7 @@ xluasocket_poll() {
 		forward_message(XLUASOCKET_TYPE_WARNING, false, &result);
 		break;
 	default:
-		//skynet_error(NULL, "Unknown socket message type %d.", type);
+		fprintf(stderr, "Unknown socket message type %d.\n", type);
 		return -1;
 	}
 	if (more) {
@@ -227,7 +222,7 @@ co(void *p) {
 
 		int r = xluasocket_poll();
 		if (r == 0) {
-			printf("EXIT");
+			fprintf(stderr, "scoket server EXIT\n");
 			break;
 		}
 		if (r < 0) {
@@ -251,7 +246,6 @@ co(void *p) {
 */
 static int
 lnew(lua_State *L) {
-	init_lib(L);
 	luaL_checktype(L, 1, LUA_TFUNCTION);
 	lua_getglobal(L, "xluasocket");
 	if (!lua_istable(L, -1)) {
@@ -263,38 +257,49 @@ lnew(lua_State *L) {
 #if defined(_DEBUG)
 	assert(lua_gettop(L) == 2);
 #endif
-	skynet_timer_init();  // 初始timer
-	q = mq_create();      // 初始消息队列
-	if (q == NULL) {
-		luaL_error(L, "q is null");
-	}
-	ss = socket_server_create(skynet_now());  // 初始socket
-	if (ss == NULL) {
-		luaL_error(L, "ss is null");
-	}
-	lua_pushvalue(L, 1);
-	lua_rawsetp(L, -2, ss);
-	lua_pop(L, 1);
-
-	int i = 0;
-	for (i = 0; i < THREADS; i++) {
-		t[i].func = co;
-		t[i].ud = &args[i];
-		args[i].n = i;
-		/*
-		thread_event_create(&ev[i]);
-		if (i + 1 < THREADS) {
-			args[i].wait = &ev[i];
-		} else {
-			args[i].wait = NULL;
+	if (!inited) {
+		LOG_INIT();
+		skynet_timer_init();  // 初始timer
+		q = mq_create();      // 初始消息队列
+		if (q == NULL) {
+			luaL_error(L, "q is null");
 		}
-		if (i - 1 >= 0) {
-			args[i].trigger = &ev[i - 1];
-		} else {
-			args[i].trigger = NULL;
-		}*/
+		ss = socket_server_create(skynet_now());  // 初始socket
+		if (ss == NULL) {
+			luaL_error(L, "ss is null");
+		}
+		struct socket_object_interface soi;
+		soi.buffer = soi_buffer;
+		soi.size = soi_size;
+		soi.free = soi_free;
+		socket_server_userobject(ss, &soi);
+
+		lua_pushvalue(L, 1);
+		lua_rawsetp(L, -2, ss);
+		lua_pop(L, 1);
+
+		int i = 0;
+		for (i = 0; i < THREADS; i++) {
+			t[i].func = co;
+			t[i].ud = &args[i];
+			args[i].n = i;
+			/*
+			thread_event_create(&ev[i]);
+			if (i + 1 < THREADS) {
+				args[i].wait = &ev[i];
+			} else {
+				args[i].wait = NULL;
+			}
+			if (i - 1 >= 0) {
+				args[i].trigger = &ev[i - 1];
+			} else {
+				args[i].trigger = NULL;
+			}*/
+		}
+		thread_create(t, THREADS);
+		inited = 1;
 	}
-	thread_create(t, THREADS);
+	
 	lua_pushinteger(L, 0);
 	return 1;
 }
@@ -302,7 +307,6 @@ lnew(lua_State *L) {
 static int
 lfree(lua_State *L) {
 	socket_server_release(ss);
-	close_lib(L);
 	return 0;
 }
 
@@ -456,6 +460,15 @@ lkeepalive(lua_State *L) {
 	return 0;
 }
 
+static int 
+llog(lua_State *L) {
+	luaL_checkstring(L, 1);
+	size_t l;
+	const char *buf = lua_tolstring(L, 1, &l);
+	fprintf(stderr, buf);
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_xluasocket(lua_State *L) {
 	luaL_checkversion(L);
@@ -479,6 +492,8 @@ luaopen_xluasocket(lua_State *L) {
 
 		{ "send", lsend },
 
+		{ "log",  llog },
+		
 		{ NULL, NULL },
 	};
 #if LUA_VERSION_NUM < 503

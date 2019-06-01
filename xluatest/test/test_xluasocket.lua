@@ -1,22 +1,27 @@
 local xluasocket = require "xluasocket"
 
+local function log(fmt, ...)
+	local s = string.format(fmt,... ) .. '\n'
+	xluasocket.log(s)
+end
+
 local function run( ... )
 	-- body
 	local err = xluasocket.new(function (t, id, ud, ... )
 		-- body
 		if t == xluasocket.SOCKET_DATA then
-			print('data:', id, ...)
+			log('data: [id = %d][%s]', id, ...)
 		elseif t == xluasocket.SOCKET_OPEN then
-			print('sokcet connect', id, ud, ...)
+			log('sokcet connect [id = %d][%d][subcmd = %s]', id, ud, ...)
 			local subcmd = tostring(...)
 			if subcmd == 'transfer' then
 			end
 		elseif t == xluasocket.SOCKET_ACCEPT then
-			print("accept", id, ud)
+			log("sokcet accept [id = %d][acc = %d]", id, ud)
 			xluasocket.unpack(ud, xluasocket.HEADER_TYPE_LINE)
 			xluasocket.start(ud)
 		elseif t == xluasocket.SOCKET_ERROR then
-			print('error', id, ...)
+			log('error', id, ...)
 		end
 	end)
 
@@ -25,7 +30,7 @@ local function run( ... )
 	if s < 0 then
 		error(string.format("id = %d listen failture.", s))
 	else
-		print('s = ', s)
+		log('s = %d', s)
 	end
 	xluasocket.start(s)
 	-- err = xluasocket.pack(s, xluasocket.HEADER_TYPE_LINE)
@@ -42,7 +47,7 @@ local function run( ... )
 	if c < 0 then
 		error(string.format("id = %d connect failture.", c))
 	else
-		print('c = ', c)
+		log('c = %d', c)
 	end
 	xluasocket.pack(c, xluasocket.HEADER_TYPE_LINE)
 	xluasocket.start(c)
@@ -51,17 +56,22 @@ local function run( ... )
 	-- 	error(string.format("id = %d listen failture.", c))
 	-- end
 
+	local times = 100
 	while true do
 		xluasocket.poll()
 
-		local err = xluasocket.send(c, "hello world")
-		if err == -1 then
-			error(string.format("id = %d send failtrue.", c))
+		if times >= 0 then
+			times = times - 1
+			log('send %d hell world', c)
+			local err = xluasocket.send(c, "hello world")
+			if err == -1 then
+				error(string.format("id = %d send failtrue.", c))
+			end
 		end
 	end
 end
 
 local ok, err = xpcall(run, debug.traceback)
 if not ok then
-	print(err)
+	log(err)
 end

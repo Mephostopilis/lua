@@ -1,13 +1,19 @@
 ﻿project(xluasocket)
 SET(XLUASOCKET_H
-	posix/win/cpoll/cpoll.h
+	posix/win/socket_cpoll.h
+	posix/win/fdhash.h
 	posix/win/timeutils.h
+	posix/win/uthash.h
+	posix/win/wehash.h
 	posix/dlfcn.h
 	posix/unistd.h
 	simplethread/atomic.h
 	simplethread/simplelock.h
 	simplethread/simplethread.h
+	Win32_Interop/Win32_PThread.h
+	Win32_Interop/Win32_ThreadControl.h
 	atomic.h
+	log.h
 	message_queue.h
 	protoc.h
 	ringbuf.h
@@ -21,10 +27,13 @@ SET(XLUASOCKET_H
 	xluaconf.h
 )
 SET(XLUASOCKET_C
-	posix/win/cpoll/cpoll.cpp
+	posix/win/socket_cpoll.c
 	posix/win/timeutils.c
 	posix/dlfcn.c
 	posix/unistd.c
+	Win32_Interop/Win32_PThread.c
+	Win32_Interop/Win32_ThreadControl.c
+	log.c
 	lxluasocket.c 
 	message_queue.c
 	ringbuf.c
@@ -59,6 +68,8 @@ if (WIN32)
 	target_include_directories(xluasocket PRIVATE posix)
 	target_compile_definitions(xluasocket PRIVATE LUA_BUILD_AS_DLL XLUASOCKET)
 endif ()
+set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
+set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
 set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(xluasocket ../../xluatest/liblua)
@@ -73,6 +84,8 @@ source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} RINGBUG_UNITTEST_C)
 
 add_executable(ringbuf_unittest ${RINGBUG_UNITTEST_H} ${RINGBUG_UNITTEST_C})
 target_include_directories(ringbuf_unittest PRIVATE ../googletest/include)
+set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
+set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
 set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(ringbuf_unittest ../../googletest/Debug/gtestd ../../googletest/Debug/gtest_maind)

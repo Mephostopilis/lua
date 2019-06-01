@@ -15,7 +15,7 @@ static void thread_event_release(struct thread_event *ev);
 static void thread_event_trigger(struct thread_event *ev);
 static void thread_event_wait(struct thread_event *ev);
 
-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+#if (defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)) && 0
 
 #include <windows.h>
 #include <assert.h>
@@ -89,7 +89,11 @@ thread_event_wait(struct thread_event *ev) {
 
 #else
 
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+#include "../Win32_Interop/Win32_PThread.h"
+#else
 #include <pthread.h>
+#endif
 
 static pthread_t *pid = NULL;
 
@@ -102,7 +106,7 @@ thread_function(void * args) {
 
 static inline void
 thread_create(struct thread *threads, int n) {
-	pthread_t *pid = malloc(sizeof(pthread) * n);
+	pthread_t *pid = malloc(sizeof(pthread_t) * n);
 	int i;
 	for (i=0;i<n;i++) {
 		if (pthread_create(&pid[i], NULL, thread_function, &threads[i])) {
@@ -112,7 +116,8 @@ thread_create(struct thread *threads, int n) {
 }
 
 static inline void
-thread_create(struct thread *threads, int n) {
+thread_join(struct thread *threads, int n) {
+	int i;
 	for (i = 0; i < n; i++) {
 		pthread_join(pid[i], NULL);
 	}

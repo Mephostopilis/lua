@@ -1,11 +1,11 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 
 #if defined(_MSC_VER)
 
 #include "timeutils.h"
-//#include <Windows.h>
 #include <WinSock2.h>
+//#include <Windows.h>
 #include <assert.h>
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
