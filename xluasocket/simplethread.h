@@ -2,7 +2,7 @@
 #define SIMPLE_THREAD_H
 
 struct thread {
-	void (*func)(void *);
+	void(*func)(void *);
 	void *ud;
 };
 
@@ -39,8 +39,8 @@ static INLINE void
 thread_create(struct thread * threads, int n) {
 	assert(thread_handle == NULL);
 	int i;
-	thread_handle = (HANDLE *)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,n*sizeof(HANDLE));
-	for (i=0;i<n;i++) {
+	thread_handle = (HANDLE *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * sizeof(HANDLE));
+	for (i = 0; i < n; i++) {
 		thread_handle[i] = CreateThread(NULL, 0, thread_function, (LPVOID)&threads[i], 0, NULL);
 		if (thread_handle[i] == NULL) {
 			HeapFree(GetProcessHeap(), 0, thread_handle);
@@ -90,7 +90,8 @@ thread_event_wait(struct thread_event *ev) {
 #else
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
-#include "../Win32_Interop/Win32_PThread.h"
+#include "Win32_Interop/Win32_PThread.h"
+#include "Win32_Interop/Win32_ThreadControl.h"
 #else
 #include <pthread.h>
 #endif
@@ -105,10 +106,17 @@ thread_function(void * args) {
 }
 
 static inline void
+thread_init() {
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+	InitThreadControl();
+#endif
+}
+
+static inline void
 thread_create(struct thread *threads, int n) {
 	pthread_t *pid = malloc(sizeof(pthread_t) * n);
 	int i;
-	for (i=0;i<n;i++) {
+	for (i = 0; i < n; i++) {
 		if (pthread_create(&pid[i], NULL, thread_function, &threads[i])) {
 			return;
 		}

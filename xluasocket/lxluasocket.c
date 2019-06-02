@@ -278,6 +278,7 @@ lnew(lua_State *L) {
 		lua_rawsetp(L, -2, ss);
 		lua_pop(L, 1);
 
+		thread_init();
 		int i = 0;
 		for (i = 0; i < THREADS; i++) {
 			t[i].func = co;

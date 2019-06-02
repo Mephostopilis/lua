@@ -2,18 +2,27 @@
 #include "dict.h"
 #include "sds.h"
 #include "xxhash.h"
+#include "util.h"
 }
 
 #include <gtest/gtest.h>
 #include <cmath>
 
-struct M {
-	int a;
-	sds s;
+struct robj {
+	int hash;
+	int ref;
 };
 
 unsigned int dictEncObjHash(const void *key) {
-	//robj *o = (robj*)key;
+	robj *o = (robj*)key;
+	if (o->hash == 0) {
+		char buf[32];
+		int len;
+
+		len = ll2string(buf, 32, (PORT_LONG)o->ref);
+		o->hash = XXH32(buf, len, 0);
+	}
+	return o->hash;
 
 	//if (sdsEncodedObject(o)) {
 	//	return dictGenHashFunction(o->ptr, (int)sdslen((sds)o->ptr));          WIN_PORT_FIX /* cast (int) */
@@ -33,7 +42,7 @@ unsigned int dictEncObjHash(const void *key) {
 	//		return hash;
 	//	}
 	//}
-	M *m1 = (M *)key;
+	//M *m1 = (M *)key;
 	/*sds *s = (sds*)key;
 	sds s1 = *s;
 	size_t l = sdslen(*s);*/
@@ -43,7 +52,7 @@ unsigned int dictEncObjHash(const void *key) {
 
 int dictEncObjKeyCompare(void *privdata, const void *key1,
 	const void *key2) {
-	sds o1 = (sds)key1, o2 = (sds)key2;
+	return ((robj *)key1)->ref > ((robj *)key2)->ref;
 	/*robj *o1 = (robj*)key1, *o2 = (robj*)key2;
 	int cmp;
 
@@ -57,7 +66,7 @@ int dictEncObjKeyCompare(void *privdata, const void *key1,
 	decrRefCount(o1);
 	decrRefCount(o2);*/
 	//return cmp;
-	return 1;
+	//return 1;
 }
 
 void dictObjectDestructor(void *privdata, void *val) {
@@ -81,18 +90,15 @@ dictType hashDictType = {
 namespace {
 
 	TEST(dict_test, zzalloc) {
-		sds s1 = sdsnew("hello world");
+		/*sds s1 = sdsnew("hello world");
 		sds s2 = sdsnew("i am world");
 		sds s3 = sdscatsds(s1, s2);
 		sds s4 = sdscatprintf(s3, "%s", "hello");
-		sds s5 = sdsdup(s1);
-		M m1, m2;
-		m1.s = s1;
-		m1.a = 10;
-		m2.s = s2;
-		m2.a = 14;
+		sds s5 = sdsdup(s1);*/
+		robj m1 = { 0, 10 };
+		robj m2 = { 0, 12 };
 		dict *d = dictCreate(&hashDictType, NULL);
-		dictAdd(d, &m1, &m2);
+		dictAdd(d, &m1, &m1);
 		//dictAdd(d, s2, s3);
 
 		//fprintf(stderr, "mem size = %d\n", sz);

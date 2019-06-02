@@ -40,6 +40,7 @@
 /build
 /build32
 /build64
+.vscode
 
 *.suo
 *.sdf

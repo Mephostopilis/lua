@@ -22,7 +22,9 @@ SET(XLUASOCKET_H
 	socket_poll.h
 	socket_server.h
 	spinlock.h
+	util.h
 	write_buffer.h 
+	xxhash.c
 	xluaconf.h
 )
 IF(UNIX)
@@ -45,6 +47,7 @@ SET(XLUASOCKET_C
 	ringbuf.c
 	skynet_timer.c
 	socket_server.c
+	util.c
 	write_buffer.c
 	zmalloc.c
 )
@@ -81,19 +84,3 @@ set_target_properties(xluasocket PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../..
 set_target_properties(xluasocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_link_libraries(xluasocket ../../xluatest/liblua)
 ADD_DEPENDENCIES(xluasocket liblua)
-
-project(ringbuf_unittest)
-SET(RINGBUG_UNITTEST_H ./ringbuf.h ./write_buffer.h)
-set(RINGBUG_UNITTEST_C ./ringbuf_unittest.cc ./ringbuf.c ./write_buffer.c)
-
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} RINGBUG_UNITTEST_H)
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} RINGBUG_UNITTEST_C)
-
-add_executable(ringbuf_unittest ${RINGBUG_UNITTEST_H} ${RINGBUG_UNITTEST_C})
-target_include_directories(ringbuf_unittest PRIVATE ../googletest/include)
-set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
-set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../xluatest)
-set_target_properties(ringbuf_unittest PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(ringbuf_unittest PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-target_link_libraries(ringbuf_unittest ../../googletest/Debug/gtestd ../../googletest/Debug/gtest_maind)
-

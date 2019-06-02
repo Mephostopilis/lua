@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #if defined(_MSC_VER)
-#include <win/timeutils.h>
+#include "Win32_Interop/Win32_Extras.h"
 #ifdef near
 #undef near
 #endif // near

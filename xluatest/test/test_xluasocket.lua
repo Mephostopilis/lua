@@ -1,4 +1,5 @@
 local xluasocket = require "xluasocket"
+local random = require "random"
 
 local function log(fmt, ...)
 	local s = string.format(fmt,... ) .. '\n'
@@ -43,30 +44,34 @@ local function run( ... )
 	-- end
 
 	-- client
-	local c = xluasocket.connect("127.0.0.1", 3300)
-	if c < 0 then
-		error(string.format("id = %d connect failture.", c))
-	else
-		log('c = %d', c)
+	for i=1,100 do
+		local c = xluasocket.connect("127.0.0.1", 3300)
+		if c < 0 then
+			error(string.format("id = %d connect failture.", c))
+		else
+			log('c = %d', c)
+		end
+		xluasocket.pack(c, xluasocket.HEADER_TYPE_LINE)
+		xluasocket.start(c)	
 	end
-	xluasocket.pack(c, xluasocket.HEADER_TYPE_LINE)
-	xluasocket.start(c)
+	
 	-- err = xluasocket.pack(c, xluasocket.HEADER_TYPE_LINE)
 	-- if err ~= 0 then
 	-- 	error(string.format("id = %d listen failture.", c))
 	-- end
 
+	local r1 = random(0)
 	local times = 100
 	while true do
 		xluasocket.poll()
-
 		if times >= 0 then
 			times = times - 1
-			log('send %d hell world', c)
-			local err = xluasocket.send(c, "hello world")
+			local id = r1(1, 100);
+			log('send %d hell world times(%d)', id, times)
+			local err = xluasocket.send(id, "hello world")
 			if err == -1 then
-				error(string.format("id = %d send failtrue.", c))
-			end
+				error(string.format("id = %d send failtrue.", id))
+			end	
 		end
 	end
 end

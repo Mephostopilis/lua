@@ -3,40 +3,121 @@
 #include "../array.h"
 #include "../dict.h"
 #include "../zmalloc.h"
-//#include "uthash.h"
-//#include "fdhash.h"
-//#include "wehash.h"
+#include "../util.h"
 #include <WinSock2.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
 
-struct fdhash {
+typedef struct fdhash {
 	int idx;
-	int hash;
 	int sock;
+	int fhash;
+	int whash;
 	WSAEVENT we;
 	void *ud;
-};
+} fdhash_t;
 
-struct wev_t {
+typedef struct wev {
 	int cap;
 	int sz;
 	int sidx;
 	struct fdhash **fds;
-};
+} wev_t;
 
-static dictType hashDictType = {
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-};
 static dict *fds = NULL;
 static dict *wes = NULL;
 static int sidx = 0;
-static struct wev_t arr = { 0, 0, 0, NULL };
+static wev_t arr = { 0, 0, 0, NULL };
+
+unsigned int dictFdsObjHash(const void *key) {
+	int *o = (int*)key;
+	int ll = *o;
+	char buf[32];
+	int len = ll2string(buf, 32, ll);
+	int hash = XXH32(buf, len, 0);
+	int realcap = pow(2, arr.cap);
+	for (size_t i = 0; i < realcap; i++) {
+		if (arr.fds == NULL) {
+			break;
+		}
+		fdhash_t *f = arr.fds[i];
+		if (f != NULL && f->sock == (*o)) {
+			if (f->fhash == 0) {
+				f->fhash = hash;
+			}
+			assert(f->fhash == hash);
+		}
+	}
+	return hash;
+}
+
+unsigned int dictWesObjHash(const void *key) {
+	WSAEVENT *o = (WSAEVENT*)key;
+	WSAEVENT p = (*o);
+	char buf[32];
+	int len = snprintf(buf, 32, "0x%p", p);
+	int hash = XXH32(buf, len, 0);
+	int realcap = pow(2, arr.cap);
+	for (size_t i = 0; i < realcap; i++) {
+		if (arr.fds == NULL) {
+			break;
+		}
+		if (arr.fds[i] != NULL && arr.fds[i]->we == (*o)) {
+			fdhash_t *f = arr.fds[i];
+			if (f->whash == 0) {
+				f->whash = hash;
+			}
+			assert(arr.fds[i]->whash == hash);
+		}
+	}
+	return hash;
+}
+
+int dictFdsObjKeyCompare(void *privdata, const void *key1,
+	const void *key2) {
+	int *o1 = (int*)key1;
+	int *o2 = (int*)key2;
+	if ((*o1) == (*o2)) {
+		return 1;
+	}
+	return 0;
+}
+
+int dictWesObjKeyCompare(void *privdata, const void *key1,
+	const void *key2) {
+	WSAEVENT *o1 = (WSAEVENT*)key1;
+	WSAEVENT *o2 = (WSAEVENT*)key2;
+	if ((*o1) == (*o2)) {
+		return 1;
+	}
+	return 0;
+}
+
+void dictObjectDestructor(void *privdata, void *val) {
+	DICT_NOTUSED(privdata);
+
+	if (val == NULL) return; /* Values of swapped out keys as set to NULL */
+	//decrRefCount(val);
+}
+
+static dictType fdsHashDictType = {
+	dictFdsObjHash,             /* hash function */
+	NULL,                       /* key dup */
+	NULL,                       /* val dup */
+	dictFdsObjKeyCompare,       /* key compare */
+	dictObjectDestructor,  /* key destructor */
+	dictObjectDestructor   /* val destructor */
+};
+static dictType wesHashDictType = {
+	dictWesObjHash,             /* hash function */
+	NULL,                       /* key dup */
+	NULL,                       /* val dup */
+	dictWesObjKeyCompare,       /* key compare */
+	dictObjectDestructor,  /* key destructor */
+	dictObjectDestructor   /* val destructor */
+};
+
 
 static int
 wev_add(struct fdhash *f) {
@@ -95,11 +176,23 @@ ssp_create() {
 	if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0) {
 		return -1;
 	}
+	if (fds == NULL) {
+		fds = dictCreate(&fdsHashDictType, NULL);
+	}
+	if (wes == NULL) {
+		wes = dictCreate(&wesHashDictType, NULL);
+	}
 	return 0;
 }
 
 void
 ssp_release(int efd) {
+	if (fds != NULL) {
+		dictRelease(fds);
+	}
+	if (fds != NULL) {
+		dictRelease(wes);
+	}
 	WSACleanup();
 }
 
@@ -111,22 +204,28 @@ int
 ssp_add(int efd, int sock, void *ud) {
 	assert(efd == 0);
 	struct fdhash *f = MALLOC(sizeof(*f));
+	memset(f, 0, sizeof(*f));
 	f->sock = sock;
 	f->ud = ud;
 	f->we = WSACreateEvent();
 	WSAEventSelect(f->sock, f->we, FD_READ | FD_ACCEPT | FD_CLOSE);
 	assert(dictAdd(fds, &f->sock, f) == 0);
-	
+
 	struct fdhash *f1 = dictFetchValue(fds, &sock);
 	assert(f1 == f);
 
 	int idx = wev_add(f);
 	assert(idx >= 0);
 	assert(idx == f->idx);
+	assert(arr.fds[idx] == f);
 
 	assert(dictAdd(wes, &f->we, f) == 0);
-	struct fdhash *w = dictFetchValue(wes, &sock);
+	struct fdhash *w = dictFetchValue(wes, &f->we);
 	assert(w == f);
+
+	WSAEVENT e = w->we;
+	struct fdhash *w1 = dictFetchValue(wes, &e);
+	assert(w == w1);
 
 	struct fdhash *f2 = dictFetchValue(fds, &sock);
 	assert(w == f2);
@@ -141,7 +240,7 @@ ssp_del(int efd, int sock) {
 		assert(wev_del(f->idx) > 0);
 		assert(dictDeleteNoFree(&fds, &f->sock) == 0);
 		assert(dictDeleteNoFree(&wes, &f->we) == 0);
-		
+
 		WSAEventSelect(sock, 0, 0);
 		WSACloseEvent(f->we);
 		FREE(f);
@@ -214,8 +313,7 @@ ssp_wait(int efd, struct event *e, int max) {
 	if (index != WSA_WAIT_TIMEOUT) {
 		int eindex = index - WSA_WAIT_EVENT_0;
 		for (int i = eindex; i < we_sz && n < max; ++i) {   // 遍历所有event
-			WSAEVENT *wep = &es[i];
-			struct fdhash *w = dictFetchValue(wes, wep);
+			struct fdhash *w = dictFetchValue(wes, &es[i]);
 			assert(w != NULL);
 			struct fdhash *f = dictFetchValue(fds, &w->sock);
 			assert(w == f);

@@ -1,5 +1,6 @@
 ﻿extern "C" {
 	#include "sds.h"
+#include "util.h"
 }
 
 #include <gtest/gtest.h>
@@ -7,7 +8,7 @@
 
 namespace {
 
-	TEST(sds_test, zzalloc) {
+	TEST(util_test, zzalloc) {
 		/*sds s1 = sdsnew("hello world");
 		sds s2 = sdsnew("i am world");
 		sds s3 = sdscatsds(s1, s2);
@@ -16,6 +17,7 @@ namespace {
 		EXPECT_EQ(sdscmp(s5, s4), 0);
 		fprintf(stderr, "%s", s4);*/
 		// sds 有問題
+		utilTest(0, NULL);
 	}
 }
 
