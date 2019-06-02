@@ -1,0 +1,2 @@
+#include "IndexComponent.h"
+

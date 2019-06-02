@@ -30,6 +30,7 @@ set (PLIST_CORE
 	./src/bplist.c
 	./src/bytearray.c
 	./src/hashtable.c
+	./src/hashtable.h
 	./src/plist.c
 	./src/plist.h
 	./src/ptrarray.c

@@ -1,10 +1,17 @@
 ﻿project(config)
 
-set( CONFIG_H ./csv.h ./strhtable.h ./value_t.h
+set( CONFIG_H 
+	./csv.h 
+	./strhtable.h 
+	./value_t.h
 	./desk_manager_t.h
 	./data_manager_t.h
 )
-SET( CONFIG_C ./lua-config.cpp ./csv.cpp ./strhtable.cpp ./value_t.cpp
+SET( CONFIG_C 
+	./lua-config.cpp 
+	./csv.cpp 
+	./strhtable.cpp 
+	./value_t.cpp
 	./desk_manager_t.cpp
 	./data_manager_t.cpp
 )

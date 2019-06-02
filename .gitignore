@@ -1,47 +1,40 @@
 # Object files
-*.o
-*.ko
-*.obj
-*.elf
+# *.o
+# *.ko
+# *.obj
+# *.elf
 
 # Precompiled Headers
-*.gch
-*.pch
+# *.gch
+# *.pch
 
 # Libraries
-*.lib
-*.a
-*.la
-*.lo
+# *.lib
+# *.a
+# *.la
+# *.lo
 
 # Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# *.dll
+# *.so
+# *.so.*
+# *.dylib
 
 # Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# *.exe
+# *.out
+# *.app
+# *.i*86
+# *.x86_64
+# *.hex
 
 # Debug files
-*.dSYM/
-*.exp
-*.ilk
-*.pdb
+# *.dSYM/
+# *.exp
+# *.ilk
+# *.pdb
 
-
-# folder
-/bin
-/build
-/build32
-/build64
-.vscode
-
+# 
 *.suo
 *.sdf
 !googletest/Debug/gtestd.lib
@@ -50,4 +43,19 @@
 !googletest/Debug/gtest_maind.dll
 !xluatest/gtestd.pdb
 !xluatest/gtest_maind.pdb
+
+# folder
+/bin
+/build
+/build32
+/build64
+.vscode
+xluatest/*.exe
+xluatest/*.a
+xluatest/*.dll
+xluatest/*.exp
+xluatest/*.ilk
+xluatest/*.pdb
+xluatest/*.lib
+
 

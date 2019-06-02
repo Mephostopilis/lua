@@ -1,4 +1,26 @@
-﻿#ifndef ANDROID
+﻿/**
+ *
+ *  Copyright(c) 2012 - 2019 mephostopilis
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy of
+ *	this software and associated documentation files(the "Software"), to deal in
+ *	the Software without restriction, including without limitation the rights to
+ *	use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * 	the Software, and to permit persons to whom the Software is furnished to do so,
+ *	subject to the following conditions :
+ *
+ *	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ *	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ *	FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE AUTHORS OR
+ *	COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ *	IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ *	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**/
+
+#ifndef ANDROID
 #define LUA_LIB
 #endif // !ANDROID
 
@@ -93,6 +115,8 @@ lplist_from_xml(lua_State *L) {
 	plist_t node = NULL;
 	plist_from_xml(xml, l, &node);
 	lua_pushlightuserdata(L, node);
+	const char *key = "Some Int";
+	plist_dict_get_item_key(node, &key);
 	return 1;
 }
 
