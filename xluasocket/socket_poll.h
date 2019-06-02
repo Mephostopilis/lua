@@ -31,7 +31,7 @@ static void sp_nonblocking(int sock);
 #endif
 
 #if defined(_MSC_VER)
-#include "win/socket_cpoll.h"
+#include "Win32_Interop/win32_cpoll.h"
 #endif
 
 #endif

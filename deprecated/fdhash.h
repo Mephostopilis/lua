@@ -14,6 +14,10 @@ struct shash {
 };
 
 struct fdhash {
+	int idx;
+	int sock;
+	WSAEVENT we;
+	void *ud;
 	struct shash uu;
 	UT_hash_handle hh;
 };

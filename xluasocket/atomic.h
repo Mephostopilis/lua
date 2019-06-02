@@ -2,7 +2,18 @@
 #define SKYNET_ATOMIC_H
 
 #if defined(_MSC_VER)
-#include "simplethread/atomic.h"
+#define ATOM_CAS(ptr,oval,nval) (oval == InterlockedCompareExchange((LONG volatile *)ptr, nval, oval))
+#define ATOM_CAS_POINTER(ptr,oval,nval) (oval = InterlockedCompareExchangePointer((PVOID volatile *)ptr, nval, oval))
+#define ATOM_INC(ptr)    InterlockedIncrement((LONG volatile *)ptr)
+#define ATOM_INC16(ptr)  InterlockedIncrement16(ptr)
+#define ATOM_FINC(ptr)   InterlockedExchangeAdd(ptr, 1)
+#define ATOM_DEC(ptr)    InterlockedDecrement(ptr)
+#define ATOM_DEC16(ptr)  InterlockedDecrement16(ptr)
+#define ATOM_FDEC(ptr)   InterlockedExchangeAdd(ptr, -1)
+#define ATOM_ADD(ptr,n)  InterlockedAdd(ptr, n)
+#define ATOM_SUB(ptr,n)  InterlockedAdd(ptr, -n)
+#define ATOM_AND(ptr,n)  InterlockedAnd(ptr, n)
+#define ATOM_SYNC()      MemoryBarrier()
 #else
 #define ATOM_CAS(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
 #define ATOM_CAS_POINTER(ptr, oval, nval) __sync_bool_compare_and_swap(ptr, oval, nval)
@@ -13,7 +24,7 @@
 #define ATOM_ADD(ptr,n) __sync_add_and_fetch(ptr, n)
 #define ATOM_SUB(ptr,n) __sync_sub_and_fetch(ptr, n)
 #define ATOM_AND(ptr,n) __sync_and_and_fetch(ptr, n)
-
+#define ATOM_SYNC() __sync_synchronize()
 #endif // _MSC_VER
 
 #endif

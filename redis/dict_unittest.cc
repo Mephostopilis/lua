@@ -85,6 +85,7 @@ namespace {
 		sds s2 = sdsnew("i am world");
 		sds s3 = sdscatsds(s1, s2);
 		sds s4 = sdscatprintf(s3, "%s", "hello");
+		sds s5 = sdsdup(s1);
 		M m1, m2;
 		m1.s = s1;
 		m1.a = 10;

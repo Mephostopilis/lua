@@ -6,10 +6,76 @@
 #define SPIN_UNLOCK(q) spinlock_unlock(&(q)->lock);
 #define SPIN_DESTROY(q) spinlock_destroy(&(q)->lock);
 
-#ifndef USE_PTHREAD_LOCK
 #if defined(_MSC_VER)
-#include "simplethread/spinlock.h"
+#if defined(USE_CRITICAL_SECTION)
+#include <Windows.h>
+
+struct spinlock {
+	CRITICAL_SECTION lock;
+};
+
+static inline void
+spinlock_init(struct spinlock *lock) {
+	InitializeCriticalSectionAndSpinCount(&lock->lock, 4000);
+}
+
+static inline void
+spinlock_lock(struct spinlock *lock) {
+	EnterCriticalSection(&lock->lock);
+}
+
+static inline int
+spinlock_trylock(struct spinlock *lock) {
+	return TryEnterCriticalSection(&lock->lock);
+}
+
+static inline void
+spinlock_unlock(struct spinlock *lock) {
+	LeaveCriticalSection(&lock->lock);
+}
+
+static inline void
+spinlock_destroy(struct spinlock *lock) {
+	DeleteCriticalSection(&lock->lock);
+}
 #else
+#include <WinSock2.h>
+#include <Windows.h>
+struct spinlock {
+	int lock;
+};
+
+static inline void
+spinlock_init(struct spinlock *lock) {
+	lock->lock = 0;
+}
+
+static inline void
+spinlock_lock(struct spinlock *lock) {
+	while (InterlockedExchange((LONG volatile *)&(lock->lock), 1)) {}
+}
+
+static inline int
+spinlock_trylock(struct spinlock *lock) {
+	return InterlockedExchange((LONG volatile *)&(lock->lock), 1) == 0;
+}
+
+static inline void
+spinlock_unlock(struct spinlock *lock) {
+	InterlockedExchange((LONG volatile *)&(lock->lock), 0);
+}
+
+static inline void
+spinlock_destroy(struct spinlock *lock) {
+	(void)lock;
+}
+#endif
+
+
+#else
+
+#ifndef USE_PTHREAD_LOCK
+
 struct spinlock {
 	int lock;
 };
@@ -38,7 +104,6 @@ static inline void
 spinlock_destroy(struct spinlock *lock) {
 	(void) lock;
 }
-#endif
 
 #else
 
@@ -77,5 +142,5 @@ spinlock_destroy(struct spinlock *lock) {
 }
 
 #endif
-
+#endif
 #endif

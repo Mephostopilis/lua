@@ -7,7 +7,7 @@
 #include "message_queue.h"
 #include "socket_server.h"
 #include "skynet_timer.h"
-#include "simplethread/simplethread.h"
+#include "simplethread.h"
 #include "array.h"
 #include "protoc.h"
 #include "log.h"

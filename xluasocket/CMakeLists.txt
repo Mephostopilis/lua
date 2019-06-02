@@ -1,24 +1,23 @@
 ﻿project(xluasocket)
 SET(XLUASOCKET_H
-	posix/win/socket_cpoll.h
-	posix/win/fdhash.h
-	posix/win/timeutils.h
-	posix/win/uthash.h
-	posix/win/wehash.h
 	posix/dlfcn.h
 	posix/unistd.h
-	simplethread/atomic.h
-	simplethread/simplelock.h
-	simplethread/simplethread.h
+	Win32_Interop/Win32_APIs.h
+	Win32_Interop/win32_cpoll.h
+	Win32_Interop/Win32_dlfcn.h
+	Win32_Interop/Win32_Extras.h
 	Win32_Interop/Win32_PThread.h
 	Win32_Interop/Win32_ThreadControl.h
+	Win32_Interop/Win32_Time.h
 	atomic.h
+	dict.h
 	log.h
 	message_queue.h
 	protoc.h
 	ringbuf.h
+	rwlock.h
+	simplethread.h
 	skynet_timer.h
-	socket_epoll.h
 	socket_info.h
 	socket_poll.h
 	socket_server.h
@@ -26,13 +25,20 @@ SET(XLUASOCKET_H
 	write_buffer.h 
 	xluaconf.h
 )
+IF(UNIX)
+set(XLUASOCKET_H socket_epoll.h)
+ENDIF()
+
 SET(XLUASOCKET_C
-	posix/win/socket_cpoll.c
-	posix/win/timeutils.c
-	posix/dlfcn.c
 	posix/unistd.c
+	Win32_Interop/Win32_APIs.c
+	Win32_Interop/win32_cpoll.c
+	Win32_Interop/Win32_dlfcn.c
+	Win32_Interop/Win32_Extras.c
 	Win32_Interop/Win32_PThread.c
 	Win32_Interop/Win32_ThreadControl.c
+	Win32_Interop/Win32_Time.c
+	dict.c
 	log.c
 	lxluasocket.c 
 	message_queue.c
@@ -40,6 +46,7 @@ SET(XLUASOCKET_C
 	skynet_timer.c
 	socket_server.c
 	write_buffer.c
+	zmalloc.c
 )
 
 macro(source_group_by_dir proj_dir source_files)

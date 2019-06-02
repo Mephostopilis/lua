@@ -1,7 +1,7 @@
-#pragma once
-#ifndef timeutils_h
-#define timeutils_h
-#if defined(_MSC_VER)
+﻿#pragma once
+#ifndef win32_extras_h
+#define win32_extras_h
+
 
 #include <time.h>
 //#include <Windows.h>
@@ -29,5 +29,4 @@ struct timezone {
 //
 //int gettimeofday(struct timeval *tv, struct timezone *tz);
 
-#endif
 #endif
