@@ -1,5 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.8.0)
 project(lua)
+option(PRO_SKYNET "option for project lua" OFF)
+
 add_subdirectory(lua/src)
 #add_subdirectory(ai)
 add_subdirectory(fixmath)
@@ -24,3 +26,4 @@ add_subdirectory(luafilesystem)
 add_subdirectory(plist)
 #add_subdirectory(ball)
 add_subdirectory(hexmap)
+add_subdirectory(xlog)

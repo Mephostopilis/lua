@@ -1,4 +1,4 @@
-#ifndef ANDROID
+﻿#ifndef ANDROID
 #define LUA_LIB
 #endif // !ANDROID
 

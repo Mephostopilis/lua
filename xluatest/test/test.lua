@@ -33,6 +33,8 @@ print('[[ -------------- TEST NETWORK  -------------- ]]')
 print('[[ -------------- TEST RAPIDJSON -------------- ]]')
 -- require "test.test_dbpack"
 print('[[ -------------- TEST PLIST -------------- ]]')
-require "test.test_plist"
+-- require "test.test_plist"
+print('[[ -------------- TEST XLOG  -------------- ]]')
+require "test.test_xlog"
 
 -- os.execute("pause")

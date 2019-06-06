@@ -45,11 +45,12 @@
 !xluatest/gtest_maind.pdb
 
 # folder
-/bin
-/build
-/build32
-/build64
+bin
+build
+build32
+build64
 .vscode
+xluatest/logs
 xluatest/*.exe
 xluatest/*.a
 xluatest/*.dll
