@@ -1,7 +1,7 @@
 ﻿project(xlog)
 
 set(XLOGGERD_HOST_CORE
-	lua-xloghost.c 
+	lua-host.c 
 	xlog.h
 	xlogger_message.h
 	xloggerdd.h

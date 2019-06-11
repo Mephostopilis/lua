@@ -26,12 +26,10 @@
   * *from* the buffer (e.g., with ringbuf_write).
   */
 
-#include "xluaconf.h"
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <sys/types.h>
 #if defined(_MSC_VER)
 #include <crtdefs.h>
@@ -41,6 +39,12 @@ typedef long long ssize_t;
 typedef int ssize_t;
 # endif
 #endif
+
+#define RINGBUF_OK         0
+#define RINGBUF_OVERFLOW   1
+#define RINGBUF_NOTENOUGH  2
+#define RINGBUF_MEMERR     3
+#define RINGBUF_ERR        4
 
 typedef struct ringbuf ringbuf_t;
 
@@ -71,7 +75,7 @@ ringbuf_buffer_size(const ringbuf_t *rb);
  * 0.
  */
 void
-ringbuf_free(ringbuf_t **rb);
+ringbuf_free(ringbuf_t *rb);
 
 /*
  * Reset a ring buffer to its initial state (empty).
@@ -156,41 +160,23 @@ ringbuf_memset(ringbuf_t *dst, int c, size_t len);
  * overflow, the value of the ring buffer's tail pointer may be
  * different than it was before the function was called.
  */
-void *
-ringbuf_memcpy_into(ringbuf_t *dst, const uint8_t *src, size_t count);
+int
+ringbuf_memcpy_buffer(ringbuf_t *dst, const char *src, size_t count);
 
-/*
- * This convenience function calls read(2) on the file descriptor fd,
- * using the ring buffer rb as the destination buffer for the read,
- * and returns the value returned by read(2). It will only call
- * read(2) once, and may return a short count.
- *
- * It is possible to read more data from the file descriptor than is
- * available in the buffer; i.e., it's possible to overflow the ring
- * buffer using this function. When an overflow occurs, the state of
- * the ring buffer is guaranteed to be consistent, including the head
- * and tail pointers: old data will simply be overwritten in FIFO
- * fashion, as needed. However, note that, if calling the function
- * results in an overflow, the value of the ring buffer's tail pointer
- * may be different than it was before the function was called.
- */
-ssize_t
-ringbuf_read_fd(ringbuf_t *rb, int fd, size_t hint_max);
-ssize_t
-ringbuf_read_fd_dagram(ringbuf_t *rb, int fd, size_t hint_max);
+// ssize_t
+// ringbuf_read_fd(ringbuf_t *rb, int fd, size_t hint_max);
+// ssize_t
+// ringbuf_read_fd_dagram(ringbuf_t *rb, int fd, size_t hint_max);
 
 int
-ringbuf_read_string(ringbuf_t *rb, uint8_t **out, int *size);
+ringbuf_memcpy_string(ringbuf_t *rb, const char *src, size_t count);
 int
-ringbuf_read_line(ringbuf_t *rb, uint8_t **out, int *size);
+ringbuf_memcpy_line(ringbuf_t *rb, const char *src, size_t count);
 int
-ringbuf_read_int64(ringbuf_t *rb, int64_t *out);
+ringbuf_memcpy_int32(ringbuf_t *rb, int32_t src);
 int
-ringbuf_read_int32(ringbuf_t *rb, int32_t *out);
-int
-ringbuf_read_int16(ringbuf_t *rb, int16_t *out);
-int
-ringbuf_read_int8(ringbuf_t *rb, int8_t *out);
+ringbuf_memcpy_int16(ringbuf_t *rb, int16_t src);
+
 
 /*
  * Copy n bytes from the ring buffer src, starting from its tail
@@ -232,16 +218,18 @@ ringbuf_memcpy_from(void *dst, ringbuf_t *src, size_t count);
  * return 0.
  */
 ssize_t
-ringbuf_write_fd(ringbuf_t *rb, int fd);
+ringbuf_write_fd(int fd, ringbuf_t *rb);
 
 int
-ringbuf_write_string(ringbuf_t *rb, const uint8_t *buf, size_t size);
+ringbuf_get_string(char **dst, size_t *sz, ringbuf_t *rb);
 int
-ringbuf_write_line(ringbuf_t *rb, const uint8_t *buf, size_t size);
+ringbuf_get_line(char **buf, size_t *sz, ringbuf_t *rb);
 int
-ringbuf_write_int32(ringbuf_t *rb, int32_t n);
+ringbuf_get_int32(int32_t *n, ringbuf_t *rb);
 int
-ringbuf_write_int16(ringbuf_t *rb, int16_t n);
+ringbuf_try_get_int16(int16_t *n, ringbuf_t *rb);
+int
+ringbuf_get_int16(int16_t *n, ringbuf_t *rb);
 
 /*
  * Copy count bytes from ring buffer src, starting from its tail
@@ -268,9 +256,6 @@ ringbuf_write_int16(ringbuf_t *rb, int16_t n);
  */
 void *
 ringbuf_copy(ringbuf_t *dst, ringbuf_t *src, size_t count);
-
-
-
 
 
 #endif /* INCLUDED_RINGBUF_H */

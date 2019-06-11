@@ -8,6 +8,7 @@ SET(REDIS_H
 	util.h
 	xxhash.h
 	zmalloc.h
+	ringbuf.h
 )
 SET(REDIS_C
 	Win32_Interop/Win32_APIs.c
@@ -21,10 +22,9 @@ SET(REDIS_C
 	xxhash.c
 	zmalloc.c	
 	zmalloc_unittest.cc
+	ringbuf.c
+	ringbuf_unittest.cc
 )
-
-SET(RINGBUG_UNITTEST_H ./ringbuf.h ./write_buffer.h)
-set(RINGBUG_UNITTEST_C ./ringbuf_unittest.cc ./ringbuf.c ./write_buffer.c)
 
 macro(source_group_by_dir proj_dir source_files)
     if(MSVC OR APPLE)

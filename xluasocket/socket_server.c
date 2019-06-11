@@ -534,6 +534,7 @@ open_socket(struct socket_server *ss, struct request_open * request, struct sock
 			continue;
 		}
 		socket_keepalive(sock);
+
 #ifdef _MSC_VER
 		status = connect(sock, ai_ptr->ai_addr, ai_ptr->ai_addrlen);
 		sp_nonblocking(sock);
@@ -551,7 +552,11 @@ open_socket(struct socket_server *ss, struct request_open * request, struct sock
 	}
 
 	if (sock < 0) {
+#if defined(_MSC_VER)
+		result->data = wsa_strerror(WSAGetLastError());
+#else
 		result->data = strerror(errno);
+#endif
 		goto _failed;
 	}
 
@@ -682,7 +687,7 @@ send_list_udp(struct socket_server *ss, struct socket *s, struct wb_list *list, 
 			case WSAEWOULDBLOCK:
 				return -1;
 			}
-			fprintf(stderr, "socket-server : udp (%d) sendto error %s.\n", s->id, strwsaerror(err));
+			fprintf(stderr, "socket-server : udp (%d) sendto error %s.\n", s->id, wsa_strerror(err));
 #else
 			switch (errno) {
 			case EINTR:
@@ -1064,7 +1069,7 @@ block_readpipe(int pipefd, void *buffer, int sz) {
 #ifdef _MSC_VER
 			int err = WSAGetLastError();
 			if (err == WSAEINTR) continue;
-			fprintf(stderr, "socket-server : read pipe error %s.\n", strwsaerror(err));
+			fprintf(stderr, "socket-server : read pipe error %s.\n", wsa_strerror(err));
 #else
 			if (errno == EINTR)
 				continue;
@@ -1317,7 +1322,7 @@ forward_message_udp(struct socket_server *ss, struct socket *s, struct socket_lo
 			break;
 		default:
 			force_close(ss, s, l, result);
-			result->data = strwsaerror(err);
+			result->data = wsa_strerror(err);
 			return SOCKET_ERR;
 		}
 		return -1;
@@ -1499,7 +1504,7 @@ socket_server_poll(struct socket_server *ss, struct socket_message * result, int
 				int err = WSAGetLastError();
 				if (err == WSAEINTR)
 					continue;
-				fprintf(stderr, "sp_wait %s", strwsaerror(err));
+				fprintf(stderr, "sp_wait %s", wsa_strerror(err));
 #else
 				if (errno == EINTR) {
 					continue;
@@ -1596,7 +1601,7 @@ send_request(struct socket_server *ss, struct request_package *request, char typ
 #ifdef _MSC_VER
 			int err = WSAGetLastError();
 			if (err != WSAEINTR) {
-				fprintf(stderr, "socket-server : send ctrl command error %s.\n", strwsaerror(err));
+				fprintf(stderr, "socket-server : send ctrl command error %s.\n", wsa_strerror(err));
 			}
 #else
 			if (errno != EINTR) {

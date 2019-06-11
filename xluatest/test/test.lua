@@ -26,7 +26,6 @@ print('[[ -------------- TEST QUEUE    -------------- ]]')
 -- require "test.test_chestnut"
 print('[[ -------------- TEST ENTITIES -------------- ]]')
 -- require "test.test_entity_system"
--- require "test.test_xluasocket"
 -- require "test.client"
 print('[[ -------------- TEST NETWORK  -------------- ]]')
 -- require "test.test_network"
@@ -35,6 +34,8 @@ print('[[ -------------- TEST RAPIDJSON -------------- ]]')
 print('[[ -------------- TEST PLIST -------------- ]]')
 -- require "test.test_plist"
 print('[[ -------------- TEST XLOG  -------------- ]]')
-require "test.test_xlog"
+-- require "test.test_xlog"
+print('[[ -------------- TEST XLUASOCKET  -------------- ]]')
+require "test.test_xluasocket"
 
 -- os.execute("pause")

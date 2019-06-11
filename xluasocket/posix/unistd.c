@@ -11,14 +11,6 @@
 #include <stdlib.h>
 
 
-long int random(void) {
-	return rand();
-}
-
-void srandom(unsigned int seed) {
-	srand(seed);
-}
-
 pid_t getpid() {
 	return PtrToInt(GetCurrentProcess());
 }
@@ -206,39 +198,4 @@ char *strsep(char **stringp, const char *delim)
         } while (sc != 0);
     }
     /* NOTREACHED */
-}
-
-static char strwsaerrbuffer[128] = { 0 };
-static char strsyserrbuffer[128] = { 0 };
-
-const char *strwsaerror(int err) {
-	memset(strwsaerrbuffer, 0, 128);
-	if (FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
-					  NULL,
-					  err,
-					  0,
-					  strwsaerrbuffer,
-					  sizeof(strwsaerrbuffer) / sizeof(char),
-					  NULL)) {
-		return strwsaerrbuffer;
-	} else {
-		snprintf(strwsaerrbuffer, 128, "Format message failed with 0x%x\n", err);
-		return strwsaerrbuffer;
-	}
-}
-
-const char *strsyserror(int err) {
-	memset(strsyserrbuffer, 0, 128);
-	if (FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
-					  NULL,
-					  err,
-					  0,
-					  strwsaerrbuffer,
-					  sizeof(strwsaerrbuffer) / sizeof(char),
-					  NULL)) {
-		return strwsaerrbuffer;
-	} else {
-		snprintf(strwsaerrbuffer, 128, "Format message failed with 0x%x\n", err);
-		return strwsaerrbuffer;
-	}
 }

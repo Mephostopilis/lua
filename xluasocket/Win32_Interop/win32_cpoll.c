@@ -4,10 +4,15 @@
 #include "../dict.h"
 #include "../zmalloc.h"
 #include "../util.h"
+#include "Win32_Error.h"
 #include <WinSock2.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+
+#define MALLOC  zmalloc
+#define REALLOC zrealloc
+#define FREE    zfree
 
 typedef struct fdhash {
 	int idx;
@@ -122,23 +127,29 @@ static dictType wesHashDictType = {
 static int
 wev_add(struct fdhash *f) {
 	int realcap = pow(2, arr.cap);
+	if (arr.fds == NULL) {
+		arr.fds = MALLOC(sizeof(struct fdhash *) * realcap);
+		memset(arr.fds, 0, sizeof(struct fdhash *) * realcap);
+	}
 	if (arr.sz >= realcap) {
-		struct fdhash **fds = arr.fds;
+		if (arr.cap > 256) {
+			return -1;
+		}
 		arr.cap++;
 		realcap = pow(2, arr.cap);
-		arr.fds = malloc(sizeof(struct fdhash *) * realcap);
-		memset(arr.fds, 0, sizeof(struct fdhash *) * realcap);
-		for (int i = 0; i < arr.sz; i++) {
-			arr.fds[i] = fds[i];
+		int fdssz = sizeof(struct fdhash *) * realcap;
+		struct fdhash **oldfds = arr.fds;
+		struct fdhash **newfds = REALLOC(oldfds, fdssz);
+		if (newfds == NULL) {
+			return -1;
 		}
-		free(fds);
+		arr.fds = newfds;
+		memset(newfds + arr.sz, 0, (realcap - arr.sz) * sizeof(struct fdhash *));
 	}
-	if (arr.fds == NULL) {
-		arr.fds = malloc(sizeof(struct fdhash *) * realcap);
-		memset(arr.fds, 0, sizeof(struct fdhash *) * realcap);
-	}
+	
 	int i = arr.sidx;
-	for (; i < realcap; i++) {
+	int cnt = 0;
+	for (; cnt < realcap; cnt++) {
 		if (arr.fds[i] == NULL) { // 空
 			arr.sidx = i + 1;
 			arr.sidx = arr.sidx >= realcap ? 0 : arr.sidx;
@@ -147,6 +158,7 @@ wev_add(struct fdhash *f) {
 			arr.fds[i]->idx = i;
 			return i;
 		}
+		i = (++i >= realcap) ? 0 : i;
 	}
 	return -1;
 }
@@ -161,9 +173,6 @@ wev_del(int idx) {
 	}
 	return 0;
 }
-
-#define MALLOC zmalloc
-#define FREE   zfree
 
 bool
 ssp_invalid(int efd) {
@@ -237,9 +246,9 @@ ssp_del(int efd, int sock) {
 	assert(efd == 0);
 	struct fdhash *f = dictFetchValue(fds, &sock);
 	if (f != NULL) {
-		assert(wev_del(f->idx) > 0);
-		assert(dictDeleteNoFree(&fds, &f->sock) == 0);
-		assert(dictDeleteNoFree(&wes, &f->we) == 0);
+		assert(wev_del(f->idx) == 1);
+		assert(dictDeleteNoFree(fds, &f->sock) == 0);
+		assert(dictDeleteNoFree(wes, &f->we) == 0);
 
 		WSAEventSelect(sock, 0, 0);
 		WSACloseEvent(f->we);
@@ -341,5 +350,7 @@ ssp_wait(int efd, struct event *e, int max) {
 void
 ssp_nonblocking(int fd) {
 	int ul = 1;
-	ioctlsocket(fd, FIONBIO, &ul);
+	if (ioctlsocket(fd, FIONBIO, &ul) == SOCKET_ERROR) {
+		fprintf(stderr, "ioctlsocket failed: %s", wsa_strerror(WSAGetLastError()));
+	}
 }

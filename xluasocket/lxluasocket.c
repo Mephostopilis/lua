@@ -10,7 +10,6 @@
 #include "simplethread.h"
 #include "array.h"
 #include "protoc.h"
-#include "log.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -62,8 +61,7 @@ soi_size(void *ptr) {
 }
 
 static void
-soi_free(void *ptr) {
-}
+soi_free(void *ptr) {}
 
 static void
 on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
@@ -104,7 +102,10 @@ on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
 		}
 		ringbuf_t *rb = lua_touserdata(L, -1);
 		lua_pop(L, 3);
-		ringbuf_memcpy_into(rb, msg->buffer, msg->ud);
+		if (ringbuf_memcpy_buffer(rb, msg->buffer, msg->ud)) {
+			fprintf(stderr, "ringbuf memcpy buffer err.");
+			break;
+		}
 		for (size_t i = 0; i < MAX_SLICEPACK_NUM; i++) {
 			if (ringbuf_is_empty(rb)) {
 				break;
@@ -112,26 +113,39 @@ on_handle_msg(lua_State *L, struct xluasocket_message *msg) {
 			if (t == HEADER_TYPE_LINE) {
 				char *buffer = NULL;
 				int sz = 0;
-				ringbuf_read_line(rb, &buffer, &sz);
+				if (ringbuf_get_line(&buffer, &sz, rb)) {
+					fprintf(stderr, "ringbuf get line err.");
+					break;
+				}
 				lua_pushlstring(L, buffer, sz);
 				lua_pcall(L, 4, 0, 0);
 			} else if (t == HEADER_TYPE_PG) {
 				char *buffer = NULL;
 				int sz = 0;
-				ringbuf_read_string(rb, &buffer, &sz);
+				if (ringbuf_get_string(&buffer, &sz, rb)) {
+					fprintf(stderr, "ringbuf get string err.");
+					break;
+				}
 				lua_pushlstring(L, buffer, sz);
 				lua_pcall(L, 4, 0, 0);
 			}
 		}
-
+		FREE(msg->buffer);
 		break;
 	}
-	case SOCKET_ERR:
-	case SOCKET_OPEN:
-	case SOCKET_ACCEPT:
+	case XLUASOCKET_TYPE_ERROR:
+	{
 		lua_pushlstring(L, msg + 1, msg->sz - sizeof(*msg));
 		lua_pcall(L, 4, 0, 0);
 		break;
+	}
+	case XLUASOCKET_TYPE_CONNECT:
+	case XLUASOCKET_TYPE_ACCEPT:
+	{
+		lua_pushlstring(L, msg + 1, msg->sz - sizeof(*msg));
+		lua_pcall(L, 4, 0, 0);
+		break;
+	}
 	default:
 		lua_pcall(L, 3, 0, 0);
 		break;
@@ -258,7 +272,7 @@ lnew(lua_State *L) {
 	assert(lua_gettop(L) == 2);
 #endif
 	if (!inited) {
-		LOG_INIT();
+
 		skynet_timer_init();  // 初始timer
 		q = mq_create();      // 初始消息队列
 		if (q == NULL) {
@@ -277,8 +291,9 @@ lnew(lua_State *L) {
 		lua_pushvalue(L, 1);
 		lua_rawsetp(L, -2, ss);
 		lua_pop(L, 1);
-
+#if defined(USE_PTHREAD) && defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 		thread_init();
+#endif
 		int i = 0;
 		for (i = 0; i < THREADS; i++) {
 			t[i].func = co;
@@ -300,7 +315,7 @@ lnew(lua_State *L) {
 		thread_create(t, THREADS);
 		inited = 1;
 	}
-	
+
 	lua_pushinteger(L, 0);
 	return 1;
 }
@@ -317,6 +332,7 @@ lpoll(lua_State *L) {
 		struct xluasocket_message *msg = mq_pop(q);
 		if (msg != NULL) {
 			on_handle_msg(L, msg);
+			FREE(msg);
 		}
 	}
 	return 0;
@@ -429,7 +445,7 @@ lunpack(lua_State *L) {
 */
 static int
 lsend(lua_State *L) {
-	int err = 0;
+	int err = -1;
 	lua_Integer id = luaL_checkinteger(L, 1);
 	size_t sz;
 	const char *buffer = luaL_checklstring(L, 2, &sz);
@@ -447,6 +463,8 @@ lsend(lua_State *L) {
 		WriteInt16(pack, 0, sz);
 		memcpy(pack + 2, buffer, sz);
 		err = socket_server_send(ss, id, pack, sz + 2);
+	} else {
+		luaL_error(L, "not supoort other pack");
 	}
 	lua_pushinteger(L, err);
 	return 1;
@@ -461,7 +479,7 @@ lkeepalive(lua_State *L) {
 	return 0;
 }
 
-static int 
+static int
 llog(lua_State *L) {
 	luaL_checkstring(L, 1);
 	size_t l;
@@ -494,7 +512,7 @@ luaopen_xluasocket(lua_State *L) {
 		{ "send", lsend },
 
 		{ "log",  llog },
-		
+
 		{ NULL, NULL },
 	};
 #if LUA_VERSION_NUM < 503

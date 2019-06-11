@@ -2,6 +2,8 @@
 #ifndef unistd_h
 #define unistd_h
 
+//#include "../Win32_Interop/Win32_APIs.h"
+#include "../Win32_Interop/Win32_Error.h"
 #include <time.h>
 #if defined(USE_PTHREAD)
 #include <sched.h>
@@ -15,8 +17,6 @@ typedef int ssize_t;
 #define inline __inline
 #endif
 
-long int random(void);
-void srandom(unsigned int seed);
 
 pid_t getpid();
 int kill(pid_t pid, int exit_code);
@@ -59,13 +59,10 @@ ssize_t write(int fd, const void *buf, size_t count);
 ssize_t read(int fd, void *buf, size_t count);
 int close(int fd);
 
-//__declspec(dllimport) int __stdcall gethostname(char *buffer, int len);
 
 /*
 ** util function
 */
 char *strsep(char **stringp, const char *delim);
 
-const char *strwsaerror(int err);
-const char *strsyserror(int err);
 #endif

@@ -17,7 +17,7 @@ namespace {
 		EXPECT_EQ(sdscmp(s5, s4), 0);
 		fprintf(stderr, "%s", s4);*/
 		// sds 有問題
-		utilTest(0, NULL);
+		//utilTest(0, NULL);
 	}
 }
 

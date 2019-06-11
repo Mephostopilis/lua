@@ -15,7 +15,7 @@ static void thread_event_release(struct thread_event *ev);
 static void thread_event_trigger(struct thread_event *ev);
 static void thread_event_wait(struct thread_event *ev);
 
-#if (defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)) && 0
+#if (defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)) && !defined(USE_PTHREAD)
 
 #include <windows.h>
 #include <assert.h>
