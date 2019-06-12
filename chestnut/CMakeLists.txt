@@ -1,5 +1,5 @@
 ﻿project(chestnut)
-SET(CHESTNUT_H ./timeutils.h)
+
 aux_source_directory(. SRC_LIST)
 
 include_directories(../lua/src)

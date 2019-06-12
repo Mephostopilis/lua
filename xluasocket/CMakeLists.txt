@@ -23,7 +23,6 @@ SET(XLUASOCKET_H
 	socket_server.h
 	spinlock.h
 	util.h
-	xxhash.c
 	xluaconf.h
 )
 IF(UNIX)
@@ -41,12 +40,14 @@ SET(XLUASOCKET_C
 	Win32_Interop/Win32_ThreadControl.c
 	Win32_Interop/Win32_Time.c
 	dict.c
+	lua-timesync.c
 	lxluasocket.c 
 	message_queue.c
 	ringbuf.c
 	skynet_timer.c
 	socket_server.c
 	util.c
+	xxhash.c
 	zmalloc.c
 )
 

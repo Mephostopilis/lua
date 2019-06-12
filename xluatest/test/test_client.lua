@@ -2,7 +2,7 @@
 local socket = require "socket.socket"
 local crypt = require "skynet.crypt"
 -- local proto = require "proto"
-local sproto = require "sproto.sproto"
+local sproto = require "sproto"
 
 if _VERSION ~= "Lua 5.3" then
 	error "Use lua 5.3"

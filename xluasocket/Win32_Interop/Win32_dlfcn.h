@@ -5,7 +5,7 @@
 #ifndef dlopen
 #define dlopen(filename,flag) replace_dlopen(filename,flag)
 #endif // !dlopen
-#ifndef dlerror()
+#ifndef dlerror
 #define dlerror() replace_dlerror()
 #endif // !dlerror()
 #ifndef dlsym
