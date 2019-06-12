@@ -1,5 +1,5 @@
 local set           = require("unorderset")
-local util           = require("entitas_util")
+local util           = require("util")
 local set_insert    = set.insert
 local set_remove    = set.remove
 local class         = util.class

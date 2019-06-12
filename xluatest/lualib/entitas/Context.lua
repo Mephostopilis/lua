@@ -108,8 +108,6 @@ end
 function Context:set_unique_component(comp_type, ...)
     local entity = self:create_entity()
     entity:add(comp_type, ...)
-    local comp = entity:get(comp_type)
-    self[comp_type.__comp_name] = comp
 end
 
 function Context:get_unique_component(comp_type)

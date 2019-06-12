@@ -1,4 +1,4 @@
-package.path = "?.lua;app/?.lua;app/lualib/?.lua;" .. package.path
+package.path = "?.lua;.\\lualib\\?.lua;" .. package.path
 if not cc then
 	cc = {}
 end
@@ -12,41 +12,33 @@ require "base.table"
 
 class = cc.class
 
-local AppConfig = require "AppConfig"
+local configmgr = require "configs.config_mgr"
 local log = require "log"
+local tableDump = require "luaTableDump"
+local traceback = debug.traceback
 local pcall = pcall
 local xpcall = xpcall
 local debug = debug
 -- local list_test = require "list_test"
 -- local stack_test = require "stack_test"
 
--- xlua.hotfix(CS.Maria.Application, 'XluaTest', function (self) 
--- 	CS.UnityEngine.Debug.Log('xlua hello world')
--- end)
-local config
-local uicontextmgr
 local app
-
+local uicontextmgr
 
 -- setup config
 function SetupConfig( ... )
 	-- body
-	local ok, err = pcall(AppConfig.new)
-	if ok then
-		config = err
-	else
+	local ok, err = pcall(configmgr.LoadFile)
+	if not ok then
 		log.error(err)
 	end
-	return config
+	return configmgr
 end
 
 function CheckConfig( ... )
 	-- body
-	if config then
-		config:LoadFile()
-		if config:CheckConfig() then
-			return true
-		end
+	if configmgr.CheckConfig() then
+		return true
 	end
 	return false
 end
@@ -55,20 +47,19 @@ end
 -- setup app
 function main( ... )
 	-- body
-	local UIContextManager = require "maria.uibase.UIContextManager"
-	local ok, err = pcall(UIContextManager.new)
-	if ok then
-		app = err
-		app.config = assert(config)
-	else
-		log.error(err)
-	end
-
+	-- local UIContextManager = require "maria.uibase.UIContextManager"
+	-- local ok, err = pcall(UIContextManager.new)
+	-- if ok then
+	-- 	app = err
+	-- 	app.config = assert(config)
+	-- else
+	-- 	log.error(err)
+	-- end
+	log.info('lua main')
 	local App = require "bacon.App"
 	local ok, err = pcall(App.new)
 	if ok then
 		app = err
-		app.config = assert(config)
 	else
 		log.error(err)
 	end
@@ -76,9 +67,8 @@ end
 
 function Startup( ... )
 	-- body
-	local App = require "bacon.App"
-	local traceback = debug.traceback
-	local ok, err = xpcall(App.Startup, traceback, app)
+	log.info('Startup')
+	local ok, err = xpcall(app.Startup, traceback, app)
 	if not ok then
 		log.error(err)
 	end
@@ -86,14 +76,15 @@ end
 
 function Cleanup( ... )
 	-- body
-	app:Cleanup()
+	local ok, err = xpcall(app.Cleanup, traceback, app)
+	if not ok then
+		log.error(err)
+	end
 end
 
 function Update(delta, ... )
 	-- body
-	local App = require "bacon.App"
-	local traceback = debug.traceback
-	local ok, err = xpcall(App.Update, traceback, app, delta)
+	local ok, err = xpcall(app.Update, traceback, app, delta)
 	if not ok then
 		log.error(err)
 	end

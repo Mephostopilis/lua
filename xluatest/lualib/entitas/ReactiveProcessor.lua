@@ -1,4 +1,4 @@
-local util              = require("entitas_util")
+local util              = require("util")
 local class             = util.class
 local table_insert      = table.insert
 local Collector         = require("entitas.Collector")

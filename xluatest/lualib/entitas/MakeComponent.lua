@@ -8,16 +8,16 @@ local function com_tostring(obj)
     elseif t == "string" then
         lua = lua .. string.format("%q", obj)
     elseif t == "table" then
-        -- lua = lua .. "{"
+        lua = lua .. "{"
 
-        -- local first = true
-        -- for k, v in pairs(obj) do
-        --     if not first  then
-        --         lua = lua .. ","
-        --     end
-        --     lua = lua .. com_tostring(k) .. "=" .. com_tostring(v)
-        --     first = false
-        -- end
+        local first = true
+        for k, v in pairs(obj) do
+            if not first  then
+                lua = lua .. ","
+            end
+            lua = lua .. com_tostring(k) .. "=" .. com_tostring(v)
+            first = false
+        end
         -- local metatable = getmetatable(obj)
         -- if metatable ~= nil and type(metatable.__index) == "table" then
         --     for k, v in pairs(metatable.__index) do
@@ -39,6 +39,16 @@ local function make_component(name, ...)
     tmp.__comp_name = name
     tmp.__tostring = function(t) return "\t" .. t.__comp_name .. com_tostring(t) end
     tmp.__index = tmp
+    tmp.pack = function (self, ... )
+        -- body
+        local p = ""
+        -- for _,v in ipairs(tmp.__keys) do
+        --     self[v]
+        -- end
+    end
+    tmp.unpack = function (self, ... )
+        -- body
+    end
     tmp.new = function(...)
         local values = {...}
         local tb = {}
