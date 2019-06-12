@@ -1,16 +1,14 @@
-package.cpath = "luaclib/?.so;"..package.cpath
-package.path = "../../test/?.lua;lualib/?.lua;"..package.path
 
-local socket = require "clientsocket"
-local crypt = require "crypt"
-local proto = require "proto"
-local sproto = require "sproto"
+local socket = require "socket.socket"
+local crypt = require "skynet.crypt"
+-- local proto = require "proto"
+local sproto = require "sproto.sproto"
 
 if _VERSION ~= "Lua 5.3" then
 	error "Use lua 5.3"
 end
 
-local fd = assert(socket.connect("192.168.1.104", 3002))
+local fd = assert(socket.connect("127.0.0.1", 3002))
 
 local function writeline(fd, text)
 	socket.send(fd, text .. "\n")

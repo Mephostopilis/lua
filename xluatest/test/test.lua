@@ -36,6 +36,8 @@ print('[[ -------------- TEST PLIST -------------- ]]')
 print('[[ -------------- TEST XLOG  -------------- ]]')
 -- require "test.test_xlog"
 print('[[ -------------- TEST XLUASOCKET  -------------- ]]')
-require "test.test_xluasocket"
+-- require "test.test_xluasocket"
+print('[[ -------------- TEST CLIENT  -------------- ]]')
+require "test.test_client"
 
 -- os.execute("pause")

@@ -20,13 +20,10 @@
 #ifndef LUASOCKET_API
 #define LUASOCKET_API extern
 #endif
-#if !defined(LUA_LIB)
-#define LUA_LIB
-#endif // !ANDROID
 
 /*-------------------------------------------------------------------------*\
 * Initializes the library.
 \*-------------------------------------------------------------------------*/
-LUASOCKET_API int luaopen_socket_core(lua_State *L);
+LUAMOD_API int luaopen_socket_core(lua_State *L);
 
 #endif /* LUASOCKET_H */
