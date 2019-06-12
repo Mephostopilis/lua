@@ -1504,7 +1504,6 @@ socket_server_poll(struct socket_server *ss, struct socket_message * result, int
 				int err = WSAGetLastError();
 				if (err == WSAEINTR)
 					continue;
-				fprintf(stderr, "sp_wait %s", wsa_strerror(err));
 #else
 				if (errno == EINTR) {
 					continue;

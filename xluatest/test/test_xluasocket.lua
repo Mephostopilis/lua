@@ -10,11 +10,12 @@ local function run1( ... )
 	-- body
 
 	local s
-	local c
+	local xc
 	local map = {}
 	local r1 = random(0)
 	local times = 100
 	local cc = 0
+	local xxxx = 100000000
 	local handle = function (t, id, ud, ... )
 		-- body
 		if t == xluasocket.SOCKET_DATA then
@@ -47,7 +48,8 @@ local function run1( ... )
 		error('new err = ', err)
 	end
 
-	while true do
+	while xxxx > 1 do
+		xxxx = xxxx - 1
 		xluasocket.poll()
 		-- server
 		if s == nil then
@@ -71,26 +73,30 @@ local function run1( ... )
 			cc = cc + 1
 		end
 
-		if times > 0 then
-			if c == nil then
-				for k,v in pairs(map) do
-					c = k
-					break
+		if s ~= nil and cc >= 50 then
+			if times > 0 then
+				times = times - 1
+				-- local id = r1(1, 100)
+				-- if map[id] then
+				-- 	log('send %d hell world times(%d)', id, times)
+				-- 	local err = xluasocket.send(id, "hello world")
+				-- 	if err == -1 then
+				-- 		error(string.format("id = %d send failtrue.", id))
+				-- 	end
+				-- end
+				if xc == nil then
+					local id = r1(1, 100)
+					while not map[id] do
+						id = r1(1, 100)
+					end
+					xc = id
 				end
-			end
-			times = times - 1
-			-- local id = r1(1, 100)
-			-- if map[id] then
-			-- 	log('send %d hell world times(%d)', id, times)
-			-- 	local err = xluasocket.send(id, "hello world")
-			-- 	if err == -1 then
-			-- 		error(string.format("id = %d send failtrue.", id))
-			-- 	end
-			-- end
-			if c then
-				local err = xluasocket.send(c, "hello world")
-				if err == -1 then
-					error(string.format("id = %d send failtrue.", id))
+				if xc ~= nil then
+					log('send %d hell world times(%d)', xc, times)
+					local err = xluasocket.send(xc, "hello world")
+					if err == -1 then
+						error(string.format("id = %d send failtrue.", xc))
+					end
 				end
 			end
 		end
@@ -109,6 +115,8 @@ local function run1( ... )
 	-- if err ~= 0 then
 	-- 	error(string.format("id = %d listen failture.", c))
 	-- end
+	xluasocket.exit()
+	xluasocket.close()
 end
 
 local function run2( ... )

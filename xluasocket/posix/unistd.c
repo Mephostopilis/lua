@@ -154,6 +154,9 @@ ssize_t read(int fd, void *buf, size_t count) {
 		}
 		return ptr - (char *) buf;
 	} else if (fd == recvfd) {
+		if (count == 0) {
+			return 0;
+		}
 		int nbytes = recv(fd, buf, count, 0);
 		if (nbytes == SOCKET_ERROR) {
 			return -1;
@@ -162,6 +165,9 @@ ssize_t read(int fd, void *buf, size_t count) {
 		//fprintf(stderr, "read recvfd %d bytes\n", err);
 		return nbytes;
 	} else {
+		if (count == 0) {
+			return 0;
+		}
 		int nbytes = recv(fd, buf, count, 0);
 		if (nbytes == SOCKET_ERROR) {
 			return -1;

@@ -181,7 +181,6 @@ forward_message(int type, bool padding, struct socket_message * result) {
 	} else {
 		sm->buffer = result->data;
 	}
-
 	mq_push(q, sm);
 }
 
@@ -229,7 +228,6 @@ static void
 co(void *p) {
 	struct args * arg = p;
 	while (1) {
-		//printf("thead\n");
 		// 时间
 		skynet_updatetime();
 		socket_server_updatetime(ss, skynet_now());
@@ -240,15 +238,9 @@ co(void *p) {
 			break;
 		}
 		if (r < 0) {
+			// 出错了
 		}
-
-		/*if (arg->wait) {
-			thread_event_wait(arg->wait);
-		}
-		printf("n = %d\n", arg->n);
-		if (arg->trigger) {
-			thread_event_trigger(arg->trigger);
-		}*/
+		// 有消息
 	}
 }
 
@@ -299,18 +291,6 @@ lnew(lua_State *L) {
 			t[i].func = co;
 			t[i].ud = &args[i];
 			args[i].n = i;
-			/*
-			thread_event_create(&ev[i]);
-			if (i + 1 < THREADS) {
-				args[i].wait = &ev[i];
-			} else {
-				args[i].wait = NULL;
-			}
-			if (i - 1 >= 0) {
-				args[i].trigger = &ev[i - 1];
-			} else {
-				args[i].trigger = NULL;
-			}*/
 		}
 		thread_create(t, THREADS);
 		inited = 1;
@@ -322,7 +302,27 @@ lnew(lua_State *L) {
 
 static int
 lfree(lua_State *L) {
-	socket_server_release(ss);
+	if (!inited) {
+		socket_server_release(ss);
+		// release mq
+		mq_release(q);
+		// release rb
+		lua_getglobal(L, "xluasocket");
+		lua_getfield(L, -1, "unpackrb");
+		if (lua_istable(L, -1)) {
+			lua_pushnil(L);  // key
+			while (lua_next(L, -2)) {
+				int t = lua_type(L, -1);
+				if (t == LUA_TLIGHTUSERDATA) {
+					ringbuf_t *rb = lua_touserdata(L, -1);
+					ringbuf_free(rb);
+				}
+				lua_pop(L, 1);
+			}
+		}
+	} else {
+		fprintf(stderr, "first call exit.");
+	}
 	return 0;
 }
 
@@ -341,6 +341,10 @@ lpoll(lua_State *L) {
 static int
 lexit(lua_State *L) {
 	socket_server_exit(ss);
+	// 等待完成
+
+	thread_join(t, THREADS);
+	inited = false;
 	return 0;
 }
 
@@ -383,7 +387,7 @@ lbind(lua_State *L) {
 static int
 lclosesocket(lua_State *L) {
 	lua_Integer id = luaL_checkinteger(L, 1);
-	socket_server_close(L, L, id);
+	socket_server_close(ss, L, id);
 	return 0;
 }
 

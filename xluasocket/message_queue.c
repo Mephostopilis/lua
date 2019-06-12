@@ -1,9 +1,10 @@
 ﻿#include "message_queue.h"
 #include "spinlock.h"
+#include "xluaconf.h"
 #include <assert.h>
 
 struct message_queue *mq_create() {
-	struct message_queue *q = malloc(sizeof(*q));
+	struct message_queue *q = MALLOC(sizeof(*q));
 	SPIN_INIT(q);
 	q->head = NULL;
 	q->tail = NULL;
@@ -11,8 +12,16 @@ struct message_queue *mq_create() {
 }
 
 void mq_release(struct message_queue *q) {
+	struct xluasocket_message *msg = mq_pop(q);
+	while (msg != NULL) {
+		if (msg->ud > 0 && msg->buffer != NULL) {
+			FREE(msg->buffer);
+		}
+		FREE(msg);
+	}
+
 	SPIN_DESTROY(q);
-	free(q); 
+	FREE(q); 
 }
 
 struct xluasocket_message *
