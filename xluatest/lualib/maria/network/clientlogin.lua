@@ -4,17 +4,17 @@ local log = require "log"
 
 local cls = class("clientlogin")
 
-function cls:ctor(network, ... )
+function cls:ctor(network, u, p, server)
 	-- body
 	assert(network)
 	self._network = network
-	
-	self._login_fd = false
+	self._username  = u
+	self._password  = p
+	self._server    = server
+
+	self.fd = false
 	self._login_step = 0
 
-	self._username  = ""
-	self._password  = ""
-	self._server    = ""
 	self._clientkey = ""
 	self._challenge = ""
 	self._secret    = ""
@@ -22,19 +22,24 @@ function cls:ctor(network, ... )
 	return self
 end
 
-function cls:connected( ... )
+function cls:connected()
 	-- body
-	self._state = state.LOGIN
+	local err = ps.start(self.fd)
+	if err == 0 then
+	end
+end
+
+function cls:open()
 	self._login_step = 1
 end
 
-function cls:data(line, ... )
+function cls:data(line)
 	-- body	
 	if self._login_step == 1 then
 		local challenge = crypt.base64decode(line)
 		local clientkey = crypt.randomkey()
 		local g = assert(self._network._g)
-		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(crypt.dhexchange(clientkey)))
+		local err, bytes = ps.send(g, self.fd, crypt.base64encode(crypt.dhexchange(clientkey)))
 		if err == 0 then
 			log.info("login send randomkey bytes = %d", bytes)
 		else
@@ -50,7 +55,7 @@ function cls:data(line, ... )
 		log.info("sceret is %s", crypt.hexencode(secret))
 		local hmac = crypt.hmac64(self._challenge, secret)
 		local g = assert(self._network._g)
-		local err, bytes = ps.send(g, self._login_fd, crypt.base64encode(hmac))
+		local err, bytes = ps.send(g, self.fd, crypt.base64encode(hmac))
 		if err == 0 then
 			log.info("login send challenge bytes = %d", bytes)
 		else
@@ -66,7 +71,7 @@ function cls:data(line, ... )
 			crypt.base64encode(self._server),
 			crypt.base64encode(self._password))
 		local etoke = crypt.desencode(self._secret, token)
-		local err = ps.send(g, self._login_fd, crypt.base64encode(etoke))
+		local err = ps.send(g, self.fd, crypt.base64encode(etoke))
 		if err == 0 then
 			log.info("login send bytes = %d", bytes)
 		else
@@ -80,7 +85,7 @@ function cls:data(line, ... )
 		log.info("login code: %d", code)
 		if code == 200 then
 			local g = assert(self._network._g)
-			ps.closesocket(g, self._login_fd)
+			ps.closesocket(g, self.fd)
 			local xline = crypt.base64decode(string.sub(line, 5))
 			local _1 = string.find(xline, '#')
 			local _2 = string.find(xline, '@', _1+1)
@@ -101,27 +106,20 @@ function cls:data(line, ... )
 	end
 end
 
-function cls:disconnected( ... )
+function cls:disconnected()
 	-- body
 	log.info("login_disconnected")
 end
 
-function cls:auth(ip, port, u, p, server, ... )
+function auth(mgr, ip, port, u, p, server)
 	-- body
 	assert(ip and port and u and p and server)
-	
-	self._username   = u
-	self._password   = p
-	self._server     = server
 	local err = ps.connect(ip, port)
 	if err > 0 then
-		self._login_fd = err
-		err = ps.start(self._login_fd)
-		if err == 0 then
-			self._login_step = 1
-		end
+		local so = cls.new(mgr, u, p, server)
+		so.fd = err
+		return so
 	end
-	return err
 end
 
-return cls
+return auth

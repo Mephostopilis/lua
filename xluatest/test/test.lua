@@ -28,7 +28,7 @@ print('[[ -------------- TEST ENTITIES -------------- ]]')
 -- require "test.test_entity_system"
 -- require "test.client"
 print('[[ -------------- TEST NETWORK  -------------- ]]')
--- require "test.test_network"
+require "test.test_network"
 print('[[ -------------- TEST RAPIDJSON -------------- ]]')
 -- require "test.test_dbpack"
 print('[[ -------------- TEST PLIST -------------- ]]')
@@ -38,6 +38,12 @@ print('[[ -------------- TEST XLOG  -------------- ]]')
 print('[[ -------------- TEST XLUASOCKET  -------------- ]]')
 -- require "test.test_xluasocket"
 print('[[ -------------- TEST CLIENT  -------------- ]]')
-require "test.test_client"
+-- require "test.test_client"
+print('[[ -------------- TEST CO  -------------- ]]')
+-- require "test.test_co"
+print('[[ -------------- TEST ZSET  -------------- ]]')
+-- require "test.test_zset"
+
+
 
 -- os.execute("pause")

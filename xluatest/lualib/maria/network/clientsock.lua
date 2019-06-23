@@ -15,7 +15,7 @@ function cls:ctor(network, ... )
 	-- body
 	self._network = network
 
-	self._gate_fd   = 0
+	self.fd   = 0
 	self._gate_step = 0
 	
 	self._index     = 0
@@ -91,7 +91,7 @@ function cls:send_request(name, args, appendix, ... )
 
 		local v = self._send_request(name, args, self._response_session)
 		local g = assert(self._network._g)
-		local err, bytes = ps.send(g, self._gate_fd, v)
+		local err, bytes = ps.send(g, self.fd, v)
 		if err == 0 then
 			-- log.info("send request %s: %d", name, self._response_session)
 			-- log.info("login send bytes = %d", bytes)
@@ -147,7 +147,7 @@ function cls:_dispatch(type, ... )
 		if ok then
 			if result then
 				local g = assert(self._network._g)
-				local err, bytes = ps.send(g, self._gate_fd, result)
+				local err, bytes = ps.send(g, self.fd, result)
 				if err == 0 then
 				else
 					return
@@ -161,69 +161,36 @@ function cls:_dispatch(type, ... )
 	end
 end
 
-function cls:gate_auth(ip, port, server, uid, subid, secret, ... )
+function cls:connected( ... )
 	-- body
-	assert(ip and port and server and uid and subid and secret)
-	local g = self._network._g
-	self._gate_fd = ps.socket(g, ps.PROTOCOL_TCP, ps.HEADER_TYPE_PG, function (code, pg, ... )
-		-- body
-		if code == ps.SOCKET_DATA then
-			if pg then
-				local ok, err = pcall(self.gate_data, self, pg)
-				if not ok then
-					print(err)
-				end
-			end
-		elseif code == ps.SOCKET_CLOSE then
-		elseif code == ps.SOCKET_ERROR then
-		end
-	end)
-	local err = ps.connect(g, self._gate_fd, ip, port)
-	if err == 0 then
-		err = ps.start(g, self._gate_fd)
-		if err ~= 0 then
-			log.error("clientsock start failture.")
-			return
-		end
-		self._index = 1
-		local handshake = string.format("%s@%s#%s:%d", 
-			crypt.base64encode(uid), 
-			crypt.base64encode(server),
-			crypt.base64encode(subid), self._index)
-		local hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
-
-		-- send handshake
-		local err, bytes = ps.send(g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
-		if err == 0 then
-		else
-			self._login_step = 0
-			log.error("clientsock send error.")
-			return
-		end
-		self._gate_step = 1
+	err = ps.start(g, self.fd)
+	if err ~= 0 then
+		log.error("clientsock start failture.")
+		return
 	end
-	return err
 end
 
-function cls:gate_connected( ... )
+function cls:open( ... )
 	-- body
 	self._index = 1
-	self._version = 1
 	local handshake = string.format("%s@%s#%s:%d", 
-		crypt.base64encode(self._uid), 
-		crypt.base64encode(self._server),
-		crypt.base64encode(self._subid), self._index)
-	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
+		crypt.base64encode(uid), 
+		crypt.base64encode(server),
+		crypt.base64encode(subid), self._index)
+	local hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
 
 	-- send handshake
-	log.info("handshake")
-	ps.send(self._g, self._gate_fd, handshake .. ":" .. crypt.base64encode(hmac))
-
-	self._state = state.GATE
+	local err, bytes = ps.send(self.fd, handshake .. ":" .. crypt.base64encode(hmac))
+	if err == 0 then
+	else
+		self._login_step = 0
+		log.error("clientsock send error.")
+		return
+	end
 	self._gate_step = 1
 end
 
-function cls:gate_data(package, ... )
+function cls:data(package, ... )
 	-- body
 	if self._gate_step == 1 then
 		local code = tonumber(string.sub(package, 1, 3))
@@ -237,10 +204,20 @@ function cls:gate_data(package, ... )
 	end
 end
 
-function cls:gate_disconnected( ... )
+function cls:disconnected( ... )
 	-- body
 	self._gate_step = 0
 	self._network:OnGateDisconnected()
 end
 
-return cls
+function auth(mgr, ip, port, server, uid, subid, secret)
+	-- body
+	assert(ip and port and server and uid and subid and secret)
+	local err = ps.connect(ip, port)
+	if err ~= 0 then
+		local so = cls.new(mgr, ip, port)		
+		return so
+	end
+end
+
+return auth
