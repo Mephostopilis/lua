@@ -25,7 +25,7 @@ function _M.debug(fmt, ...)
 	local msg = string.format(fmt, ...)
 	local info = debug.getinfo(2)
 	if info then
-		msg = string.format("[lua][debug][%s][%s:%d] %s", os.date(), info.short_src, info.currentline, msg)
+		msg = string.format("[lua][debug][%s][%s:%d] %s\n", os.date(), info.short_src, info.currentline, msg)
 	end
 	if output == 1 then
 		print(msg)
@@ -38,7 +38,7 @@ function _M.info(fmt, ...)
 	local msg = string.format(fmt, ...)
 	local info = debug.getinfo(2)
 	if info then
-		msg = string.format("[lua][info][%s][%s:%d] %s", os.date(), info.short_src, info.currentline, msg)
+		msg = string.format("[lua][info][%s][%s:%d] %s\n", os.date(), info.short_src, info.currentline, msg)
 	end
 	if output == 1 then
 		print(msg)
@@ -51,7 +51,7 @@ function _M.warning(fmt, ...)
 	local msg = string.format(fmt, ...)
 	local info = debug.getinfo(2)
 	if info then
-		msg = string.format("[lua][warning][%s][%s:%d] %s", os.date(), info.short_src, info.currentline, msg)
+		msg = string.format("[lua][warning][%s][%s:%d] %s\n", os.date(), info.short_src, info.currentline, msg)
 	end
 	if output == 1 then
 		print(msg)
@@ -64,7 +64,7 @@ function _M.error(fmt, ...)
 	local msg = string.format(fmt, ...)
 	local info = debug.getinfo(2)
 	if info then
-		msg = string.format("[lua][error][%s][%s:%d] %s", os.date(), info.short_src, info.currentline, msg)
+		msg = string.format("[lua][error][%s][%s:%d] %s\n", os.date(), info.short_src, info.currentline, msg)
 	end
 	if output == 1 then
 		print(msg)
@@ -77,7 +77,7 @@ function _M.fatal(fmt, ...)
 	local msg = string.format(fmt, ...)
 	local info = debug.getinfo(2)
 	if info then
-		msg = string.format("[lua][fatal][%s][%s][%s:%d] %s", os.date(), SERVICE_NAME, info.short_src, info.currentline, msg)
+		msg = string.format("[lua][fatal][%s][%s][%s:%d] %s\n", os.date(), SERVICE_NAME, info.short_src, info.currentline, msg)
 	end
 	if test or daemon then
 		logger.fatal(msg)

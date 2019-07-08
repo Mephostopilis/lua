@@ -111,6 +111,9 @@ ringbuf_is_full(const ringbuf_t *rb);
 bool
 ringbuf_is_empty(const ringbuf_t *rb);
 
+void
+ringbuf_statics(const ringbuf_t *rb);
+
 /*
  * Locate the first occurrence of character c (converted to an
  * unsigned char) in ring buffer rb, beginning the search at offset

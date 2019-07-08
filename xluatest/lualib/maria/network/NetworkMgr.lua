@@ -3,7 +3,6 @@ local clientlogin = require "maria.network.clientlogin"
 local clientsock = require "maria.network.clientsock"
 local log = require "log"
 local assert = assert
-local host = {}
 local sockets = {}
 local delegets = {}
 
@@ -11,6 +10,7 @@ local _M = {}
 
 local handler = function (t, id, ud, ... )
 	if t == ps.SOCKET_DATA then
+		log.error('test data')
 		local so = assert(sockets[id])
 		local line = tostring(...)
 		local ok, err = pcall(so.data, so, line)
@@ -19,7 +19,9 @@ local handler = function (t, id, ud, ... )
 		end
 	elseif t == ps.SOCKET_OPEN then
 		local subcmd = tostring(...)
+		log.info('socket open subcmd = [%s]', subcmd)
 		if subcmd == 'transfor' then
+		else
 			local so = assert(sockets[id])
 			local ok, err = pcall(so.connected, so)
 			if not ok then
@@ -36,115 +38,94 @@ local handler = function (t, id, ud, ... )
 	end
 end
 
-function _M.Startup( ... )
+function _M.Startup()
 	-- body
 	ps.new(handler)
 end
 
-function _M.Cleanup( ... )
+function _M.Cleanup()
 	-- body
 	ps.exit()
 	ps.close()
 end
 
-function _M.Update( ... )
+function _M.Update()
 	-- body
 	ps.poll()
 end
 
-function _M.RegNetwork(deleget, ... )
+function _M.RegNetwork(t)
 	-- body
-	if not deleget then
-		log.error("deleget is nil")
-		return
-	end
-	delegets[deleget] = true
+	assert(type(t) == 'table')
+	delegets[t] = true
 end
 
-function _M.UnrNetwork(deleget, ... )
+function _M.UnrNetwork(t)
 	-- body
-	if not deleget then
-		log.error("deleget is nil")
-		return
-	end
-	delegets[deleget] = nil
+	delegets[t] = nil
+end
+
+function _M.GetSo(id)
+	return sockets[id]
 end
 
 -- login
-function _M.LoginAuth(ip, port, server, u, p, ... )
+function _M.LoginAuth(ip, port, server, u, p)
 	-- body
 	assert(ip and port and server and u and p)
-	local err = self.login:login_auth(ip, port, u, p, server)
-	if err == 0 then
-		log.info("login auth success.")
+	local so = clientlogin(_M, ip, port, u, p, server)
+	if so then
+		sockets[so.fd] = so
 	end
-	return err
 end
 
-function _M.OnLoginConnected(connected, ... )
+function _M.OnLoginAuthed(id, code, uid, subid, secret)
 	-- body
-	self._l:foreach(function (i, ... )
-		-- body
-		i:OnLoginConnected(connected)
-	end)
+	for k,_ in pairs(delegets) do
+		k.OnLoginAuthed(k, id, code, uid, subid, secret)
+	end
 end
 
-function _M.OnLoginAuthed(code, uid, subid, secret, ... )
+function _M.OnLoginDisconnected(id)
 	-- body
-
-	self._l:foreach(function (i, ... )
-		-- body
-		if i.OnLoginAuthed then
-			i:OnLoginAuthed(code, uid, subid, secret, ... )
+	assert(sockets[id])
+	sockets[id] = nil
+	for k,_ in pairs(delegets) do
+		local func = k.OnLoginDisconnected
+		if func then
+			pcall(func, k)
 		end
-	end)
+	end
 end
 
-function _M.OnLoginDisconnected( ... )
-	-- body
-	log.info("login disconnected.")
-	self._l:foreach(function (i, ... )
-		-- body
-		i:OnLoginDisconnected(connected)
-	end)
-end
-
-function _M.OnLoginError( ... )
+function _M.OnLoginError(id)
 	-- body
 end
 
 -- gate
-function _M.GateAuth(ip, port, server, uid, subid, secret, ... )
+function _M.GateAuth(ip, port, server, uid, subid, secret)
 	-- body
-	local so = clientlogin.new()
-	local id = self.client:gate_auth(ip, port, server, uid, subid, secret)
-	sockets[id] = so
-	return id
+	local so = clientsock(_M, ip, port, server, uid, subid, secret)
+	if so then
+		sockets[so.fd] = so
+	end
 end
 
-function _M.OnGateAuthed(code, ... )
+function _M.OnGateAuthed(id, code)
 	-- body
 	log.info("NetworkMgr OnGateAuthed")
-	self._l:foreach(function (i, ... )
-		-- body
-		if i['OnGateAuthed'] then
-			i:OnGateAuthed(code)
-		else
-			log.error("[%s] don't contains OnGateAuthed.", tostring(i))
-		end
-	end)
+	for k,_ in pairs(delegets) do
+		k.OnGateAuthed(k, id, code, uid, subid, secret)
+	end
 end
 
-function _M.OnGateDisconnected( ... )
+function _M.OnGateDisconnected(id)
 	-- body
-	self._l:foreach(function (i, ... )
-		-- body
-		if i['OnGateDisconnected'] then
-			i:OnGateDisconnected()
-		else
-			log.error("[%s] don't contains OnGateDisconnected", tostring(i))
-		end
-	end)
+	assert(sockets[id])
+	sockets[id] = nil
+	for k,_ in pairs(delegets) do
+		k.OnGateDisconnected(k, id, code, uid, subid, secret)
+	end
 end
 
 function _M.OnGateError()

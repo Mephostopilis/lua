@@ -6,14 +6,20 @@ local core = require "sproto.core"
 local FileUtils = require "FileUtils"
 local log = require "log"
 local res = require "res"
+local traceback = debug.traceback
 local assert = assert
 local debug = debug
+local XLua = false
 
 local cls = class("clientsock")
 
-function cls:ctor(network, ... )
+function cls:ctor(network, server, uid, subid, secret)
 	-- body
 	self._network = network
+	self._server  = server
+	self._uid     = uid
+	self._subid   = subid
+	self._secret  = secret
 
 	self.fd   = 0
 	self._gate_step = 0
@@ -27,18 +33,16 @@ function cls:ctor(network, ... )
 	-- sproto
 	local proto = {}
 	local utils = FileUtils:getInstance()
-	if false then
+	if XLua then
 		proto.c2s = res.LoadTextAsset("XLua/app/proto", "c2s.sproto").text
 	else
-		proto.c2s = utils:getStringFromFile("app/proto/c2s.sproto")
-		-- proto.c2s = utils:getStringFromFile("proto/proto.c2s.sproto")
+		proto.c2s = utils:getStringFromFile("proto/c2s.sproto")
 	end
 	assert(type(proto.c2s) == "string")
-	if false then
+	if XLua then
 		proto.s2c = res.LoadTextAsset("XLua/app/proto", "s2c.sproto").text
 	else
-		proto.s2c = utils:getStringFromFile("app/proto/s2c.sproto")
-		-- proto.s2c = utils:getStringFromFile("proto/proto.s2c.sproto")
+		proto.s2c = utils:getStringFromFile("proto/s2c.sproto")
 	end
 	assert(type(proto.s2c) == "string")
 	local s2c_sp = core.newproto(parser.parse(proto.s2c))
@@ -90,15 +94,14 @@ function cls:send_request(name, args, appendix, ... )
 		end
 
 		local v = self._send_request(name, args, self._response_session)
-		local g = assert(self._network._g)
-		local err, bytes = ps.send(g, self.fd, v)
-		if err == 0 then
-			-- log.info("send request %s: %d", name, self._response_session)
-			-- log.info("login send bytes = %d", bytes)
-		else
+		local err = ps.send(self.fd, v)
+		if err == -1 then
 			self._login_step = 0
 			log.error("login send error.")
 			return
+		else
+			-- log.info("send request %s: %d", name, self._response_session)
+			-- log.info("login send bytes = %d", bytes)
 		end
 	else
 		log.error("clientsock not auted, you cann't send request")
@@ -111,8 +114,9 @@ function cls:_response(session, args, ... )
 	local RESPONSE = self._RESPONSE
 	local pac = RESPONSE[name]
 	if pac then
-		local traceback = debug.traceback
-		local ok, err = xpcall(pac.cb, traceback, pac.ud, args, pac.appendix, ...)
+		local func = assert(pac.cb)
+		local ud = assert(pac.ud)
+		local ok, err = xpcall(func, traceback, ud, args, pac.appendix, ...)
 		if not ok then
 			log.error(err)
 		end
@@ -146,48 +150,48 @@ function cls:_dispatch(type, ... )
 		local ok, result = pcall(cls._request, self, ...)
 		if ok then
 			if result then
-				local g = assert(self._network._g)
-				local err, bytes = ps.send(g, self.fd, result)
-				if err == 0 then
-				else
-					return
+				local err = ps.send(self.fd, result)
+				if err == -1 then
+					log.error('send result error.')
 				end
 			else
 				log.error("request result is nil")
 			end
 		end
 	elseif type == "RESPONSE" then
-		pcall(cls._response, self, ... )
+		local ok, err = pcall(cls._response, self, ... )
+		if not ok then
+			log.error(err)
+		end
 	end
 end
 
 function cls:connected( ... )
 	-- body
-	err = ps.start(g, self.fd)
-	if err ~= 0 then
-		log.error("clientsock start failture.")
-		return
-	end
-end
-
-function cls:open( ... )
-	-- body
+	-- err = ps.start(g, self.fd)
+	-- if err ~= 0 then
+	-- 	log.error("clientsock start failture.")
+	-- 	return
+	-- end
 	self._index = 1
 	local handshake = string.format("%s@%s#%s:%d", 
-		crypt.base64encode(uid), 
-		crypt.base64encode(server),
-		crypt.base64encode(subid), self._index)
-	local hmac = crypt.hmac64(crypt.hashkey(handshake), secret)
+		crypt.base64encode(self._uid), 
+		crypt.base64encode(self._server),
+		crypt.base64encode(self._subid), self._index)
+	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
 
 	-- send handshake
-	local err, bytes = ps.send(self.fd, handshake .. ":" .. crypt.base64encode(hmac))
-	if err == 0 then
-	else
+	local err = ps.send(self.fd, handshake .. ":" .. crypt.base64encode(hmac))
+	if err == -1 then
 		self._login_step = 0
 		log.error("clientsock send error.")
 		return
 	end
 	self._gate_step = 1
+end
+
+function cls:open( ... )
+	-- body
 end
 
 function cls:data(package, ... )
@@ -197,8 +201,13 @@ function cls:data(package, ... )
 		if code == 200 then
 			log.info("gate auth ok.")
 			self._gate_step = 2
+		else
+			self._gate_step = 0
 		end
-		self._network:OnGateAuthed(code)
+		local ok, err = pcall(self._network.OnGateAuthed, self.fd, code)
+		if not ok then
+			log.error(err)
+		end
 	elseif self._gate_step == 2 then
 		self:_dispatch(self._host:dispatch(package))
 	end
@@ -207,7 +216,7 @@ end
 function cls:disconnected( ... )
 	-- body
 	self._gate_step = 0
-	self._network:OnGateDisconnected()
+	self._network.OnGateDisconnected(self.fd)
 end
 
 function auth(mgr, ip, port, server, uid, subid, secret)
@@ -215,7 +224,10 @@ function auth(mgr, ip, port, server, uid, subid, secret)
 	assert(ip and port and server and uid and subid and secret)
 	local err = ps.connect(ip, port)
 	if err ~= 0 then
-		local so = cls.new(mgr, ip, port)		
+		ps.pack(err, ps.HEADER_TYPE_PG)
+		ps.unpack(err, ps.HEADER_TYPE_PG)
+		local so = cls.new(mgr, server, uid, subid, secret)
+		so.fd = err		
 		return so
 	end
 end

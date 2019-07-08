@@ -1,69 +1,93 @@
-local NetworkMgr = require "maria.network.NetworkMgr"
+local network = require "maria.network.NetworkMgr"
 local timer = require "timer"
+local log = require 'log'
 
 local function run()
 	-- body
 	-- begain to connect
-	local network = NetworkMgr.new()
-	network:Startup()
-	local username = "hello"
+	
+	network.Startup()
+	local username = "12311"
 	local password = "Password"
 	local server = "sample1"
 	local TI = 10000
-	local count = 100
+	local count = 5
+	local c = 0
 
-	local t = {
-		OnLoginAuthed = function (self, code, uid, subid, secret)
+	local req = {
+		handshake = function (self, requestObj, ... )
 			-- body
-			assert(self)
-			if code == 200 then
-				print("OnLoginAuthed ---------------------")
-				-- print(user.server)
-				-- print(user.uid)
-				-- print(user.subid)
-				-- print(user.secret)
-				print("gate Auth ---------------------")
-
-				network:GateAuth("127.0.0.1", 3301, server, uid, subid, secret)
-			end
-		end,
-		OnGateAuthed = function (self)
-			-- body
-			assert(self)
-			print("OnGateAuthed")
-			timer.timeout(network, "timeout", TI)
-		end,
-		OnGateDisconnected = function (self, ... )
-			-- body
+			log.error('requestObj ===>')
 		end
 	}
 	local r = {
 		handshake = function (self, responseObj, ... )
 			-- body
-			print('responseObj ===>', responseObj.errorcode)
+			log.error('responseObj ===>', responseObj.errorcode)
 		end
 	}
-	network:RegNetwork(t)
-	network.client:register_response("handshake", r.handshake, r)
-	network:LoginAuth("127.0.0.1", "3002", server, username, password)
+
+	local t = {
+		OnLoginAuthed = function (self, id, code, uid, subid, secret)
+			-- body
+			assert(self)
+			if code == 200 then
+				log.info("OnLoginAuthed ---------------------")
+				-- print(user.server)
+				log.info("%d", uid)
+				log.info("%d", subid)
+				log.info("%s", secret)
+				log.info("gate Auth ---------------------")
+				local ok, err = pcall(network.GateAuth, "119.27.191.44", 3301, server, uid, subid, secret)
+				if not ok then
+					log.error(err)
+				end
+			end
+		end,
+		OnLoginDisconnected = function (self, id)
+			log.info("OnLoginDisconnected ---------------------")
+		end,
+		OnGateAuthed = function (self, id)
+			-- body
+			assert(self)
+			c = id
+			log.info("OnGateAuthed")
+			local so = network.GetSo(c)
+			for k,v in pairs(r) do
+				so:register_response(k, v, r)	
+			end
+			for k,v in pairs(req) do
+				so:regiseter_request(k, v, r)	
+			end
+			timer.timeout(network, "timeout", TI)
+		end,
+		OnGateDisconnected = function (self, id, ... )
+			-- body
+			log.info("OnGateDisconnected ---------------------")
+		end
+	}
+	
+	network.RegNetwork(t)
+	-- network.client:register_response("handshake", r.handshake, r)
+	network.LoginAuth("119.27.191.44", "3002", server, username, password)
 
 	local function execute(obj, message, arg)
 		-- body
-		print(timer.now())
+		-- print(timer.now())
 		if obj == network then
 			if message == "timeout" then
-				network.client:send_request("handshake")
-				timer.timeout(network, "timeout", TI)
 				count = count - 1
+				if count > 0 then
+					local client = network.GetSo(c)
+					client:send_request("handshake")
+					timer.timeout(network, "timeout", TI)
+				end
 			end
 		end
 	end
 	while true do
 		network:Update()
-		timer.update(1, execute)
-		-- if count <= 0 then
-		-- 	break
-		-- end
+		timer.update(10, execute)
 	end
 	network:Cleanup()
 end
