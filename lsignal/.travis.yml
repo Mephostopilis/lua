@@ -1,0 +1,26 @@
+ */
+ mm_jalx32_op, mm_jal32_op, mm_sw32_op, mm_lw32_op,
+};
+enum mm_32i_minor_op {
+ mm_bltz_op, mm_bltzal_op, mm_bgez_op, mm_bgezal_op,
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ mm_blez_op, mm_bnezc_op, mm_bgtz_op, mm_beqzc_op,
+ mm_tlti_op, mm_tgei_op, mm_tltiu_op, mm_tgeiu_op,
+ mm_tnei_op, mm_lui_op, mm_teqi_op, mm_reserved13_op,
+ mm_synci_op, mm_bltzals_op, mm_reserved14_op, mm_bgezals_op,
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ mm_bc2f_op, mm_bc2t_op, mm_reserved15_op, mm_reserved16_op,
+ mm_reserved17_op, mm_reserved18_op, mm_bposge64_op, mm_bposge32_op,
+ mm_bc1f_op, mm_bc1t_op, mm_reserved19_op, mm_reserved20_op,
+ mm_bc1any2f_op, mm_bc1any2t_op, mm_bc1any4f_op, mm_bc1any4t_op,
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+};
+enum mm_32a_minor_op {
+ mm_sll32_op = 0x000,
+ mm_ins_op = 0x00c,
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
+ mm_ext_op = 0x02c,
+ mm_pool32axf_op = 0x03c,
+ mm_srl32_op = 0x040,
+ mm_sra_op = 0x080,
+/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE 

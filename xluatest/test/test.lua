@@ -28,13 +28,13 @@ print('[[ -------------- TEST ENTITIES -------------- ]]')
 -- require "test.test_entity_system"
 -- require "test.client"
 print('[[ -------------- TEST NETWORK  -------------- ]]')
-require "test.test_network"
+-- require "test.test_network"
 print('[[ -------------- TEST RAPIDJSON -------------- ]]')
 -- require "test.test_dbpack"
 print('[[ -------------- TEST PLIST -------------- ]]')
 -- require "test.test_plist"
 print('[[ -------------- TEST XLOG  -------------- ]]')
--- require "test.test_xlog"
+require "test.test_xlog"
 print('[[ -------------- TEST XLUASOCKET  -------------- ]]')
 -- require "test.test_xluasocket"
 print('[[ -------------- TEST CLIENT  -------------- ]]')
