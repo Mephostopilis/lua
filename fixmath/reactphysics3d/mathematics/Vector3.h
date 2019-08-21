@@ -1,6 +1,6 @@
 ﻿/********************************************************************************
 * ReactPhysics3D physics library, http://www.reactphysics3d.com                 *
-* Copyright (c) 2010-2018 Daniel Chappuis                                       *
+* Copyright (c) 2010-2019 Daniel Chappuis                                       *
 *********************************************************************************
 *                                                                               *
 * This software is provided 'as-is', without any express or implied warranty.   *
@@ -395,11 +395,7 @@ inline decimal Vector3::getMaxValue() const {
 
 // Get the string representation
 inline std::string Vector3::to_string() const {
-#if defined(RP_NO_FIXMATH)
-    return "Vector3(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
-#else
-	return "Vector3";
-#endif
+    return "Vector3(" + std::to_string((float)x) + "," + std::to_string((float)y) + "," + std::to_string((float)z) + ")";
 }
 
 // Return the zero vector

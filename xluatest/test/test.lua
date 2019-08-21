@@ -16,34 +16,34 @@ class = cc.class
 DEBUG_TEST = true
 
 -- require "main"
-print('[[ -------------- TEST LIST     -------------- ]]')
+print("[[ -------------- TEST LIST     -------------- ]]")
 -- require "test_list"
-print('[[ -------------- TEST TIMER    -------------- ]]')
+print("[[ -------------- TEST TIMER    -------------- ]]")
 -- require "test_timer"
-print('[[ -------------- TEST RANDOM   -------------- ]]')
+print("[[ -------------- TEST RANDOM   -------------- ]]")
 -- require "test_random"
-print('[[ -------------- TEST QUEUE    -------------- ]]')
+print("[[ -------------- TEST QUEUE    -------------- ]]")
 -- require "test.test_chestnut"
-print('[[ -------------- TEST ENTITIES -------------- ]]')
+print("[[ -------------- TEST ENTITIES -------------- ]]")
 -- require "test.test_entity_system"
 -- require "test.client"
-print('[[ -------------- TEST NETWORK  -------------- ]]')
+print("[[ -------------- TEST NETWORK  -------------- ]]")
 -- require "test.test_network"
-print('[[ -------------- TEST RAPIDJSON -------------- ]]')
+print("[[ -------------- TEST RAPIDJSON -------------- ]]")
 -- require "test.test_dbpack"
-print('[[ -------------- TEST PLIST -------------- ]]')
+print("[[ -------------- TEST PLIST -------------- ]]")
 -- require "test.test_plist"
-print('[[ -------------- TEST XLOG  -------------- ]]')
-require "test.test_xlog"
-print('[[ -------------- TEST XLUASOCKET  -------------- ]]')
+print("[[ -------------- TEST XLOG  -------------- ]]")
+-- require "test.test_xlog"
+print("[[ -------------- TEST XLUASOCKET  -------------- ]]")
 -- require "test.test_xluasocket"
-print('[[ -------------- TEST CLIENT  -------------- ]]')
+print("[[ -------------- TEST CLIENT  -------------- ]]")
 -- require "test.test_client"
-print('[[ -------------- TEST CO  -------------- ]]')
+print("[[ -------------- TEST CO  -------------- ]]")
 -- require "test.test_co"
-print('[[ -------------- TEST ZSET  -------------- ]]')
+print("[[ -------------- TEST ZSET  -------------- ]]")
 -- require "test.test_zset"
-
-
+print("[[ -------------- TEST react  -------------- ]]")
+require "test.test_reactphysics3d"
 
 -- os.execute("pause")

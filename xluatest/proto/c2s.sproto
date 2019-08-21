@@ -40,6 +40,11 @@
     player3       4 : string
     player4       5 : string
 }
+
+.func {
+    id   0 : integer
+    open 1 : integer
+}
 .op {
 	session 0 : integer
     opcode 1 : integer

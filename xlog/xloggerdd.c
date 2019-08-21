@@ -179,6 +179,26 @@ check_dir(const char *path, char *basepath, int *sz) {
 	return XLOG_OK;
 }
 
+static size_t
+xloggerdd_gen_dir_(struct xloggerdd *self, char *fullpath, size_t hint) {
+	if (fullpath == NULL) {
+		return 0;
+	}
+	char path[XLOG_MAXPATHLEN] = { 0 };
+	size_t sz = 0;
+	struct tm *ntm = localtime(&self->pt);
+	char timebuf[32] = { 0 };
+	strftime(timebuf, sizeof(timebuf), "%Y%m%d", ntm);
+#if defined(_MSC_VER)
+	sz = snprintf(path, XLOG_MAXPATHLEN, "%s\\%s", self->basepath, timebuf);
+#else
+	sz = snprintf(path, XLOG_MAXPATHLEN, "%s/%s", self->basepath, timebuf);
+#endif
+
+	strncpy(fullpath, path, sz);
+	return sz;
+}
+
 static int
 xloggerdd_init_(struct xloggerdd *self) {
 
@@ -216,26 +236,6 @@ xloggerdd_init_(struct xloggerdd *self) {
 		}
 	}
 	return XLOG_OK;
-}
-
-static size_t
-xloggerdd_gen_dir_(struct xloggerdd *self, char *fullpath, size_t hint) {
-	if (fullpath == NULL) {
-		return 0;
-	}
-	char path[XLOG_MAXPATHLEN] = { 0 };
-	size_t sz = 0;
-	struct tm *ntm = localtime(&self->pt);
-	char timebuf[32] = { 0 };
-	strftime(timebuf, sizeof(timebuf), "%Y%m%d", ntm);
-#if defined(_MSC_VER)
-	sz = snprintf(path, XLOG_MAXPATHLEN, "%s\\%s", self->basepath, timebuf);
-#else
-	sz = snprintf(path, XLOG_MAXPATHLEN, "%s/%s", self->basepath, timebuf);
-#endif
-
-	strncpy(fullpath, path, sz);
-	return sz;
 }
 
 struct xloggerdd *

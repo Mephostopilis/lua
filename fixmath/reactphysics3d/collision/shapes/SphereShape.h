@@ -1,6 +1,6 @@
 ﻿/********************************************************************************
 * ReactPhysics3D physics library, http://www.reactphysics3d.com                 *
-* Copyright (c) 2010-2018 Daniel Chappuis                                       *
+* Copyright (c) 2010-2019 Daniel Chappuis                                       *
 *********************************************************************************
 *                                                                               *
 * This software is provided 'as-is', without any express or implied warranty.   *
@@ -167,11 +167,7 @@ inline bool SphereShape::testPointInside(const Vector3& localPoint, ProxyShape* 
 
 // Return the string representation of the shape
 inline std::string SphereShape::to_string() const {
-#if defined(RP_NO_FIXMATH)
-    return "SphereShape{radius=" + std::to_string(getRadius()) + "}";
-#else
-	return "SphereShape";
-#endif
+    return "SphereShape{radius=" + std::to_string((float)getRadius()) + "}";
 }
 
 }

@@ -118,3 +118,12 @@ function table.readonly(t, name)
     })
     return t
 end
+function table.equal(t1, t2)
+    for k,v in pairs(t1) do
+        if t2[k] ~= v then
+            return false
+        end
+    end
+    return true
+end
+

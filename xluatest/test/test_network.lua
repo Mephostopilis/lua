@@ -1,6 +1,7 @@
 local network = require "maria.network.NetworkMgr"
 local timer = require "timer"
 local log = require 'log'
+local table_dump = require 'luaTableDump'
 
 local function run()
 	-- body
@@ -13,18 +14,30 @@ local function run()
 	local TI = 10000
 	local count = 5
 	local c = 0
+	local run_ti = 0
 
 	local req = {
-		handshake = function (self, requestObj, ... )
+		handshake = function (self, requestObj)
 			-- body
 			log.error('requestObj ===>')
+		end,
+		base_info = function (self, requestObj)
+			log.error('[base_info] => %s', table_dump(requestObj))
+		end,
+		player_funcs = function (self, requestObj)
+			log.error('[player_funcs] => %s', table_dump(requestObj))
 		end
 	}
-	local r = {
+	local resp = {
 		handshake = function (self, responseObj, ... )
 			-- body
 			log.error('responseObj ===>', responseObj.errorcode)
+		end,
+		enter = function (self, responseObj)
+			-- log.error(table_dump(requestObj))
+			log.info('enter')
 		end
+
 	}
 
 	local t = {
@@ -53,13 +66,14 @@ local function run()
 			c = id
 			log.info("OnGateAuthed")
 			local so = network.GetSo(c)
-			for k,v in pairs(r) do
-				so:register_response(k, v, r)	
+			for k,v in pairs(resp) do
+				so:register_response(k, v, resp)	
 			end
 			for k,v in pairs(req) do
-				so:regiseter_request(k, v, r)	
+				so:regiseter_request(k, v, req)	
 			end
 			timer.timeout(network, "timeout", TI)
+			so:send_request('enter')
 		end,
 		OnGateDisconnected = function (self, id, ... )
 			-- body
@@ -85,9 +99,10 @@ local function run()
 			end
 		end
 	end
-	while true do
+	while run_ti < 100000 do
 		network:Update()
 		timer.update(10, execute)
+		run_ti = run_ti + 1
 	end
 	network:Cleanup()
 end

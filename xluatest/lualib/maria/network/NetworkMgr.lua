@@ -10,7 +10,6 @@ local _M = {}
 
 local handler = function (t, id, ud, ... )
 	if t == ps.SOCKET_DATA then
-		log.error('test data')
 		local so = assert(sockets[id])
 		local line = tostring(...)
 		local ok, err = pcall(so.data, so, line)

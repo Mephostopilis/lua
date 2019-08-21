@@ -1,6 +1,6 @@
 ﻿/********************************************************************************
 * ReactPhysics3D physics library, http://www.reactphysics3d.com                 *
-* Copyright (c) 2010-2018 Daniel Chappuis                                       *
+* Copyright (c) 2010-2019 Daniel Chappuis                                       *
 *********************************************************************************
 *                                                                               *
 * This software is provided 'as-is', without any express or implied warranty.   *
@@ -108,21 +108,21 @@ constexpr decimal DYNAMIC_TREE_AABB_GAP = decimal(0.1);
 constexpr decimal DYNAMIC_TREE_AABB_LIN_GAP_MULTIPLIER = decimal(1.7);
 
 /// Current version of ReactPhysics3D
-const std::string RP3D_VERSION = std::string("0.7.0");
+const std::string RP3D_VERSION = std::string("0.7.1");
 
 #else
 
 /// Smallest decimal value (negative)
-const decimal DECIMAL_SMALLEST = b3R32::minimum();
+const decimal DECIMAL_SMALLEST = decimal::minimum();
 
 /// Maximum decimal value
-const decimal DECIMAL_LARGEST = b3R32::maximum();
+const decimal DECIMAL_LARGEST = decimal::maximum();
 
 /// Machine epsilon
-const decimal MACHINE_EPSILON = b3R32::epsilon();
+const decimal MACHINE_EPSILON = decimal::epsilon();
 
 /// Pi constant
-const decimal PI = b3R32::pi();
+const decimal PI = decimal::pi();
 
 /// 2*Pi constant
 const decimal PI_TIMES_2 = decimal::pi() * decimal(2.0);
@@ -138,7 +138,7 @@ const decimal DYNAMIC_TREE_AABB_GAP = decimal(0.1);
 const decimal DYNAMIC_TREE_AABB_LIN_GAP_MULTIPLIER = decimal(1.7);
 
 /// Current version of ReactPhysics3D
-const std::string RP3D_VERSION = std::string("0.7.0");
+const std::string RP3D_VERSION = std::string("0.7.1");
 
 #endif
 

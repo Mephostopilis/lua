@@ -40,6 +40,11 @@
     player3       4 : string
     player4       5 : string
 }
+
+.func {
+    id   0 : integer
+    open 1 : integer
+}
 .op {
 	session 0 : integer
     opcode 1 : integer
@@ -85,7 +90,7 @@ offline 4 {
 # 系统模块 [100, 500)
 base_info 101 {
     request {
-        num       0 : integer
+        num      0 : integer
         nickname 1 : string
         nameid 2 : string
         rcard 3 : integer
@@ -205,6 +210,24 @@ checkins 350 {
 records 400 {
     request {
         list      0 : *record
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 成就模块 [450, 500)
+player_achievement 450 {
+    request {
+    }
+}
+
+####################################### 
+# 功能模块 [450, 500)
+player_funcs 500 {
+    request {
+        list 0 : *func
     }
     response {
         errorcode 0 : integer
