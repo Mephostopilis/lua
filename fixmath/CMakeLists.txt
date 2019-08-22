@@ -131,8 +131,10 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/engine/EventListener.h
 	./reactphysics3d/engine/Island.cpp
 	./reactphysics3d/engine/Material.cpp
+	./reactphysics3d/engine/Material.h
 	./reactphysics3d/engine/OverlappingPair.cpp
 	./reactphysics3d/engine/Timer.cpp
+	./reactphysics3d/engine/Timer.h
 	./reactphysics3d/mathematics/mathematics_functions.cpp
 	./reactphysics3d/mathematics/Matrix2x2.cpp
 	./reactphysics3d/mathematics/Matrix3x3.cpp
@@ -146,6 +148,7 @@ set (REACTPHYSICS3D_CORE
 	./reactphysics3d/mathematics/Vector3.cpp
 	./reactphysics3d/mathematics/Vector3.h
 	./reactphysics3d/memory/DefaultPoolAllocator.cpp
+	./reactphysics3d/memory/DefaultPoolAllocator.h
 	./reactphysics3d/memory/DefaultSingleFrameAllocator.cpp
 	./reactphysics3d/memory/MemoryManager.cpp
 	./reactphysics3d/utils/Logger.cpp

@@ -1,6 +1,6 @@
 ﻿/********************************************************************************
 * ReactPhysics3D physics library, http://www.reactphysics3d.com                 *
-* Copyright (c) 2010-2018 Daniel Chappuis                                       *
+* Copyright (c) 2010-2019 Daniel Chappuis                                       *
 *********************************************************************************
 *                                                                               *
 * This software is provided 'as-is', without any express or implied warranty.   *
@@ -152,17 +152,14 @@ inline void Material::setRollingResistance(decimal rollingResistance) {
 
 // Return a string representation for the material
 inline std::string Material::to_string() const {
-#if defined(RP_NO_FIXMATH)
+
     std::stringstream ss;
 
-    ss << "frictionCoefficient=" << mFrictionCoefficient << std::endl;
-    ss << "rollingResistance=" << mRollingResistance << std::endl;
-    ss << "bounciness=" << mBounciness << std::endl;
+    ss << "frictionCoefficient=" << (float)mFrictionCoefficient << std::endl;
+    ss << "rollingResistance=" << (float)mRollingResistance << std::endl;
+    ss << "bounciness=" << (float)mBounciness << std::endl;
 
     return ss.str();
-#else
-	return "Material";
-#endif
 }
 
 // Overloaded assignment operator
