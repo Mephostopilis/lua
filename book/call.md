@@ -1,0 +1,9 @@
+# call
+
+一段luachunk生成命令，其实最终都是生成proto，但是每个proto在生成的时候又会有两个东西来Funcstate与DynData这两个东西，这两个在对应一个proto时候只有一个，在一个proto里面可能会有多个BlockCnt，这是因为if while for等逻辑结构形程多个短暂的生成空间。
+
+语法语义分析都是在lparse这里面，这里面主要看出变量与表达式，表达式会有statement与subexp这两个函数需要重点查看。当一个表达式查看完了过后，会调用code生成命令。生成命令在lcode这个模块。
+
+一个lua模块可以生成字节码，而任何一个vm都可以运行，怎么靠一个一段模块生成，怎是不容易的。怎么解决
+lua_pcallk->luaD_pcall->luaD_rawrunprotected->f_call->luaD_callnoyield->luaD_call->luaD_precall(这是真正执行的地方）。
+这一串调用链，都是在修改CallInfo，CallInfo就是调用栈信息，lua真个vm的实现就是怎么稳定的调用，而这一切就是核心，转到ldo，这些都是ldo里面的内容

@@ -45,6 +45,12 @@
     id   0 : integer
     open 1 : integer
 }
+
+.hero {
+    id 0 : integer
+    level 1 : integer
+}
+
 .op {
 	session 0 : integer
     opcode 1 : integer
@@ -94,6 +100,7 @@ base_info 101 {
         nickname 1 : string
         nameid 2 : string
         rcard 3 : integer
+        level 4 : integer
     }
     response {
         errorcode 0 : integer
@@ -224,7 +231,7 @@ player_achievement 450 {
 }
 
 ####################################### 
-# 功能模块 [450, 500)
+# 功能模块 [500, 550)
 player_funcs 500 {
     request {
         list 0 : *func
@@ -232,7 +239,20 @@ player_funcs 500 {
     response {
         errorcode 0 : integer
     }
-}####################################### 
+}
+
+####################################### 
+# 英雄模块 [550, 600)
+player_heros 550 {
+    request {
+        list 0 : *hero
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
 # 球球模块 [10000, 10100)
 opcode 10000 {
     request {

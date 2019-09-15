@@ -10,23 +10,25 @@ local traceback = debug.traceback
 local assert = assert
 local debug = debug
 local XLua = false
+local req = require "maria.network.request"
+local resp = require "maria.network.response"
 
 local cls = class("clientsock")
 
 function cls:ctor(network, server, uid, subid, secret)
 	-- body
 	self._network = network
-	self._server  = server
-	self._uid     = uid
-	self._subid   = subid
-	self._secret  = secret
+	self._server = server
+	self._uid = uid
+	self._subid = subid
+	self._secret = secret
 
-	self.fd   = 0
+	self.fd = 0
 	self._gate_step = 0
-	
-	self._index     = 0
-	self._version   = 0
-	
+
+	self._index = 0
+	self._version = 0
+
 	self._RESPONSE_SESSION_NAME = {}
 	self._response_session = 0
 
@@ -53,34 +55,22 @@ function cls:ctor(network, server, uid, subid, secret)
 	self._host = host
 	self._send_request = send_request
 
-	self._REQUEST = {}
-	self._RESPONSE = {}
+	self._REQUEST = req
+	self._RESPONSE = resp
 	return self
 end
 
-function cls:regiseter_request(name, cb, ud, ... )
+function cls:regiseter_request(name, cb)
 	-- body
-	local pac = self._REQUEST[name]
-	if pac then
-		pac.cb = cb
-		pac.ud = ud
-	else
-		self._REQUEST[name] = { cb = cb, ud = ud }
-	end
+	self._REQUEST[name] = cb
 end
 
-function cls:register_response(name, cb, ud, ... )
- 	-- body
- 	local pac = self._RESPONSE[name]
-	if pac then
-		pac.cb = cb
-		pac.ud = ud
-	else
-		self._RESPONSE[name] = { cb = cb, ud = ud }
-	end
-end 
+function cls:register_response(name, cb)
+	-- body
+	self._RESPONSE[name] = cb
+end
 
-function cls:send_request(name, args, appendix, ... )
+function cls:send_request(name, args, appendix, ...)
 	-- body
 	if self._gate_step == 2 then
 		local max = 1000000
@@ -108,15 +98,13 @@ function cls:send_request(name, args, appendix, ... )
 	end
 end
 
-function cls:_response(session, args, ... )
+function cls:_response(session, args, ...)
 	-- body
 	local name = self._RESPONSE_SESSION_NAME[session]
 	local RESPONSE = self._RESPONSE
 	local pac = RESPONSE[name]
 	if pac then
-		local func = assert(pac.cb)
-		local ud = assert(pac.ud)
-		local ok, err = xpcall(func, traceback, ud, args, pac.appendix, ...)
+		local ok, err = xpcall(pac, traceback, args, ...)
 		if not ok then
 			log.error(err)
 		end
@@ -125,15 +113,13 @@ function cls:_response(session, args, ... )
 	end
 end
 
-function cls:_request(name, args, response, ... )
+function cls:_request(name, args, response, ...)
 	-- body
 	-- log.info("request %s.", name)
 	local REQUEST = self._REQUEST
 	local pac = REQUEST[name]
 	if pac then
-		local cb = pac.cb
-		local ud = pac.ud
-		local ok, err = pcall(cb, ud, args)
+		local ok, err = pcall(pac, args)
 		if ok then
 			return response(err)
 		else
@@ -144,7 +130,7 @@ function cls:_request(name, args, response, ... )
 	end
 end
 
-function cls:_dispatch(type, ... )
+function cls:_dispatch(type, ...)
 	-- body
 	if type == "REQUEST" then
 		local ok, result = pcall(cls._request, self, ...)
@@ -152,21 +138,21 @@ function cls:_dispatch(type, ... )
 			if result then
 				local err = ps.send(self.fd, result)
 				if err == -1 then
-					log.error('send result error.')
+					log.error("send result error.")
 				end
 			else
 				log.error("request result is nil")
 			end
 		end
 	elseif type == "RESPONSE" then
-		local ok, err = pcall(cls._response, self, ... )
+		local ok, err = pcall(cls._response, self, ...)
 		if not ok then
 			log.error(err)
 		end
 	end
 end
 
-function cls:connected( ... )
+function cls:connected(...)
 	-- body
 	-- err = ps.start(g, self.fd)
 	-- if err ~= 0 then
@@ -174,10 +160,14 @@ function cls:connected( ... )
 	-- 	return
 	-- end
 	self._index = 1
-	local handshake = string.format("%s@%s#%s:%d", 
-		crypt.base64encode(self._uid), 
+	local handshake =
+		string.format(
+		"%s@%s#%s:%d",
+		crypt.base64encode(self._uid),
 		crypt.base64encode(self._server),
-		crypt.base64encode(self._subid), self._index)
+		crypt.base64encode(self._subid),
+		self._index
+	)
 	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
 
 	-- send handshake
@@ -190,11 +180,11 @@ function cls:connected( ... )
 	self._gate_step = 1
 end
 
-function cls:open( ... )
+function cls:open(...)
 	-- body
 end
 
-function cls:data(package, ... )
+function cls:data(package, ...)
 	-- body
 	if self._gate_step == 1 then
 		local code = tonumber(string.sub(package, 1, 3))
@@ -213,7 +203,7 @@ function cls:data(package, ... )
 	end
 end
 
-function cls:disconnected( ... )
+function cls:disconnected(...)
 	-- body
 	self._gate_step = 0
 	self._network.OnGateDisconnected(self.fd)
@@ -227,7 +217,7 @@ function auth(mgr, ip, port, server, uid, subid, secret)
 		ps.pack(err, ps.HEADER_TYPE_PG)
 		ps.unpack(err, ps.HEADER_TYPE_PG)
 		local so = cls.new(mgr, server, uid, subid, secret)
-		so.fd = err		
+		so.fd = err
 		return so
 	end
 end

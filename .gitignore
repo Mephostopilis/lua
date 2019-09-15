@@ -49,7 +49,6 @@ bin
 build
 build32
 build64
-.vscode
 xluatest/logs
 xluatest/*.exe
 xluatest/*.a

@@ -45,6 +45,12 @@
     id   0 : integer
     open 1 : integer
 }
+
+.hero {
+    id 0 : integer
+    level 1 : integer
+}
+
 .op {
 	session 0 : integer
     opcode 1 : integer
@@ -71,7 +77,7 @@ enter 3 {
 
 
 ####################################### 
-# 系统模块 [100, 500)
+# 系统模块 [100, 200)
 # 第一条消息，主要是一个写个人信息
 modify_name 100 {
     request {
@@ -79,6 +85,18 @@ modify_name 100 {
     }
     response {
         errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 聊天模块 [200, 250)
+say 200 {
+    request {
+        id 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+        r         1 : string
     }
 }
 
@@ -131,7 +149,18 @@ record 400 {
         errorcode 0 : integer
         r         1 : string
     }
-}####################################### 
+}
+
+####################################### 
+# 成就模块 [450, 500)
+active_achievement 450 {
+    request {
+    }
+}
+
+####################################### 
+# 记录模块 [450, 500)
+####################################### 
 # 球球模块 [10000, 10100)
 opcode 10000 {
     request {

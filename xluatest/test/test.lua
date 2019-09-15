@@ -1,4 +1,4 @@
-package.path = ".\\lualib\\?.lua;" .. package.path
+﻿package.path = ".\\lualib\\?.lua;" .. package.path
 
 if not cc then
 	cc = {}
@@ -28,7 +28,7 @@ print("[[ -------------- TEST ENTITIES -------------- ]]")
 -- require "test.test_entity_system"
 -- require "test.client"
 print("[[ -------------- TEST NETWORK  -------------- ]]")
--- require "test.test_network"
+require "test.test_network"
 print("[[ -------------- TEST RAPIDJSON -------------- ]]")
 -- require "test.test_dbpack"
 print("[[ -------------- TEST PLIST -------------- ]]")
@@ -44,6 +44,6 @@ print("[[ -------------- TEST CO  -------------- ]]")
 print("[[ -------------- TEST ZSET  -------------- ]]")
 -- require "test.test_zset"
 print("[[ -------------- TEST react  -------------- ]]")
-require "test.test_reactphysics3d"
+-- require "test.test_reactphysics3d"
 
 -- os.execute("pause")
