@@ -8,7 +8,7 @@ local delegets = {}
 
 local _M = {}
 
-local handler = function (t, id, ud, ... )
+local handler = function(t, id, ud, ...)
 	if t == ps.SOCKET_DATA then
 		local so = assert(sockets[id])
 		local line = tostring(...)
@@ -18,8 +18,8 @@ local handler = function (t, id, ud, ... )
 		end
 	elseif t == ps.SOCKET_OPEN then
 		local subcmd = tostring(...)
-		log.info('socket open subcmd = [%s]', subcmd)
-		if subcmd == 'transfor' then
+		log.info("socket open subcmd = [%s]", subcmd)
+		if subcmd == "transfor" then
 		else
 			local so = assert(sockets[id])
 			local ok, err = pcall(so.connected, so)
@@ -55,7 +55,7 @@ end
 
 function _M.RegNetwork(t)
 	-- body
-	assert(type(t) == 'table')
+	assert(type(t) == "table")
 	delegets[t] = true
 end
 
@@ -68,9 +68,14 @@ function _M.GetSo(id)
 	return sockets[id]
 end
 
+function _M.CloseSo(id)
+	if sockets[id] then
+		ps.closesocket(id)
+	end
+end
+
 -- login
 function _M.LoginAuth(ip, port, server, u, p)
-	-- body
 	assert(ip and port and server and u and p)
 	local so = clientlogin(_M, ip, port, u, p, server)
 	if so then
@@ -79,20 +84,18 @@ function _M.LoginAuth(ip, port, server, u, p)
 end
 
 function _M.OnLoginAuthed(id, code, uid, subid, secret)
-	-- body
-	for k,_ in pairs(delegets) do
+	for k, _ in pairs(delegets) do
 		k.OnLoginAuthed(k, id, code, uid, subid, secret)
 	end
 end
 
 function _M.OnLoginDisconnected(id)
-	-- body
 	assert(sockets[id])
 	sockets[id] = nil
-	for k,_ in pairs(delegets) do
+	for k, _ in pairs(delegets) do
 		local func = k.OnLoginDisconnected
 		if func then
-			pcall(func, k)
+			pcall(func, k, id)
 		end
 	end
 end
@@ -111,10 +114,9 @@ function _M.GateAuth(ip, port, server, uid, subid, secret)
 end
 
 function _M.OnGateAuthed(id, code)
-	-- body
 	log.info("NetworkMgr OnGateAuthed")
-	for k,_ in pairs(delegets) do
-		k.OnGateAuthed(k, id, code, uid, subid, secret)
+	for k, _ in pairs(delegets) do
+		k.OnGateAuthed(k, id, code)
 	end
 end
 
@@ -122,8 +124,8 @@ function _M.OnGateDisconnected(id)
 	-- body
 	assert(sockets[id])
 	sockets[id] = nil
-	for k,_ in pairs(delegets) do
-		k.OnGateDisconnected(k, id, code, uid, subid, secret)
+	for k, _ in pairs(delegets) do
+		k.OnGateDisconnected(k, id)
 	end
 end
 

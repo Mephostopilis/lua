@@ -13,7 +13,8 @@ local function run()
 	local server = "sample1"
 	local TI = 10000
 	local count = 0
-	local c = 0
+	local l = 0 -- login so
+	local c = 0 -- client so
 
 	local req = {
 		handshake = function(requestObj)
@@ -51,12 +52,12 @@ local function run()
 		OnLoginAuthed = function(self, id, code, uid, subid, secret)
 			-- body
 			assert(self)
+			l = id
 			if code == 200 then
 				log.info("OnLoginAuthed ---------------------")
-				-- print(user.server)
-				log.info("%d", uid)
-				log.info("%d", subid)
-				log.info("%s", secret)
+				log.info("uid = %d", uid)
+				log.info("subid = %d", subid)
+				log.info("secrete = %s", secret)
 				log.info("gate Auth ---------------------")
 				local ok, err = pcall(network.GateAuth, "119.27.191.44", 3301, server, uid, subid, secret)
 				if not ok then
@@ -68,8 +69,10 @@ local function run()
 			log.info("OnLoginDisconnected ---------------------")
 		end,
 		OnGateAuthed = function(self, id)
-			-- body
 			assert(self)
+			-- 删除login so
+			network.CloseSo(l)
+			--
 			c = id
 			log.info("OnGateAuthed")
 			local so = network.GetSo(c)
@@ -100,9 +103,9 @@ local function run()
 				count = count + 1
 				if count == 1 then
 				elseif count == 2 then
-				-- log.info("send modify_name")
-				-- local client = network.GetSo(c)
-				-- client:send_request("modify_name", {nickname = "nickname"})
+					log.info("send modify_name")
+					local client = network.GetSo(c)
+					client:send_request("modify_name", {nickname = "nickname"})
 				end
 			end
 		end
