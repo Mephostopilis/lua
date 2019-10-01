@@ -1,5 +1,4 @@
-﻿project(random)
-
+﻿
 SET(RANDOM_C ./random.c)
 
 include_directories(../lua/src)

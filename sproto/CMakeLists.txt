@@ -1,4 +1,4 @@
-﻿project(sproto)
+﻿
 
 file(GLOB SPROTO_H *.h)
 aux_source_directory(. SPROTO_C)

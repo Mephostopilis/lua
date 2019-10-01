@@ -1,6 +1,6 @@
-﻿project(md5)
+﻿
 
-SET(MD5_C ./md5.c)
+set(MD5_C ./md5.c)
 
 include_directories(../lua/src)
 

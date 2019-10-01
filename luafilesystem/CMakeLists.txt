@@ -1,7 +1,5 @@
 ﻿# cmake_minimum_required(VERSION 3.12)
 
-project(lfs)
-
 include_directories(../lua/src)
 
 if (MSVC)

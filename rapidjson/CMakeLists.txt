@@ -1,4 +1,4 @@
-﻿project(rapidjson)
+﻿
 aux_source_directory(. RAPIDJSON_C)
 
 macro(source_group_by_dir proj_dir source_files)

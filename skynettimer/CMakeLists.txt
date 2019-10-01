@@ -1,4 +1,4 @@
-﻿project(skynettimer)
+﻿
 
 SET(SKYNET_C 
 	posix/win/timeutils.c

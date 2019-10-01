@@ -1,14 +1,12 @@
-﻿project(chestnut)
-
-aux_source_directory(. SRC_LIST)
-
-include_directories(../lua/src)
-IF(MSVC)
-ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)	
-ENDIF()
+﻿
+file(GLOB SRC_LIST *.c)
 
 add_library(chestnut SHARED ${CHESTNUT_H} ${SRC_LIST})
 set_target_properties(chestnut PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(chestnut PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+target_include_directories(chestnut PRIVATE ../lua/src)
+if (MSVC)
+add_compile_options(chestnut PRIVATE LUA_BUILD_AS_DLL)
+endif()
 target_link_libraries(chestnut ../../xluatest/liblua)
 ADD_DEPENDENCIES(chestnut lua)

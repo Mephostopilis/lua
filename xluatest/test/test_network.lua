@@ -32,7 +32,7 @@ local function run()
 		player_heros = function(requestObj)
 			log.error("[player_heros] => %s", table_dump(requestObj))
 		end,
-		new_name = function(responseObj)
+		new_name = function(requestObj)
 			log.error("[new_name] => %s", table_dump(requestObj))
 		end
 	}

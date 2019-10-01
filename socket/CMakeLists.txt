@@ -1,5 +1,4 @@
-﻿project(socket)
-
+﻿
 include_directories(../lua/src)
 
 set ( SOCKET_CORE luasocket.c timeout.c buffer.c io.c auxiliar.c compat.c options.c inet.c except.c select.c tcp.c udp.c)

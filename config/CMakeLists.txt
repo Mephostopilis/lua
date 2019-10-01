@@ -1,6 +1,4 @@
-﻿project(config)
-
-set( CONFIG_H 
+﻿set( CONFIG_H 
 	./csv.h 
 	./strhtable.h 
 	./value_t.h
@@ -16,12 +14,12 @@ SET( CONFIG_C
 	./data_manager_t.cpp
 )
 
-include_directories(../lua/src)
-
-add_definitions(-DLUA_BUILD_AS_DLL)
-
 add_library(config SHARED ${CONFIG_H} ${CONFIG_C})
 set_target_properties(config PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 set_target_properties(config PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+target_include_directories(config PRIVATE ../lua/src)
+if (MSVC)
+add_compile_options(config PRIVATE LUA_BUILD_AS_DLL)
+endif()
 target_link_libraries(config ../../xluatest/liblua)
 add_dependencies(config lua)

@@ -1,4 +1,4 @@
-﻿project(skynet)
+﻿
 
 SET(SKYNET_C ./lsha1.c ./lua-crypt.c)
 

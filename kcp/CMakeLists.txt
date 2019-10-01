@@ -1,4 +1,4 @@
-﻿project(kcp)
+﻿
 aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST ./test.cpp)
 message(STATUS ${SRC_LIST})

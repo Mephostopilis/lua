@@ -1,7 +1,7 @@
-﻿project(lpeg)
+﻿
 
 file(GLOB LPEG_H *.h)
-aux_source_directory(. LPEG_C)
+file(GLOB LPEG_C *.c)
 
 include_directories(../lua/src)
 

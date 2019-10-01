@@ -1,4 +1,4 @@
-﻿project(timer)
+﻿
 
 SET(TIMER_C ./timer.c)
 
