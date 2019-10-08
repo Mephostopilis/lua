@@ -1,5 +1,4 @@
 ﻿
-
 set(XLOGGERD_HOST_CORE
 	lua-host.c 
 	xlog.h

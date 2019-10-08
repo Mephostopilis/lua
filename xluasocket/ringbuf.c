@@ -15,9 +15,9 @@
 
 #include "ringbuf.h"
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #if defined(_MSC_VER)
+#include <WinSock2.h>
 #include <math.h>
 #define MIN min
 #else
@@ -51,7 +51,6 @@ struct ringbuf {
     char* buf;
     char *head, *tail;
     size_t size;
-    int p, q;
 };
 
 /*
@@ -93,8 +92,8 @@ ringbuf_t*
 ringbuf_new(size_t capacity)
 {
     ringbuf_t* rb = MALLOC(sizeof(struct ringbuf));
-    memset(rb, 0, sizeof(struct ringbuf));
     if (rb) {
+
         /* One byte is used for detecting the full condition. */
         rb->size = capacity + 1;
         size_t realsize = capacity * 2 + 1;
@@ -115,15 +114,15 @@ ringbuf_buffer_size(const ringbuf_t* rb)
     return rb->size;
 }
 
+void ringbuf_reset(ringbuf_t* rb)
+{
+    rb->head = rb->tail = rb->buf;
+}
+
 void ringbuf_free(ringbuf_t* rb)
 {
     FREE(rb->buf);
     FREE(rb);
-}
-
-void ringbuf_reset(ringbuf_t* rb)
-{
-    rb->head = rb->tail = rb->buf;
 }
 
 size_t
@@ -160,11 +159,6 @@ bool ringbuf_is_empty(const ringbuf_t* rb)
     return (ringbuf_bytes_free(rb) == ringbuf_capacity(rb)) ? true : false;
 }
 
-void ringbuf_statics(const ringbuf_t* rb)
-{
-    fprintf(stderr, "p => %d, q=> %d\n", rb->p, rb->q);
-}
-
 /*
  * Given a ring buffer rb and a pointer to a location within its
  * contiguous buffer, return the a pointer to the next logical
@@ -179,7 +173,9 @@ ringbuf_nextp(ringbuf_t* rb, const char* p)
 	 * portable.
 	 */
     assert((p >= rb->buf) && (p < ringbuf_end(rb)));
-    return rb->buf + ((++p - rb->buf) % ringbuf_buffer_size(rb));
+    int pn = ((++p - rb->buf) % rb->size);
+    assert(pn >= 0 && pn < rb->size);
+    return rb->buf + pn;
 }
 
 size_t
@@ -230,29 +226,28 @@ ringbuf_memset(ringbuf_t* dst, int c, size_t len)
     return nwritten;
 }
 
-int ringbuf_memcpy_buffer(ringbuf_t* rb, const char* src, size_t count)
+int ringbuf_memcpy_buffer(ringbuf_t* dst, const char* src, size_t count)
 {
-    const char* p = src;
-    const char* bufend = ringbuf_end(rb);
-    if (count > ringbuf_bytes_free(rb)) {
-        if (ringbuf_ext(rb)) {
+    while (count > ringbuf_bytes_free(dst)) {
+        if (ringbuf_ext(dst)) {
             return RINGBUF_MEMERR;
         }
     }
+    const char* p = src;
+    const char* bufend = ringbuf_end(dst);
     size_t nread = 0;
     while (nread < count) {
         /* don't copy beyond the end of the buffer */
-        assert(bufend > rb->head);
-        size_t n = MIN(bufend - rb->head, count - nread);
-        memcpy(rb->head, p + nread, n);
-        rb->head += n;
+        assert(bufend > dst->head);
+        size_t n = MIN(bufend - dst->head, count - nread);
+        memcpy(dst->head, p + nread, n);
+        dst->head += n;
         nread += n;
 
         /* wrap? */
-        if (rb->head == bufend)
-            rb->head = rb->buf;
+        if (dst->head == bufend)
+            dst->head = dst->buf;
     }
-    rb->p += nread;
     return RINGBUF_OK;
 }
 
@@ -348,8 +343,10 @@ ringbuf_read_fd_dagram(ringbuf_t* rb, int fd, size_t hint_max, struct sockaddr* 
 
 int ringbuf_memcpy_string(ringbuf_t* rb, const char* src, size_t count)
 {
-    if (ringbuf_bytes_free(rb) < count + 2) {
-        ringbuf_ext(rb); // 可能错误
+    while (ringbuf_bytes_free(rb) < count + 2) {
+        if (ringbuf_ext(rb)) {
+            return RINGBUF_MEMERR;
+        }
     }
     assert(ringbuf_memcpy_int16(rb, count) == RINGBUF_OK);
     const char* end = ringbuf_end(rb);
@@ -359,14 +356,15 @@ int ringbuf_memcpy_string(ringbuf_t* rb, const char* src, size_t count)
         memcpy(rb->buf, src + n, src - n);
     }
     rb->head = rb->buf + (((rb->head - rb->buf) + count) % rb->size);
-    rb->p += count + 2;
     return RINGBUF_OK;
 }
 
 int ringbuf_memcpy_line(ringbuf_t* rb, const char* buf, size_t size)
 {
-    if (ringbuf_bytes_free(rb) < size + 1) {
-        ringbuf_ext(rb);
+    while (ringbuf_bytes_free(rb) < size + 1) {
+        if (ringbuf_ext(rb)) {
+            return RINGBUF_MEMERR;
+        }
     }
     const char* end = ringbuf_end(rb);
     int n = MIN(end - rb->head, size);
@@ -378,15 +376,16 @@ int ringbuf_memcpy_line(ringbuf_t* rb, const char* buf, size_t size)
     assert(rb->head >= rb->buf && rb->head < end);
     rb->head[0] = '\n';
     rb->head = ringbuf_nextp(rb, rb->head);
-    rb->p += size + 1;
     return RINGBUF_OK;
 }
 
 int ringbuf_memcpy_int32(ringbuf_t* rb, int32_t val)
 {
     int len = 4;
-    if (ringbuf_bytes_free(rb) < len) {
-        ringbuf_ext(rb);
+    while (ringbuf_bytes_free(rb) < len) {
+        if (ringbuf_ext(rb)) {
+            return RINGBUF_MEMERR;
+        }
     }
     if (CheckEnd()) { // bd
         for (size_t i = 0; i < len; i++) {
@@ -407,8 +406,10 @@ int ringbuf_memcpy_int32(ringbuf_t* rb, int32_t val)
 int ringbuf_memcpy_int16(ringbuf_t* rb, int16_t val)
 {
     int len = 2;
-    if (ringbuf_bytes_free(rb) < 2) {
-        ringbuf_ext(rb);
+    while (ringbuf_bytes_free(rb) < 2) {
+        if (ringbuf_ext(rb)) {
+            return RINGBUF_MEMERR;
+        }
     }
     if (CheckEnd()) { // bd
         for (size_t i = 0; i < len; i++) {
@@ -480,32 +481,53 @@ ringbuf_write_fd(int fd, ringbuf_t* rb)
 
 int ringbuf_get_string(char** out, size_t* size, ringbuf_t* rb)
 {
-    if (ringbuf_bytes_used(rb) < 2) {
-        fprintf(stderr, "ringbuf get string err not enough.\n");
-        return RINGBUF_ERR;
+    size_t oused = ringbuf_bytes_used(rb);
+    if (oused < 2) {
+        return RINGBUF_NOTENOUGH;
     }
-    int16_t count = 0;
-    int err = ringbuf_try_get_int16(&count, rb);
-    if (err != RINGBUF_OK) {
+    uint16_t count = 0;
+    int err = RINGBUF_OK;
+    if (err = ringbuf_try_get_int16(&count, rb)) {
         return err;
     }
-    if (ringbuf_bytes_used(rb) >= count + 2) {
-        ringbuf_get_int16(&count, rb);
+    union ss {
+        short int i;
+        char c[2];
+    } u;
+    u.c[0] = rb->tail[0];
+    u.c[1] = rb->tail[1];
+    if (rb->tail + 1 == ringbuf_end(rb)) {
+        u.c[1] = rb->buf[0];
+    }
+    uint16_t nsz = ntohs(u.i);
+    count = nsz;
+    assert(nsz == count);
+    assert(count >= 0);
+    size_t nused = ringbuf_bytes_used(rb);
+    assert(oused == nused);
+    if (nused >= count + 2) {
+        int16_t t;
+        ringbuf_get_int16(&t, rb);
         if (rb->head >= rb->tail) {
             *out = rb->tail;
             *size = count;
             rb->tail += count;
-            rb->q += count + 2;
             return RINGBUF_OK;
         } else {
-            int n = ((rb->tail - rb->buf) + count) % rb->size;
-            const uint8_t* end = ringbuf_end(rb);
-            memcpy(end, rb->buf, n);
-            *out = rb->tail;
-            *size = count;
-            rb->tail = rb->buf + n;
-            rb->q += count + 2;
-            return RINGBUF_OK;
+            const char* bufend = ringbuf_end(rb);
+            if (bufend - rb->tail > count) {
+                *out = rb->tail;
+                *size = count;
+                rb->tail += count;
+                return RINGBUF_OK;
+            } else {
+                int n = (count - (bufend - rb->tail)) % rb->size;
+                memcpy(bufend, rb->buf, n);
+                *out = rb->tail;
+                *size = count;
+                rb->tail = rb->buf + n;
+                return RINGBUF_OK;
+            }
         }
     }
     return RINGBUF_ERR;
@@ -523,7 +545,6 @@ int ringbuf_get_line(char** out, size_t* size, ringbuf_t* rb)
                 *out = rb->tail;
                 rb->tail[ofs] = '\0';
                 rb->tail += ofs + 1;
-                rb->q += ofs + 1;
                 return RINGBUF_OK;
             } else {
                 int n = (rb->tail - rb->buf + ofs) % rb->size;
@@ -534,7 +555,6 @@ int ringbuf_get_line(char** out, size_t* size, ringbuf_t* rb)
                 rb->tail = rb->buf + n + 1;
                 if (rb->tail == end)
                     rb->tail = rb->buf;
-                rb->q += ofs + 1;
                 return RINGBUF_OK;
             }
         }
@@ -596,12 +616,15 @@ int ringbuf_try_get_int16(int16_t* out, ringbuf_t* rb)
 {
     int16_t n = 0;
     char* p = rb->tail;
-    int len = 2;
+    size_t len = 2;
     if (ringbuf_bytes_used(rb) >= len) {
         if (!CheckEnd()) { // 低位字节存高位,ld
             for (size_t i = 0; i < len; i++) {
                 n |= (*p << ((len - i - 1) * 8)) & 0xffffffff;
-                p = ringbuf_nextp(rb, p);
+                p++;
+                if (p >= ringbuf_end(rb)) {
+                    p = rb->buf;
+                }
             }
         } else {
             for (size_t i = 0; i < len; i++) {

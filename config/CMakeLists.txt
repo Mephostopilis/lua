@@ -15,8 +15,8 @@ SET( CONFIG_C
 )
 
 add_library(config SHARED ${CONFIG_H} ${CONFIG_C})
-set_target_properties(config PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(config PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+#set_target_properties(config PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+#set_target_properties(config PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
 target_include_directories(config PRIVATE ../lua/src)
 if (MSVC)
 add_compile_options(config PRIVATE LUA_BUILD_AS_DLL)

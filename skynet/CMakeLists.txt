@@ -1,6 +1,6 @@
 ﻿
 
-SET(SKYNET_C ./lsha1.c ./lua-crypt.c)
+set(SKYNET_C ./lsha1.c ./lua-crypt.c)
 
 include_directories(../lua/src)
 

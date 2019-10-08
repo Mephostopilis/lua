@@ -21,7 +21,7 @@ CheckEnd()
 {
     int i = 0x12345678;
     char* c = (char*)&i;
-    return (*c == 0x12);
+    return (*c == 0x12); // bd
 }
 
 static int
@@ -136,10 +136,13 @@ ReadInt16(char* ptr, int ofs, int16_t* val)
         *val |= ptr[ofs + 1] >> 8;
         return ofs + 2;
     } else {
-        int len = 2;
+        size_t len = 2;
         int16_t res = 0;
         for (size_t i = 0; i < len; i++) {
-            res |= ptr[ofs + i] << (8 * i);
+            const char* p = ptr + ofs + i;
+            int16_t t = *p;
+            t = (t << ((len - i - 1) * 8)) & 0xffffffff;
+            res |= t;
         }
         *val = res;
         return (ofs + len);

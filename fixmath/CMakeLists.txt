@@ -298,23 +298,6 @@ set (GNULIBFIXMATH_CORE
 
 set (MATH3D_CORE ./math3d/fixedptmath3d.h ./math3d/lua-fixedptmath.c)
 
-macro(source_group_by_dir proj_dir source_files)
-    if(MSVC OR APPLE)
-        get_filename_component(sgbd_cur_dir ${proj_dir} ABSOLUTE)
-        foreach(sgbd_file ${${source_files}})
-			get_filename_component(sgbd_abs_file ${sgbd_file} ABSOLUTE)
-            file(RELATIVE_PATH sgbd_fpath ${sgbd_cur_dir} ${sgbd_abs_file})
-            string(REGEX REPLACE "\(.*\)/.*" \\1 sgbd_group_name ${sgbd_fpath})
-            string(COMPARE EQUAL ${sgbd_fpath} ${sgbd_group_name} sgbd_nogroup)
-            string(REPLACE "/" "\\" sgbd_group_name ${sgbd_group_name})
-            if(sgbd_nogroup)
-                set(sgbd_group_name "\\")
-            endif(sgbd_nogroup)
-            source_group(${sgbd_group_name} FILES ${sgbd_file})
-        endforeach(sgbd_file)
-    endif(MSVC OR APPLE)
-endmacro(source_group_by_dir)
-
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} REACTPHYSICS3D_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCE_CORE)
 source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} BOUNCELITE_CORE)
@@ -327,16 +310,5 @@ add_library(fixmath SHARED ${REACTPHYSICS3D_CORE} ${LIBFIXEDPTMATH_CORE})
 #target_compile_definitions(fixmath PRIVATE RP_NO_FIXMATH)
 #target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
 target_compile_definitions(fixmath PRIVATE B3_DEBUG_R32)
-set_target_properties(fixmath
-    PROPERTIES
-    PREFIX ""
-	RUNTIME_OUTPUT_DIRECTORY ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../xluatest
-	ARCHIVE_OUTPUT_DIRECTORY ../../xluatest
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../xluatest
-	LIBRARY_OUTPUT_DIRECTORY ../../xluatest
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-)
+set_target_properties(fixmath PROPERTIES PREFIX "")
 target_link_libraries(fixmath ws2_32 ../../xluatest/liblua)

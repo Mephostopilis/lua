@@ -24,6 +24,7 @@ SET(XLUASOCKET_H
 	spinlock.h
 	util.h
 	xluaconf.h
+	zmalloc.h
 )
 IF(UNIX)
 set(XLUASOCKET_H socket_epoll.h)

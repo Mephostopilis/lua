@@ -27,4 +27,4 @@ if (MSVC)
 endif (MSVC)
 target_link_libraries(socket ../../xluatest/liblua)
 
-ADD_DEPENDENCIES(socket liblua)
+add_dependencies(socket liblua)

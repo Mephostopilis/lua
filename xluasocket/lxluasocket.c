@@ -15,6 +15,7 @@
 #include <lua.h>
 
 #include <assert.h>
+#include <netinet/in.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -112,34 +113,48 @@ on_handle_msg(lua_State* L, struct xluasocket_message* msg)
         ringbuf_t* rb = lua_touserdata(L, -1);
         lua_pop(L, 3);
 
-        size_t used = ringbuf_bytes_used(rb);
+        size_t oused = ringbuf_bytes_used(rb);
         if (ringbuf_memcpy_buffer(rb, msg->buffer, msg->ud)) {
             fprintf(stderr, "ringbuf memcpy buffer err.\n");
             goto handle_data_error;
         }
-        //ringbuf_statics(rb);
+        size_t nused = ringbuf_bytes_used(rb);
+        assert(oused + msg->ud == nused);
+
+        if (t == HEADER_TYPE_PG) {
+            /*fprintf(stderr, "ringbuf [recv][%d]\n", msg->ud);
+            int16_t sz = 0;
+            int16_t az = 0;
+            int16_t tz = 0;
+            int16_t xz = 0;
+            ReadInt16(msg->buffer, 0, &sz);
+            ringbuf_try_get_int16(&tz, rb);
+            ringbuf_try_get_int16(&xz, rb);
+            union ss {
+                short int i;
+                char c[2];
+            } u;
+            u.c[0] = msg->buffer[0];
+            u.c[1] = msg->buffer[1];
+            az = ntohs(u.i);
+            assert(sz == tz);*/
+        }
         for (size_t i = 0; i < MAX_SLICEPACK_NUM; i++) {
             if (ringbuf_is_empty(rb)) {
                 break;
             }
+            //fprintf(stderr, "ringbuf [cap = %d][free = %d]\n", ringbuf_capacity(rb), ringbuf_bytes_free(rb));
             char* buffer = NULL;
             int sz = 0;
             if (t == HEADER_TYPE_LINE) {
                 if (ringbuf_get_line(&buffer, &sz, rb)) {
-                    //ringbuf_statics(rb);
+                    
                     goto handle_data_error;
                 }
             } else if (t == HEADER_TYPE_PG) {
                 if (ringbuf_get_string(&buffer, &sz, rb)) {
-                    //ringbuf_statics(rb);
                     goto handle_data_error;
                 }
-                // test
-                /*ringbuf_statics(rb);
-				ARRAY(char, testm, sz + 1);
-				memset(testm, 0, sz + 1);
-				memcpy(testm, buffer, sz);
-				fprintf(stderr, "ringbuf [%s][%d]\n", testm, sz);*/
             }
             if (buffer != NULL && sz > 0) {
                 lua_getglobal(L, "xluasocket");
@@ -393,7 +408,7 @@ llisten(lua_State* L)
 {
     size_t sz;
     const char* addr = luaL_checklstring(L, 1, &sz);
-    uint16_t port = luaL_checkinteger(L, 2);
+    lua_Integer port = luaL_checkinteger(L, 2);
     int id = socket_server_listen(ss, L, addr, port, 0);
     lua_pushinteger(L, id);
     return 1;

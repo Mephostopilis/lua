@@ -4,9 +4,6 @@ local log = require "log"
 local table_dump = require "luaTableDump"
 
 local function run()
-	-- body
-	-- begain to connect
-
 	network.Startup()
 	local username = "12311"
 	local password = "Password"
@@ -38,7 +35,7 @@ local function run()
 	}
 	local resp = {
 		handshake = function(responseObj)
-			-- log.error("[handshake] ===> %s", table_dump(responseObj))
+			log.error("[handshake] ===> %s", table_dump(responseObj))
 		end,
 		enter = function(responseObj)
 			log.error("[enter] ===> %s", table_dump(responseObj))
@@ -98,6 +95,10 @@ local function run()
 		if obj == network then
 			if message == "timeout" then
 				local client = network.GetSo(c)
+				if not client then
+					log.error("disconnect")
+					break
+				end
 				client:send_request("handshake")
 				timer.timeout(network, "timeout", TI)
 				count = count + 1
