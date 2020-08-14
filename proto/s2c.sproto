@@ -1,0 +1,336 @@
+.package {
+	type 0 : integer
+	session 1 : integer
+    index 2 : integer
+    version 3 : integer
+}
+
+.card {
+    pos   0 : integer
+    value 1 : integer
+}
+
+# 背包
+.item {
+    id  0 : integer
+    num 1 : integer
+}
+
+####################################### 
+# 邮件
+.mail {
+    id       0 : integer
+    from     1 : integer
+    to       2 : integer
+    title    3 : string
+    content  4 : string
+    viewed   5 : integer
+    datetime 6 : integer
+}
+
+.outbox {
+    all 0 : *mail
+}
+
+.record {
+    id            0 : integer
+    datetime      1 : integer
+    player1       2 : string
+    player2       3 : string
+    player3       4 : string
+    player4       5 : string
+}
+
+.func {
+    id   0 : integer
+    open 1 : integer
+}
+
+.hero {
+    id 0 : integer
+    level 1 : integer
+}
+
+.rank_power_item {
+    id 0 : integer
+    uid 1 : integer
+    power 2 : integer
+}
+
+.taskdaily {
+    id 0 : integer
+    finished 1 : integer
+}
+
+.base_info {
+    num      0 : integer
+    nickname 1 : string
+    nameid 2 : string
+    rcard 3 : integer
+    level 4 : integer
+}
+
+.team {
+    id 0 : integer
+    name 1 : string
+}
+
+.store_item {
+    id 0 : integer
+}
+
+.achievement {
+    id 0 : integer
+}
+.op {
+	session 0 : integer
+    opcode 1 : integer
+}
+
+####################################### 
+# 一般模块 [1, 100)
+handshake 1 {
+    response {
+        errorcode 0 : integer
+    }
+}
+
+logout 2 {
+    request {
+        subid 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+online 3 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+offline 4 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+
+
+####################################### 
+# 系统模块 [100, 500)
+base_info 101 {
+    request {
+        info 0 : base_info
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+radio 102 {
+    request {
+        board     0 : string
+        adver     1 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+new_name 103 {
+    request {
+        nickname  0 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 背包模块 [150, 200)
+package_info 150 {
+    request {
+        common 0 : *item
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+add_item 151 {
+    request {
+        i 0 : item
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+sub_item 152 {
+    request {
+        i 0 : item
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+update_item 153 {
+    request {
+        i 0 : item
+    }
+}
+
+####################################### 
+# 聊天模块 [200, 250)
+rchat 200 {
+    request {
+        idx       0 : integer
+        type      1 : integer
+        textid    2 : integer
+        sdsteam   3 : string
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 房间模块 [250, 300)
+room_info 250 {
+    request {
+        isCreated 0 : boolean
+        joined    1 : boolean
+        roomid    2 : integer
+        type      3 : integer    # 此房间的类型
+        mode      4 : integer    # 此房间的模式
+    }
+}
+
+match 251 {
+    request {
+        id 0 : integer
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 邮件模块 [300, 350)
+inbox 300 {
+    request {
+        list      0 : *mail
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 每日签到模块 [350, 400)
+checkins 350 {
+    request {
+        
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 记录模块 [400, 450)
+records 400 {
+    request {
+        list      0 : *record
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 成就模块 [450, 500)
+player_achievement 450 {
+    request {
+        item 0: achievement
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+player_achievements 451 {
+    request {
+        list 0: *achievement
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 功能模块 [500, 550)
+player_funcs 500 {
+    request {
+        list 0 : *func
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 英雄模块 [550, 600)
+player_heros 550 {
+    request {
+        list 0 : *hero
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+add_hero 551 {
+    request {
+        hero 0 : hero
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
+
+####################################### 
+# 好友模块 [600, 650)
+player_friends 600 {
+    request {
+    }
+}
+
+####################################### 
+# 排行榜模块 [650, 700)
+
+####################################### 
+# 战队模块 [750, 800)
+
+####################################### 
+# 商店模块 [800, 850)
+
+####################################### 
+# 球球模块 [10000, 20000)
+opcode 10000 {
+    request {
+        ops 0 : *op
+    }
+    response {
+        errorcode 0 : integer
+    }
+}
