@@ -30,7 +30,7 @@ if(UNIX)
 		target_link_libraries(navigation )
 	endif()
 else()
-	target_link_libraries(navigation ../../xluatest/liblua)
+	target_link_libraries(navigation ../../liblua)
 	ADD_DEPENDENCIES(navigation liblua)
 endif()
 

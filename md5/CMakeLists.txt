@@ -14,5 +14,3 @@ set_target_properties(md5 PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luacli
 set_target_properties(md5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 target_link_libraries(md5 ../../liblua)
 ADD_DEPENDENCIES(md5 liblua)
-
-#set(BUILD_USE_64BITS on)
