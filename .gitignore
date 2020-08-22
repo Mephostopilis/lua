@@ -57,7 +57,7 @@ xluatest/*.exp
 xluatest/*.ilk
 xluatest/*.pdb
 xluatest/*.lib
-luaclib
-lua*
-liblua*
+luaclib/*
+lua.*
+liblua.*
 
