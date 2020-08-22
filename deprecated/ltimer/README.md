@@ -1,2 +1,0 @@
-# ltimer
-lua timer library
