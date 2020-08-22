@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+#include "Win32_Interop/Win32_Extras.h"
+
 #include <Wininet.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
@@ -23,6 +25,10 @@
 #ifndef ssize_t
 #define ssize_t intptr_t
 #endif // !
+
+#ifdef near
+#undef near
+#endif // near
 
 #endif
 

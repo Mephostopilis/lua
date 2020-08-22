@@ -30,11 +30,7 @@
 #define XLUASOCKET_TYPE_UDP 6
 #define XLUASOCKET_TYPE_WARNING 7
 
-#define MAX_SENDPACK_NUM (10)
-#define MAX_RECVPACK_NUM (4)
-#define MAX_SLICEPACK_NUM (20)
-
-#define RINGBUF_CAP (256)
+#define MAX_RECVPACK_NUM 10
 
 #define THREADS 1
 static bool inited = false;
@@ -67,15 +63,14 @@ soi_free(void* ptr) {}
 static void
 on_handle_msg(lua_State* L, struct xluasocket_message* msg)
 {
+    lua_getglobal(L, "xluasocket");
+    luaL_checktype(L, -1, LUA_TFUNCTION);
     switch (msg->type) {
     case XLUASOCKET_TYPE_DATA: {
-        lua_getglobal(L, "xluasocket");
-        luaL_checktype(L, -1, LUA_TFUNCTION);
         lua_pushinteger(L, msg->type);
         lua_pushinteger(L, msg->id);
-        lua_pushinteger(L, msg->ud);
         lua_pushlstring(L, msg->buffer, msg->ud);
-        if (lua_pcall(L, 4, 0, 0) == 0) {
+        if (lua_pcall(L, 3, 0, 0) == 0) {
         }
         FREE(msg->buffer);
         break;
@@ -83,9 +78,6 @@ on_handle_msg(lua_State* L, struct xluasocket_message* msg)
     case XLUASOCKET_TYPE_ERROR:
     case XLUASOCKET_TYPE_CONNECT:
     case XLUASOCKET_TYPE_ACCEPT: {
-        lua_getglobal(L, "xluasocket");
-        lua_rawgetp(L, -1, ss);
-        luaL_checktype(L, -1, LUA_TFUNCTION);
         lua_pushinteger(L, msg->type);
         lua_pushinteger(L, msg->id);
         lua_pushinteger(L, msg->ud);
@@ -93,15 +85,14 @@ on_handle_msg(lua_State* L, struct xluasocket_message* msg)
         lua_pcall(L, 4, 0, 0);
         break;
     }
-    default:
-        lua_getglobal(L, "xluasocket");
-        lua_rawgetp(L, -1, ss);
-        luaL_checktype(L, -1, LUA_TFUNCTION);
+    case XLUASOCKET_TYPE_CLOSE:
         lua_pushinteger(L, msg->type);
         lua_pushinteger(L, msg->id);
         lua_pushinteger(L, msg->ud);
         lua_pcall(L, 3, 0, 0);
         break;
+    default:
+        luaL_error(L, "not support type.");
     }
 }
 
@@ -172,9 +163,6 @@ xluasocket_poll()
         fprintf(stderr, "Unknown socket message type %d.\n", type);
         return -1;
     }
-    if (more) {
-        return -1;
-    }
     return 1;
 }
 
@@ -187,13 +175,15 @@ co(void* p)
         skynet_updatetime();
         socket_server_updatetime(ss, skynet_now());
 
-        int r = xluasocket_poll();
-        if (r == 0) {
+        int err = xluasocket_poll();
+        if (err == 0) {
             fprintf(stderr, "scoket server EXIT\n");
             break;
         }
-        if (r < 0) {
+        if (err < 0) {
             // 出错了
+            fprintf(stderr, "scoket server err: %d\n", err);
+            break;
         }
         // 有消息
     }
@@ -231,10 +221,6 @@ lnew(lua_State* L)
     soi.free = soi_free;
     socket_server_userobject(ss, &soi);
 
-    lua_pushvalue(L, 1);
-    lua_rawsetp(L, -2, ss);
-    lua_pop(L, 1);
-
     int i = 0;
     for (i = 0; i < THREADS; i++) {
         t[i].func = co;
@@ -259,7 +245,7 @@ lfree(lua_State* L)
     // release mq
     mq_release(q);
     // release rb
-
+    inited = false;
     return 0;
 }
 
@@ -271,9 +257,13 @@ lpoll(lua_State* L)
         if (msg != NULL) {
             on_handle_msg(L, msg);
             FREE(msg);
+        } else {
+            lua_pushinteger(L, 1);
+            return 1;
         }
     }
-    return 0;
+    lua_pushinteger(L, 0);
+    return 1;
 }
 
 static int
@@ -281,9 +271,7 @@ lexit(lua_State* L)
 {
     socket_server_exit(ss);
     // 等待完成
-
     thread_join(t, THREADS);
-    inited = false;
     return 0;
 }
 
@@ -371,7 +359,7 @@ lsend(lua_State* L)
 static int
 lkeepalive(lua_State* L)
 {
-    luaL_error(L, "error.");
+    luaL_error(L, "error, not support.");
     lua_Integer id = luaL_checkinteger(L, 1);
     // struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
     // struct lua_socket * so = (struct lua_socket*)lua_touserdata(L, 2);
