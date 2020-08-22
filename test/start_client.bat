@@ -1,1 +1,0 @@
-lua.exe ./test/test_client.lua
