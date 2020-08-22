@@ -17,7 +17,6 @@
 #include <assert.h>
 #include <string.h>
 #if defined(_MSC_VER)
-#include <WinSock2.h>
 #include <math.h>
 #define MIN min
 #else
@@ -46,12 +45,6 @@ CheckEnd()
  * in your own projects, once you're comfortable that it functions as
  * intended.
  */
-
-struct ringbuf {
-    char* buf;
-    char *head, *tail;
-    size_t size;
-};
 
 /*
 * Return a pointer to one-past-the-end of the ring buffer's
@@ -88,12 +81,9 @@ ringbuf_ext(ringbuf_t* rb)
     return RINGBUF_MEMERR;
 }
 
-ringbuf_t*
-ringbuf_new(size_t capacity)
+int ringbuf_init(ringbuf_t* rb, size_t capacity)
 {
-    ringbuf_t* rb = MALLOC(sizeof(struct ringbuf));
     if (rb) {
-
         /* One byte is used for detecting the full condition. */
         rb->size = capacity + 1;
         size_t realsize = capacity * 2 + 1;
@@ -122,7 +112,6 @@ void ringbuf_reset(ringbuf_t* rb)
 void ringbuf_free(ringbuf_t* rb)
 {
     FREE(rb->buf);
-    FREE(rb);
 }
 
 size_t
@@ -491,17 +480,15 @@ int ringbuf_get_string(char** out, size_t* size, ringbuf_t* rb)
         return err;
     }
     union ss {
-        short int i;
+        uint16_t i;
         char c[2];
     } u;
-    u.c[0] = rb->tail[0];
-    u.c[1] = rb->tail[1];
+    u.c[0] = rb->tail[1];
+    u.c[1] = rb->tail[0];
     if (rb->tail + 1 == ringbuf_end(rb)) {
         u.c[1] = rb->buf[0];
     }
-    uint16_t nsz = ntohs(u.i);
-    count = nsz;
-    assert(nsz == count);
+    assert(u.i == count);
     assert(count >= 0);
     size_t nused = ringbuf_bytes_used(rb);
     assert(oused == nused);

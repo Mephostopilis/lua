@@ -1,5 +1,5 @@
-﻿SET(MTRAND_H ./mt_rand.h)
-SET(MTRAND_C ./mt_rand.c ./lua-mtrand.c)
+﻿
+SET(MTRAND_C ./mt_rand.c)
 
 include_directories(.)
 include_directories(../lua/src)
@@ -9,7 +9,7 @@ IF(MSVC)
 #ADD_DEFINITIONS(-DNOUSE_JEMALLOC -DHAVE_STRUCT_TIMESPEC -DUSE_PTHREAD_LOCK)
 ENDIF()
 
-add_library(mtrand SHARED ${MTRAND_H} ${MTRAND_C})
+add_library(mtrand SHARED  ${MTRAND_C})
 set_target_properties(mtrand PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 set_target_properties(mtrand PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 target_link_libraries(mtrand ../../liblua)

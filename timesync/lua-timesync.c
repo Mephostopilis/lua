@@ -3,53 +3,52 @@
 #define LUA_LIB
 #endif // !ANDROID
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <lua.h>
 #include <lauxlib.h>
+#include <lua.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "platform.h"
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-#include <unistd.h>
 #include <sys/time.h>
-#
-#if defined(_WIN32) || defined(_WIN64)
+#include <unistd.h>
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 #include <Windows.h>
 #include <time.h>
-#else
-
 #endif
 
-struct time
-{
-	uint64_t start_time;
-	int time_elapse;   // init -1, the time elapse from first time sync
-	int time_shift;	   // shift time from first time sync, (local timer may faster or slower than global timer)
-	int time_sync;	   // sync time (in local time)
-	int estimate_from; // estimate global time [from , to] .
-	int estimate_to;
+#include "array.h"
+#include "protoc.h"
+
+struct time {
+    uint64_t start_time;
+    int time_elapse; // init -1, the time elapse from first time sync
+    int time_shift; // shift time from first time sync, (local timer may faster or slower than global timer)
+    int time_sync; // sync time (in local time)
+    int estimate_from; // estimate global time [from , to] .
+    int estimate_to;
 };
 
 static uint64_t
 gettime()
 {
-	uint64_t t;
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	t = (uint64_t)tv.tv_sec * 100;
-	t += tv.tv_usec / 10000;
-	return t;
+    uint64_t t;
+    /* struct timeval tv;
+    gettimeofday(&tv, NULL);
+    t = (uint64_t)tv.tv_sec * 100;
+    t += tv.tv_usec / 10000;*/
+    return t;
 }
 
 static int
-llocaltime(lua_State *L)
+llocaltime(lua_State* L)
 {
-	struct time *t = lua_touserdata(L, lua_upvalueindex(1));
-	uint64_t ct = gettime();
-	lua_pushinteger(L, ct - t->start_time);
-	return 1;
+    struct time* t = lua_touserdata(L, lua_upvalueindex(1));
+    uint64_t ct = gettime();
+    lua_pushinteger(L, ct - t->start_time);
+    return 1;
 }
 
 /*
@@ -57,112 +56,126 @@ llocaltime(lua_State *L)
 	integer: global time
  */
 static int
-lsync(lua_State *L)
+lsync(lua_State* L)
 {
-	int request_time = luaL_checkinteger(L, 1);
-	int global_time = luaL_checkinteger(L, 2);
-	struct time *t = lua_touserdata(L, lua_upvalueindex(1));
-	uint64_t now = gettime();
-	int local_time = (int)(now - t->start_time);
-	int lag = local_time - request_time;
-	int elapse_from_last_sync = local_time - t->time_sync;
-	if (local_time < request_time)
-	{
-		// invalid sync
-		return 0;
-	}
-	if (t->time_elapse < 0 || elapse_from_last_sync < 0)
-	{
-		// first time sync
-		t->time_elapse = 0;
-		t->time_shift = 0;
-		t->time_sync = local_time;
-		t->estimate_from = global_time;
-		t->estimate_to = global_time + lag;
-	}
-	else
-	{
-		int estimate = global_time + lag / 2;
-		t->estimate_from += elapse_from_last_sync;
-		t->estimate_to += elapse_from_last_sync;
-		int estimate_last = t->estimate_from + (t->estimate_to - t->estimate_from) / 2;
-		t->time_elapse += elapse_from_last_sync;
-		t->time_shift += estimate - estimate_last;
-		t->time_sync = local_time;
-		if (estimate < t->estimate_from || estimate > t->estimate_to)
-		{
-			// estimate time is not in last estimate section, use this section instead
-			t->estimate_from = global_time;
-			t->estimate_to = global_time + lag;
-		}
-		else
-		{
-			if (global_time > t->estimate_from)
-				t->estimate_from = global_time;
-			if (global_time + lag < t->estimate_to)
-				t->estimate_to = global_time + lag;
-		}
-	}
-	lua_pushinteger(L, lag / 2);
-	if (t->time_shift == 0 || t->time_elapse <= 0)
-	{
-		lua_pushinteger(L, 0);
-	}
-	else
-	{
-		lua_pushnumber(L, (double)t->time_shift / t->time_elapse);
-	}
-	return 2;
+    int request_time = luaL_checkinteger(L, 1);
+    int global_time = luaL_checkinteger(L, 2);
+    struct time* t = lua_touserdata(L, lua_upvalueindex(1));
+    uint64_t now = gettime();
+    int local_time = (int)(now - t->start_time);
+    int lag = local_time - request_time;
+    int elapse_from_last_sync = local_time - t->time_sync;
+    if (local_time < request_time) {
+        // invalid sync
+        return 0;
+    }
+    if (t->time_elapse < 0 || elapse_from_last_sync < 0) {
+        // first time sync
+        t->time_elapse = 0;
+        t->time_shift = 0;
+        t->time_sync = local_time;
+        t->estimate_from = global_time;
+        t->estimate_to = global_time + lag;
+    } else {
+        int estimate = global_time + lag / 2;
+        t->estimate_from += elapse_from_last_sync;
+        t->estimate_to += elapse_from_last_sync;
+        int estimate_last = t->estimate_from + (t->estimate_to - t->estimate_from) / 2;
+        t->time_elapse += elapse_from_last_sync;
+        t->time_shift += estimate - estimate_last;
+        t->time_sync = local_time;
+        if (estimate < t->estimate_from || estimate > t->estimate_to) {
+            // estimate time is not in last estimate section, use this section instead
+            t->estimate_from = global_time;
+            t->estimate_to = global_time + lag;
+        } else {
+            if (global_time > t->estimate_from)
+                t->estimate_from = global_time;
+            if (global_time + lag < t->estimate_to)
+                t->estimate_to = global_time + lag;
+        }
+    }
+    lua_pushinteger(L, lag / 2);
+    if (t->time_shift == 0 || t->time_elapse <= 0) {
+        lua_pushinteger(L, 0);
+    } else {
+        lua_pushnumber(L, (double)t->time_shift / t->time_elapse);
+    }
+    return 2;
 }
 
 static int
-lglobaltime(lua_State *L)
+lglobaltime(lua_State* L)
 {
-	struct time *t = lua_touserdata(L, lua_upvalueindex(1));
-	if (t->time_elapse < 0)
-	{
-		return 0;
-	}
-	uint64_t now = gettime();
-	int local_time = (int)(now - t->start_time);
-	int lag = (t->estimate_to - t->estimate_from) / 2;
-	int estimate = t->estimate_from + lag + (local_time - t->time_sync);
-	lua_pushinteger(L, estimate);
-	lua_pushinteger(L, lag);
-	return 2;
+    struct time* t = lua_touserdata(L, lua_upvalueindex(1));
+    if (t->time_elapse < 0) {
+        return 0;
+    }
+    uint64_t now = gettime();
+    int local_time = (int)(now - t->start_time);
+    int lag = (t->estimate_to - t->estimate_from) / 2;
+    int estimate = t->estimate_from + lag + (local_time - t->time_sync);
+    lua_pushinteger(L, estimate);
+    lua_pushinteger(L, lag);
+    return 2;
 }
 
 static void
-init(struct time *t)
+init(struct time* t)
 {
-	memset(t, 0, sizeof(*t));
-	t->start_time = gettime();
-	t->time_elapse = -1;
+    memset(t, 0, sizeof(*t));
+    t->start_time = gettime();
+    t->time_elapse = -1;
 }
 
 // debug use
 static int
-lsleep(lua_State *L)
+lsleep(lua_State* L)
 {
-	int t = luaL_checkinteger(L, 1);
-	usleep(t * 10000);
-	return 0;
+    int t = luaL_checkinteger(L, 1);
+    //usleep(t * 10000);
+    return 0;
 }
 
-int luaopen_timesync(lua_State *L)
+static int
+lpack(lua_State* L)
 {
-	luaL_checkversion(L);
-	luaL_Reg l[] = {
-		{"localtime", llocaltime},
-		{"sync", lsync},
-		{"globaltime", lglobaltime},
-		{"sleep", lsleep},
-		{NULL, NULL},
-	};
-	luaL_newlibtable(L, l);
-	struct time *t = lua_newuserdata(L, sizeof(*t));
-	init(t);
-	luaL_setfuncs(L, l, 1);
+    const char* cmd = luaL_checkstring(L, 1);
+    size_t sz = 0;
+    const char* buf = luaL_checklstring(L, 2, &sz);
+    if (strcmp(cmd, "line") == 0) {
+        ARRAY(char, str, sz + 1);
+        strncpy(str, buf, sz);
+        str[sz] = "\n";
+        lua_pushstring(L, str);
+        return 1;
+    } else if (strcmp(cmd, "pg") == 0) {
+        ARRAY(char, str, sz + 2);
+        WriteInt16(str, 0, sz);
+        memcpy(str + 2, buf, sz);
+        lua_pushstring(L, str);
+        return 1;
+    } else {
+        luaL_error(L, "not supoort other pack");
+    }
+    return 0;
+}
 
-	return 1;
+int luaopen_timesync(lua_State* L)
+{
+    luaL_checkversion(L);
+    luaL_Reg l[] = {
+        { "localtime", llocaltime },
+        { "sync", lsync },
+        { "globaltime", lglobaltime },
+        { "sleep", lsleep },
+        { "pack", lpack },
+        { NULL, NULL },
+    };
+    luaL_newlibtable(L, l);
+    struct time* t = lua_newuserdata(L, sizeof(*t));
+    init(t);
+    luaL_setfuncs(L, l, 1);
+
+    return 1;
 }

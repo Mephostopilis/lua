@@ -1,10 +1,12 @@
-﻿SET(TIMER_C 
+﻿SET(SRC 
 	./lua-timesync.c
 	./lua-pack.c
+	./lua-unpack.c
+	./ringbuf.h
 	./ringbuf.c
 )
 
-add_library(timesync SHARED ${TIMER_C})
+add_library(timesync SHARED ${SRC})
 set_target_properties(timesync PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 set_target_properties(timesync PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 target_link_libraries(timesync ../../liblua)
