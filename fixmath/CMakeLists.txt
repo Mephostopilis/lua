@@ -1,10 +1,10 @@
 ﻿# cmake_minimum_required(VERSION 3.12)
 
-project(fixmath)
 
-include_directories(libfixmath)
-include_directories(..)
+
+include_directories(.)
 include_directories(../lua/src)
+include_directories(libfixmath)
 include_directories(reactphysics3d)
 #include_directories(bounce/include)
 

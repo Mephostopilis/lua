@@ -1,5 +1,4 @@
 ﻿#include "message_queue.h"
-#include "spinlock.h"
 #include "xluaconf.h"
 #include <assert.h>
 

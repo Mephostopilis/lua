@@ -58,8 +58,6 @@
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 #ifndef __MINGW32__
 #pragma warning(disable : 4127)
-#include <Winsock2.h>
-#include <Windows.h>
 #endif
 #endif // CC_PLATFORM_WIN32
 

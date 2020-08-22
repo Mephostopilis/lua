@@ -5,8 +5,9 @@
 
 typedef int poll_fd;
 
-struct event {
-	void * s;
+struct event
+{
+	void *s;
 	bool read;
 	bool write;
 	bool error;
@@ -26,12 +27,12 @@ static void sp_nonblocking(int sock);
 #include "socket_epoll.h"
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined (__NetBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include "socket_kqueue.h"
 #endif
 
 #if defined(_MSC_VER)
-#include "Win32_Interop/win32_cpoll.h"
+#include "cpoll/win32_cpoll.h"
 #endif
 
 #endif

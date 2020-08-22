@@ -1,11 +1,12 @@
-﻿#include "win32_cpoll.h"
+﻿#include "../xluaconf.h"
+
+#include "win32_cpoll.h"
+#include "dict.h"
+#include "util.h"
+#include "zmalloc.h"
 #include "../array.h"
-#include "../dict.h"
 #include "../socket_poll.h"
-#include "../util.h"
-#include "../zmalloc.h"
-#include "Win32_Error.h"
-#include <WinSock2.h>
+#include "../Win32_Interop/Win32_Error.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>

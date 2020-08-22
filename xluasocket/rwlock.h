@@ -4,120 +4,110 @@
 #include "platform.h"
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 
-struct rwlock
-{
-	int write;
-	int read;
+struct rwlock {
+    int write;
+    int read;
 };
 
 static inline void
-rwlock_init(struct rwlock *lock)
+rwlock_init(struct rwlock* lock)
 {
-	lock->write = 0;
-	lock->read = 0;
+    lock->write = 0;
+    lock->read = 0;
 }
 
 static inline void
-rwlock_rlock(struct rwlock *lock)
+rwlock_rlock(struct rwlock* lock)
 {
-	for (;;)
-	{
-		while (lock->write)
-		{
-			__sync_synchronize();
-		}
-		__sync_add_and_fetch(&lock->read, 1);
-		if (lock->write)
-		{
-			__sync_sub_and_fetch(&lock->read, 1);
-		}
-		else
-		{
-			break;
-		}
-	}
+    for (;;) {
+        while (lock->write) {
+            __sync_synchronize();
+        }
+        __sync_add_and_fetch(&lock->read, 1);
+        if (lock->write) {
+            __sync_sub_and_fetch(&lock->read, 1);
+        } else {
+            break;
+        }
+    }
 }
 
 static inline void
-rwlock_wlock(struct rwlock *lock)
+rwlock_wlock(struct rwlock* lock)
 {
-	while (__sync_lock_test_and_set(&lock->write, 1))
-	{
-	}
-	while (lock->read)
-	{
-		__sync_synchronize();
-	}
+    while (__sync_lock_test_and_set(&lock->write, 1)) {
+    }
+    while (lock->read) {
+        __sync_synchronize();
+    }
 }
 
 static inline void
-rwlock_wunlock(struct rwlock *lock)
+rwlock_wunlock(struct rwlock* lock)
 {
-	__sync_lock_release(&lock->write);
+    __sync_lock_release(&lock->write);
 }
 
 static inline void
-rwlock_runlock(struct rwlock *lock)
+rwlock_runlock(struct rwlock* lock)
 {
-	__sync_sub_and_fetch(&lock->read, 1);
+    __sync_sub_and_fetch(&lock->read, 1);
 }
 
-#else
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 
-struct rwlock
-{
-	int write;
-	int read;
+struct rwlock {
+    int write;
+    int read;
 };
 
 static inline void
-rwlock_init(struct rwlock *lock)
+rwlock_init(struct rwlock* lock)
 {
-	lock->write = 0;
-	lock->read = 0;
+    lock->write = 0;
+    lock->read = 0;
 }
 
 static inline void
-rwlock_rlock(struct rwlock *lock)
+rwlock_rlock(struct rwlock* lock)
 {
-	for (;;)
-	{
-		while (lock->write)
-		{
-			atom_sync();
-		}
-		atom_inc(&lock->read);
-		if (lock->write)
-		{
-			atom_dec(&lock->read);
-		}
-		else
-		{
-			break;
-		}
-	}
+    /*for (;;) {
+        while (lock->write) {
+            atom_sync();
+        }
+        atom_inc(&lock->read);
+        if (lock->write) {
+            InterlockedDecrement(&lock->read);
+        } else {
+            break;
+        }
+    }*/
 }
 
 static inline void
-rwlock_wlock(struct rwlock *lock)
+rwlock_wlock(struct rwlock* lock)
 {
-	atom_spinlock(&lock->write);
-	while (lock->read)
-	{
-		atom_sync();
-	}
+    /*atom_spinlock(&lock->write);
+    while (lock->read) {
+        InterlockedDecrement(&lock->read);
+    }*/
 }
 
 static inline void
-rwlock_wunlock(struct rwlock *lock)
+rwlock_wunlock(struct rwlock* lock)
 {
-	atom_spinunlock(&lock->write);
+    /*for (;;) {
+
+    }
+    atom_spinunlock(&lock->write);*/
 }
 
 static inline void
-rwlock_runlock(struct rwlock *lock)
+rwlock_runlock(struct rwlock* lock)
 {
-	atom_dec(&lock->read);
+    InterlockedDecrement(&lock->read);
 }
+
+#endif
 
 #endif

@@ -32,7 +32,7 @@
 #define __ZMALLOC_H
 
 #ifdef _WIN32
-#include "Win32_Interop/Win32_Portability.h"
+#include "../Win32_Interop/Win32_Portability.h"
 #endif
 
 /* Double expansion needed for stringification of macro values. */
