@@ -9,9 +9,9 @@ ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 ENDIF()
 
 add_library(random SHARED ${RANDOM_C})
-set_target_properties(random PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(random PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-target_link_libraries(random ../../xluatest/liblua)
+set_target_properties(random PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+set_target_properties(random PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+target_link_libraries(random ../../liblua)
 ADD_DEPENDENCIES(random liblua)
 
 #ADD_DEPENDENCIES(random bson)
