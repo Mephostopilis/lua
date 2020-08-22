@@ -1,11 +1,5 @@
 ﻿# cmake_minimum_required(VERSION 3.12)
 
-include_directories(../lua/src)
-
-if (MSVC)
-	add_definitions(-DLUA_BUILD_AS_DLL -D_SCL_SECURE_NO_WARNINGS)
-endif (MSVC)
-
 if (CMAKE_COMPILER_IS_GNUCXX)
     set (CMAKE_C_FLAGS "-std=gnu99 -Wall -Wextra -fPIC")
     set (CMAKE_C_FLAGS_DEBUG "-g -O0")
@@ -35,4 +29,8 @@ set_target_properties(signal
 	LIBRARY_OUTPUT_DIRECTORY ../../luaclib
     LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../luaclib
 )
+target_include_directories(signal PUBLIC ../lua/src)
 target_link_libraries(signal ws2_32 ../../liblua)
+if (MSVC)
+	target_compile_definitions(signal PRIVATE LUA_BUILD_AS_DLL _SCL_SECURE_NO_WARNINGS)
+endif (MSVC)

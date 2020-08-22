@@ -28,12 +28,12 @@ source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} XLOGGERD_HOST_CORE)
 
 add_library(xlog SHARED ${XLOGGERD_HOST_CORE})
 set_target_properties(xlog PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-	ARCHIVE_OUTPUT_DIRECTORY ../../xluaclib
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-    LIBRARY_OUTPUT_DIRECTORY ../../xluaclib
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../xluaclib
+	RUNTIME_OUTPUT_DIRECTORY ../../luaclib
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+	ARCHIVE_OUTPUT_DIRECTORY ../../luaclib
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+    LIBRARY_OUTPUT_DIRECTORY ../../luaclib
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../luaclib
 )
 target_link_libraries(xlog ../../xluatest/liblua)
 add_dependencies(xlog liblua)

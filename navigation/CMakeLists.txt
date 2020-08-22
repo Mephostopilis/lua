@@ -19,9 +19,9 @@ if( WIN32 )
 endif()
 
 set_target_properties( navigation PROPERTIES
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-	LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 	
 if(UNIX)
 	if (CMAKE_BUILD_TYPE MATCHES "Release")

@@ -1,6 +1,4 @@
-﻿project(mtrand)
-
-SET(MTRAND_H ./mt_rand.h)
+﻿SET(MTRAND_H ./mt_rand.h)
 SET(MTRAND_C ./mt_rand.c ./lua-mtrand.c)
 
 include_directories(.)
@@ -12,7 +10,7 @@ IF(MSVC)
 ENDIF()
 
 add_library(mtrand SHARED ${MTRAND_H} ${MTRAND_C})
-set_target_properties(mtrand PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(mtrand PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-target_link_libraries(mtrand ../../xluatest/liblua)
-ADD_DEPENDENCIES(mtrand lua)
+set_target_properties(mtrand PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+set_target_properties(mtrand PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+target_link_libraries(mtrand ../../liblua)
+ADD_DEPENDENCIES(mtrand liblua)
