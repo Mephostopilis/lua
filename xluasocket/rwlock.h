@@ -1,135 +1,123 @@
-﻿#ifndef SKYNET_RWLOCK_H
-#define SKYNET_RWLOCK_H
+﻿#ifndef __rwlock_h__
+#define __rwlock_h__
 
-#if defined(_MSC_VER)
+#include "platform.h"
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 
-#include "atomic.h"
-struct rwlock {
+struct rwlock
+{
 	int write;
 	int read;
 };
 
 static inline void
-rwlock_init(struct rwlock *lock) {
+rwlock_init(struct rwlock *lock)
+{
 	lock->write = 0;
 	lock->read = 0;
 }
 
 static inline void
-rwlock_rlock(struct rwlock *lock) {
-	for (;;) {
-		while (lock->write) {
-			atom_sync();
-		}
-		atom_inc(&lock->read);
-		if (lock->write) {
-			atom_dec(&lock->read);
-		} else {
-			break;
-		}
-	}
-}
-
-static inline void
-rwlock_wlock(struct rwlock *lock) {
-	atom_spinlock(&lock->write);
-	while (lock->read) {
-		atom_sync();
-	}
-}
-
-static inline void
-rwlock_wunlock(struct rwlock *lock) {
-	atom_spinunlock(&lock->write);
-}
-
-static inline void
-rwlock_runlock(struct rwlock *lock) {
-	atom_dec(&lock->read);
-}
-
-#else
-#ifndef USE_PTHREAD_LOCK
-struct rwlock {
-	int write;
-	int read;
-};
-
-static inline void
-rwlock_init(struct rwlock *lock) {
-	lock->write = 0;
-	lock->read = 0;
-}
-
-static inline void
-rwlock_rlock(struct rwlock *lock) {
-	for (;;) {
-		while(lock->write) {
+rwlock_rlock(struct rwlock *lock)
+{
+	for (;;)
+	{
+		while (lock->write)
+		{
 			__sync_synchronize();
 		}
-		__sync_add_and_fetch(&lock->read,1);
-		if (lock->write) {
-			__sync_sub_and_fetch(&lock->read,1);
-		} else {
+		__sync_add_and_fetch(&lock->read, 1);
+		if (lock->write)
+		{
+			__sync_sub_and_fetch(&lock->read, 1);
+		}
+		else
+		{
 			break;
 		}
 	}
 }
 
 static inline void
-rwlock_wlock(struct rwlock *lock) {
-	while (__sync_lock_test_and_set(&lock->write,1)) {}
-	while(lock->read) {
+rwlock_wlock(struct rwlock *lock)
+{
+	while (__sync_lock_test_and_set(&lock->write, 1))
+	{
+	}
+	while (lock->read)
+	{
 		__sync_synchronize();
 	}
 }
 
 static inline void
-rwlock_wunlock(struct rwlock *lock) {
+rwlock_wunlock(struct rwlock *lock)
+{
 	__sync_lock_release(&lock->write);
 }
 
 static inline void
-rwlock_runlock(struct rwlock *lock) {
-	__sync_sub_and_fetch(&lock->read,1);
+rwlock_runlock(struct rwlock *lock)
+{
+	__sync_sub_and_fetch(&lock->read, 1);
 }
 
 #else
 
-#include <pthread.h>
-
-// only for some platform doesn't have __sync_*
-// todo: check the result of pthread api
-
-struct rwlock {
-	pthread_rwlock_t lock;
+struct rwlock
+{
+	int write;
+	int read;
 };
 
 static inline void
-rwlock_init(struct rwlock *lock) {
-	pthread_rwlock_init(&lock->lock, NULL);
+rwlock_init(struct rwlock *lock)
+{
+	lock->write = 0;
+	lock->read = 0;
 }
 
 static inline void
-rwlock_rlock(struct rwlock *lock) {
-	 pthread_rwlock_rdlock(&lock->lock);
+rwlock_rlock(struct rwlock *lock)
+{
+	for (;;)
+	{
+		while (lock->write)
+		{
+			atom_sync();
+		}
+		atom_inc(&lock->read);
+		if (lock->write)
+		{
+			atom_dec(&lock->read);
+		}
+		else
+		{
+			break;
+		}
+	}
 }
 
 static inline void
-rwlock_wlock(struct rwlock *lock) {
-	 pthread_rwlock_wrlock(&lock->lock);
+rwlock_wlock(struct rwlock *lock)
+{
+	atom_spinlock(&lock->write);
+	while (lock->read)
+	{
+		atom_sync();
+	}
 }
 
 static inline void
-rwlock_wunlock(struct rwlock *lock) {
-	pthread_rwlock_unlock(&lock->lock);
+rwlock_wunlock(struct rwlock *lock)
+{
+	atom_spinunlock(&lock->write);
 }
 
 static inline void
-rwlock_runlock(struct rwlock *lock) {
-	pthread_rwlock_unlock(&lock->lock);
+rwlock_runlock(struct rwlock *lock)
+{
+	atom_dec(&lock->read);
 }
 
-#endif
-#endif
 #endif

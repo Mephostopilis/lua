@@ -1,7 +1,5 @@
 ﻿
 SET(XLUASOCKET_H
-	posix/dlfcn.h
-	posix/unistd.h
 	Win32_Interop/Win32_APIs.h
 	Win32_Interop/win32_cpoll.h
 	Win32_Interop/Win32_dlfcn.h
@@ -13,8 +11,6 @@ SET(XLUASOCKET_H
 	atomic.h
 	dict.h
 	message_queue.h
-	protoc.h
-	ringbuf.h
 	rwlock.h
 	simplethread.h
 	skynet_timer.h
@@ -31,7 +27,6 @@ set(XLUASOCKET_H socket_epoll.h)
 ENDIF()
 
 SET(XLUASOCKET_C
-	posix/unistd.c
 	Win32_Interop/Win32_APIs.c
 	Win32_Interop/win32_cpoll.c
 	Win32_Interop/Win32_dlfcn.c
@@ -40,11 +35,10 @@ SET(XLUASOCKET_C
 	Win32_Interop/Win32_PThread.c
 	Win32_Interop/Win32_ThreadControl.c
 	Win32_Interop/Win32_Time.c
+	Win32_Interop/Win32_CStd.c
 	dict.c
-	lua-timesync.c
 	lxluasocket.c 
 	message_queue.c
-	ringbuf.c
 	skynet_timer.c
 	socket_server.c
 	util.c

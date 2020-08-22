@@ -10,9 +10,9 @@ ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
 ENDIF()
 
 add_library(md5 SHARED ${MD5_C})
-set_target_properties(md5 PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-set_target_properties(md5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest)
-target_link_libraries(md5 ../../xluatest/liblua)
+set_target_properties(md5 PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+set_target_properties(md5 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+target_link_libraries(md5 ../../liblua)
 ADD_DEPENDENCIES(md5 liblua)
 
 #set(BUILD_USE_64BITS on)

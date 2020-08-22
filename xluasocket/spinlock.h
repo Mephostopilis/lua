@@ -1,146 +1,86 @@
-﻿#ifndef SKYNET_SPINLOCK_H
-#define SKYNET_SPINLOCK_H
+﻿#ifndef __spinlock_h__
+#define __spinlock_h__
 
 #define SPIN_INIT(q) spinlock_init(&(q)->lock);
 #define SPIN_LOCK(q) spinlock_lock(&(q)->lock);
 #define SPIN_UNLOCK(q) spinlock_unlock(&(q)->lock);
 #define SPIN_DESTROY(q) spinlock_destroy(&(q)->lock);
 
-#if defined(_MSC_VER)
-#if defined(USE_CRITICAL_SECTION)
-#include <Windows.h>
-
-struct spinlock {
+#include "platform.h"
+#if #if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+struct spinlock
+{
 	CRITICAL_SECTION lock;
 };
 
 static inline void
-spinlock_init(struct spinlock *lock) {
+spinlock_init(struct spinlock *lock)
+{
 	InitializeCriticalSectionAndSpinCount(&lock->lock, 4000);
 }
 
 static inline void
-spinlock_lock(struct spinlock *lock) {
+spinlock_lock(struct spinlock *lock)
+{
 	EnterCriticalSection(&lock->lock);
 }
 
 static inline int
-spinlock_trylock(struct spinlock *lock) {
+spinlock_trylock(struct spinlock *lock)
+{
 	return TryEnterCriticalSection(&lock->lock);
 }
 
 static inline void
-spinlock_unlock(struct spinlock *lock) {
+spinlock_unlock(struct spinlock *lock)
+{
 	LeaveCriticalSection(&lock->lock);
 }
 
 static inline void
-spinlock_destroy(struct spinlock *lock) {
+spinlock_destroy(struct spinlock *lock)
+{
 	DeleteCriticalSection(&lock->lock);
 }
-#else
-#include <WinSock2.h>
-#include <Windows.h>
-struct spinlock {
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+
+struct spinlock
+{
 	int lock;
 };
 
 static inline void
-spinlock_init(struct spinlock *lock) {
+spinlock_init(struct spinlock *lock)
+{
 	lock->lock = 0;
 }
 
 static inline void
-spinlock_lock(struct spinlock *lock) {
-	while (InterlockedExchange((LONG volatile *)&(lock->lock), 1)) {}
+spinlock_lock(struct spinlock *lock)
+{
+	while (__sync_lock_test_and_set(&lock->lock, 1))
+	{
+	}
 }
 
 static inline int
-spinlock_trylock(struct spinlock *lock) {
-	return InterlockedExchange((LONG volatile *)&(lock->lock), 1) == 0;
+spinlock_trylock(struct spinlock *lock)
+{
+	return __sync_lock_test_and_set(&lock->lock, 1) == 0;
 }
 
 static inline void
-spinlock_unlock(struct spinlock *lock) {
-	InterlockedExchange((LONG volatile *)&(lock->lock), 0);
-}
-
-static inline void
-spinlock_destroy(struct spinlock *lock) {
-	(void)lock;
-}
-#endif
-
-
-#else
-
-#ifndef USE_PTHREAD_LOCK
-
-struct spinlock {
-	int lock;
-};
-
-static inline void
-spinlock_init(struct spinlock *lock) {
-	lock->lock = 0;
-}
-
-static inline void
-spinlock_lock(struct spinlock *lock) {
-	while (__sync_lock_test_and_set(&lock->lock,1)) {}
-}
-
-static inline int
-spinlock_trylock(struct spinlock *lock) {
-	return __sync_lock_test_and_set(&lock->lock,1) == 0;
-}
-
-static inline void
-spinlock_unlock(struct spinlock *lock) {
+spinlock_unlock(struct spinlock *lock)
+{
 	__sync_lock_release(&lock->lock);
 }
 
 static inline void
-spinlock_destroy(struct spinlock *lock) {
-	(void) lock;
-}
-
-#else
-
-#include <pthread.h>
-
-// we use mutex instead of spinlock for some reason
-// you can also replace to pthread_spinlock
-
-struct spinlock {
-	pthread_mutex_t lock;
-};
-
-static inline void
-spinlock_init(struct spinlock *lock) {
-	pthread_mutex_init(&lock->lock, NULL);
-}
-
-static inline void
-spinlock_lock(struct spinlock *lock) {
-	pthread_mutex_lock(&lock->lock);
-}
-
-static inline int
-spinlock_trylock(struct spinlock *lock) {
-	return pthread_mutex_trylock(&lock->lock) == 0;
-}
-
-static inline void
-spinlock_unlock(struct spinlock *lock) {
-	pthread_mutex_unlock(&lock->lock);
-}
-
-static inline void
-spinlock_destroy(struct spinlock *lock) {
-	pthread_mutex_destroy(&lock->lock);
+spinlock_destroy(struct spinlock *lock)
+{
+	(void)lock;
 }
 
 #endif
-#endif
+
 #endif

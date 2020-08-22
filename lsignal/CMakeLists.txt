@@ -15,29 +15,24 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	# message (${CMAKE_CXX_FLAGS})
 endif ()
 
-set (LUAFILESYSTEM_CORE
+set (SIGNAL_CORE
 	./lsignal.c
 	./lsignal.h
 )
 
-source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} LUAFILESYSTEM_CORE)
+source_group_by_dir(${CMAKE_CURRENT_SOURCE_DIR} SIGNAL_CORE)
 
-add_library(signal SHARED ${LUAFILESYSTEM_CORE})
-#target_compile_definitions(fixmath PRIVATE FIXEDPT B3_NO_PROFILE)
-#target_compile_definitions(fixmath PRIVATE B3_NO_FIXMATH)
-#target_compile_definitions(fixmath PRIVATE RP_NO_FIXMATH)
-#target_compile_definitions(fixmath PRIVATE GNUFIXMATH)
-#target_compile_definitions(fixmath PRIVATE B3_DEBUG_R32)
+add_library(signal SHARED ${SIGNAL_CORE})
 set_target_properties(signal
     PROPERTIES
     PREFIX ""
-	RUNTIME_OUTPUT_DIRECTORY ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-	RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../xluatest
-	ARCHIVE_OUTPUT_DIRECTORY ../../xluatest
-	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../xluatest
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../xluatest
-	LIBRARY_OUTPUT_DIRECTORY ../../xluatest
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../xluatest
+	RUNTIME_OUTPUT_DIRECTORY ../../luaclib
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE ../../luaclib
+	ARCHIVE_OUTPUT_DIRECTORY ../../luaclib
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../../luaclib
+	LIBRARY_OUTPUT_DIRECTORY ../../luaclib
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG ../../luaclib
 )
-target_link_libraries(signal ws2_32 ../../xluatest/liblua)
+target_link_libraries(signal ws2_32 ../../liblua)
