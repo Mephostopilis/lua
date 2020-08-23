@@ -23,7 +23,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/luaclib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/luaclib)
 
 add_subdirectory(lua/src)
-#add_subdirectory(ai)
+add_subdirectory(http-parser)
 add_subdirectory(fixmath)
 add_subdirectory(chestnut)
 add_subdirectory(xluasocket)

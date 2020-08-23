@@ -3,21 +3,21 @@
 #define LUA_LIB
 #endif // !ANDROID
 
-#include <lauxlib.h>
-#include <lua.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
 #include "platform.h"
-
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 #include <sys/time.h>
 #include <unistd.h>
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-#include <Windows.h>
+#include "Win32_Interop/Win32_APIs.h"
+#include "Win32_Interop/Win32_Time.h"
 #include <time.h>
 #endif
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <lauxlib.h>
+#include <lua.h>
 
 #include "array.h"
 #include "protoc.h"
@@ -35,10 +35,10 @@ static uint64_t
 gettime()
 {
     uint64_t t;
-    /* struct timeval tv;
+    struct timeval tv;
     gettimeofday(&tv, NULL);
     t = (uint64_t)tv.tv_sec * 100;
-    t += tv.tv_usec / 10000;*/
+    t += tv.tv_usec / 10000;
     return t;
 }
 
@@ -133,7 +133,7 @@ static int
 lsleep(lua_State* L)
 {
     int t = luaL_checkinteger(L, 1);
-    //usleep(t * 10000);
+    usleep(t * 10000);
     return 0;
 }
 
