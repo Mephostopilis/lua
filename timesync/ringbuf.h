@@ -31,14 +31,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#if defined(_MSC_VER)
-#include <crtdefs.h>
-#if defined(_WIN64) || (defined(__DMC__) && defined(_M_AMD64))
-typedef long long ssize_t;
-#else
-typedef int ssize_t;
-#endif
-#endif
 
 #define RINGBUF_OK 0
 #define RINGBUF_OVERFLOW 1
@@ -66,26 +58,10 @@ typedef struct ringbuf ringbuf_t;
 int ringbuf_init(ringbuf_t* rb, size_t capacity);
 
 /*
- * The size of the internal buffer, in bytes. One or more bytes may be
- * unusable in order to distinguish the "buffer full" state from the
- * "buffer empty" state.
- *
- * For the usable capacity of the ring buffer, use the
- * ringbuf_capacity function.
- */
-size_t
-ringbuf_buffer_size(const ringbuf_t* rb);
-
-/*
  * Deallocate a ring buffer, and, as a side effect, set the pointer to
  * 0.
  */
 void ringbuf_free(ringbuf_t* rb);
-
-/*
- * Reset a ring buffer to its initial state (empty).
- */
-void ringbuf_reset(ringbuf_t* rb);
 
 /*
  * The usable capacity of the ring buffer, in bytes. Note that this
@@ -108,10 +84,6 @@ ringbuf_bytes_free(const ringbuf_t* rb);
  */
 size_t
 ringbuf_bytes_used(const ringbuf_t* rb);
-
-bool ringbuf_is_full(const ringbuf_t* rb);
-
-bool ringbuf_is_empty(const ringbuf_t* rb);
 
 /*
  * Locate the first occurrence of character c (converted to an
@@ -162,7 +134,7 @@ ringbuf_memset(ringbuf_t* dst, int c, size_t len);
  * overflow, the value of the ring buffer's tail pointer may be
  * different than it was before the function was called.
  */
-int ringbuf_memcpy_buffer(ringbuf_t* dst, const char* src, size_t count);
+int ringbuf_memcpy_buffer(ringbuf_t* rb, const char* src, size_t count);
 int ringbuf_memcpy_string(ringbuf_t* rb, const char* src, size_t count);
 int ringbuf_memcpy_line(ringbuf_t* rb, const char* src, size_t count);
 int ringbuf_memcpy_int32(ringbuf_t* rb, int32_t src);
@@ -184,29 +156,6 @@ int ringbuf_memcpy_int16(ringbuf_t* rb, int16_t src);
  * no bytes are copied, and the function will return 0.
  */
 void* ringbuf_memcpy_from(void* dst, ringbuf_t* src, size_t count);
-
-/*
- * This convenience function calls write(2) on the file descriptor fd,
- * using the ring buffer rb as the source buffer for writing (starting
- * at the ring buffer's tail pointer), and returns the value returned
- * by write(2). It will only call write(2) once, and may return a
- * short count.
- *
- * Note that this copy is destructive with respect to the ring buffer:
- * any bytes written from the ring buffer to the file descriptor are
- * no longer available in the ring buffer after the copy is complete,
- * and the ring buffer will have N more free bytes than it did before
- * the function was called, where N is the value returned by the
- * function (unless N is < 0, in which case an error occurred and no
- * bytes were written).
- *
- * This function will *not* allow the ring buffer to underflow. If
- * count is greater than the number of bytes used in the ring buffer,
- * no bytes are written to the file descriptor, and the function will
- * return 0.
- */
-ssize_t
-ringbuf_write_fd(int fd, ringbuf_t* rb);
 
 int ringbuf_get_string(char** dst, size_t* sz, ringbuf_t* rb);
 int ringbuf_get_line(char** buf, size_t* sz, ringbuf_t* rb);
@@ -237,6 +186,6 @@ int ringbuf_get_int16(int16_t* n, ringbuf_t* rb);
  * number of bytes used in src, no bytes are copied, and the function
  * returns 0.
  */
-void* ringbuf_copy(ringbuf_t* dst, ringbuf_t* src, size_t count);
+int ringbuf_copy(ringbuf_t* dst, ringbuf_t* src, size_t count);
 
 #endif /* INCLUDED_RINGBUF_H */

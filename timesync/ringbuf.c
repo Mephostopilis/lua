@@ -81,6 +81,12 @@ ringbuf_ext(ringbuf_t* rb)
     return RINGBUF_MEMERR;
 }
 
+static void
+ringbuf_reset(ringbuf_t* rb)
+{
+    rb->head = rb->tail = rb->buf;
+}
+
 int ringbuf_init(ringbuf_t* rb, size_t capacity)
 {
     if (rb) {
@@ -98,20 +104,11 @@ int ringbuf_init(ringbuf_t* rb, size_t capacity)
     return rb;
 }
 
-size_t
-ringbuf_buffer_size(const ringbuf_t* rb)
-{
-    return rb->size;
-}
-
-void ringbuf_reset(ringbuf_t* rb)
-{
-    rb->head = rb->tail = rb->buf;
-}
-
 void ringbuf_free(ringbuf_t* rb)
 {
-    FREE(rb->buf);
+    if (rb) {
+        FREE(rb->buf);
+    }
 }
 
 size_t
@@ -136,16 +133,6 @@ size_t
 ringbuf_bytes_used(const ringbuf_t* rb)
 {
     return ringbuf_capacity(rb) - ringbuf_bytes_free(rb);
-}
-
-bool ringbuf_is_full(const ringbuf_t* rb)
-{
-    return (ringbuf_bytes_free(rb) == 0) ? true : false;
-}
-
-bool ringbuf_is_empty(const ringbuf_t* rb)
-{
-    return (ringbuf_bytes_free(rb) == ringbuf_capacity(rb)) ? true : false;
 }
 
 /*
@@ -190,7 +177,7 @@ ringbuf_memset(ringbuf_t* dst, int c, size_t len)
 {
     const char* bufend = ringbuf_end(dst);
     size_t nwritten = 0;
-    size_t count = MIN(len, ringbuf_buffer_size(dst));
+    size_t count = MIN(len, dst->size);
     int overflow = count > ringbuf_bytes_free(dst);
 
     while (nwritten != count) {
@@ -209,7 +196,7 @@ ringbuf_memset(ringbuf_t* dst, int c, size_t len)
 
     if (overflow) {
         dst->tail = ringbuf_nextp(dst, dst->head);
-        assert(ringbuf_is_full(dst));
+        assert(ringbuf_bytes_free(dst) == 0);
     }
 
     return nwritten;
@@ -262,72 +249,10 @@ int ringbuf_memcpy_buffer_overflow(ringbuf_t* dst, const char* src, size_t count
 
     if (overflow) {
         dst->tail = ringbuf_nextp(dst, dst->head);
-        assert(ringbuf_is_full(dst));
+        assert(ringbuf_bytes_free(dst) == 0);
     }
 
     return RINGBUF_OK;
-}
-
-ssize_t
-ringbuf_read_fd(ringbuf_t* rb, int fd, size_t hint_max)
-{
-    // if (ringbuf_is_full(rb)) {
-    // 	ringbuf_ext(rb);
-    // }
-    // const uint8_t *bufend = ringbuf_end(rb);
-    // size_t nfree = ringbuf_bytes_free(rb);
-
-    // /* don't write beyond the end of the buffer */
-    // assert(bufend > rb->head);
-    // int count = MIN(bufend - rb->head, nfree);
-    // ssize_t n = recv(fd, rb->head, count, 0);
-    // if (n > 0) {
-    // 	assert(rb->head + n <= bufend);
-    // 	rb->head += n;
-
-    // 	/* wrap? */
-    // 	if (rb->head == bufend)
-    // 		rb->head = rb->buf;
-
-    // 	/* fix up the tail pointer if an overflow occurred */
-    // 	if (n > nfree) {
-    // 		rb->tail = ringbuf_nextp(rb, rb->head);
-    // 		assert(ringbuf_is_full(rb));
-    // 	}
-    // }
-
-    // return n;
-    return 0;
-}
-
-ssize_t
-ringbuf_read_fd_dagram(ringbuf_t* rb, int fd, size_t hint_max, struct sockaddr* from, int* fromlen)
-{
-    // if (ringbuf_is_full(rb)) {
-    // 	ringbuf_ext(rb);
-    // }
-    // const uint8_t *bufend = ringbuf_end(rb);
-    // size_t nfree = ringbuf_bytes_free(rb);
-
-    // /* don't write beyond the end of the buffer */
-    // assert(bufend > rb->head);
-    // int count = MIN(bufend - rb->head, nfree);
-    // ssize_t n = recvfrom(fd, rb->head, count, 0, from, fromlen);
-    // if (n > 0) {
-    // 	assert(rb->head + n <= bufend);
-    // 	rb->head += n;
-
-    // 	/* wrap? */
-    // 	if (rb->head == bufend)
-    // 		rb->head = rb->buf;
-
-    // 	/* fix up the tail pointer if an overflow occurred */
-    // 	if (n > nfree) {
-    // 		rb->tail = ringbuf_nextp(rb, rb->head);
-    // 		assert(ringbuf_is_full(rb));
-    // 	}
-    // }
-    return 0;
 }
 
 int ringbuf_memcpy_string(ringbuf_t* rb, const char* src, size_t count)
@@ -439,33 +364,6 @@ void* ringbuf_memcpy_from(void* dst, ringbuf_t* src, size_t count)
 
     assert(count + ringbuf_bytes_used(src) == bytes_used);
     return src->tail;
-}
-
-ssize_t
-ringbuf_write_fd(int fd, ringbuf_t* rb)
-{
-    // size_t bytes_used = ringbuf_bytes_used(rb);
-    // if (bytes_used <= 0) {
-    // 	return bytes_used;
-    // }
-
-    // const uint8_t *bufend = ringbuf_end(rb);
-    // assert(bufend > rb->head);
-    // int count = MIN(bufend - rb->tail, bytes_used);
-    // ssize_t n = send(fd, rb->tail, count, 0);
-    // if (n > 0) {
-    // 	assert(rb->tail + n <= bufend);
-    // 	rb->tail += n;
-
-    // 	/* wrap? */
-    // 	if (rb->tail == bufend)
-    // 		rb->tail = rb->buf;
-
-    // 	assert(n + ringbuf_bytes_used(rb) == bytes_used);
-    // }
-
-    // return n;
-    return 0;
 }
 
 int ringbuf_get_string(char** out, size_t* size, ringbuf_t* rb)
@@ -675,7 +573,7 @@ int ringbuf_get_int8(int8_t* out, ringbuf_t* rb)
     return 0;
 }
 
-void* ringbuf_copy(ringbuf_t* dst, ringbuf_t* src, size_t count)
+int ringbuf_copy(ringbuf_t* dst, ringbuf_t* src, size_t count)
 {
     size_t src_bytes_used = ringbuf_bytes_used(src);
     if (count > src_bytes_used)
@@ -706,7 +604,7 @@ void* ringbuf_copy(ringbuf_t* dst, ringbuf_t* src, size_t count)
 
     if (overflow) {
         dst->tail = ringbuf_nextp(dst, dst->head);
-        assert(ringbuf_is_full(dst));
+        assert(ringbuf_bytes_free(dst) == 0);
     }
 
     return dst->head;

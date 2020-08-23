@@ -1,7 +1,4 @@
-#if defined(XLUA) && defined(ANDROID)
-#else
 #define LUA_LIB
-#endif // !ANDROID
 
 #include "platform.h"
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
@@ -147,13 +144,13 @@ lpack(lua_State* L)
         ARRAY(char, str, sz + 1);
         strncpy(str, buf, sz);
         str[sz] = "\n";
-        lua_pushstring(L, str);
+        lua_pushlstring(L, str, sz + 1);
         return 1;
     } else if (strcmp(cmd, "pg") == 0) {
         ARRAY(char, str, sz + 2);
         WriteInt16(str, 0, sz);
         memcpy(str + 2, buf, sz);
-        lua_pushstring(L, str);
+        lua_pushlstring(L, str, sz + 2);
         return 1;
     } else {
         luaL_error(L, "not supoort other pack");
@@ -161,6 +158,15 @@ lpack(lua_State* L)
     return 0;
 }
 
+static int
+lsend(lua_State* L)
+{
+    size_t sz = 0;
+    const char* buf = luaL_checklstring(L, 1, &sz);
+    return 0;
+}
+
+LUAMOD_API
 int luaopen_timesync(lua_State* L)
 {
     luaL_checkversion(L);
@@ -170,6 +176,7 @@ int luaopen_timesync(lua_State* L)
         { "globaltime", lglobaltime },
         { "sleep", lsleep },
         { "pack", lpack },
+        { "send", lsend },
         { NULL, NULL },
     };
     luaL_newlibtable(L, l);

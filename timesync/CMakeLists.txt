@@ -1,6 +1,6 @@
 ﻿SET(SRC 
 	./lua-timesync.c
-	./lua-unpack.c
+	./lua-ringbuf.c
 	./ringbuf.h
 	./ringbuf.c
 )
@@ -16,7 +16,7 @@ set_target_properties(timesync PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../l
 set_target_properties(timesync PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 target_include_directories(timesync PRIVATE ../lua/src)
 if (MSVC)
-	target_compile_definitions (timesync PRIVATE LUA_BUILD_AS_DLL)
+	target_compile_definitions (timesync PRIVATE LUA_BUILD_AS_DLL _CRT_SECURE_NO_WARNINGS)
 endif ()
 
 target_link_libraries(timesync ../../liblua)

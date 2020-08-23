@@ -12,11 +12,11 @@
 #define MAX_BUF_LEN (1024)
 
 static int
-lis_full(lua_State* L)
+lcapacity(lua_State* L)
 {
     ringbuf_t* aux = (ringbuf_t*)lua_touserdata(L, 1);
-    bool b = ringbuf_is_full(aux);
-    lua_pushboolean(L, b);
+    size_t b = ringbuf_capacity(aux);
+    lua_pushinteger(L, b);
     return 1;
 }
 
@@ -41,7 +41,7 @@ lget_string(lua_State* L)
     int err = ringbuf_get_string(&buf, &sz, aux);
     if (err == RINGBUF_OK) {
         lua_pushinteger(L, err);
-        lua_pushstring(L, buf);
+        lua_pushlstring(L, buf, sz);
         return 2;
     }
     lua_pushinteger(L, err);
@@ -58,7 +58,7 @@ lget_line(lua_State* L)
     int err = ringbuf_get_line(&buf, &sz, aux);
     if (err == RINGBUF_OK) {
         lua_pushinteger(L, err);
-        lua_pushstring(L, buf);
+        lua_pushlstring(L, buf, sz);
         return 2;
     }
     lua_pushinteger(L, err);
@@ -68,7 +68,7 @@ lget_line(lua_State* L)
 static int
 lfree(lua_State* L)
 {
-    ringbuf_t* aux = (ringbuf_t*)lua_newuserdata(L, sizeof(*aux));
+    ringbuf_t* aux = (ringbuf_t*)lua_touserdata(L, 1);
     ringbuf_free(aux);
     return 0;
 }
@@ -81,6 +81,8 @@ lalloc(lua_State* L)
         luaL_error(L, "new udata failture.");
         return 0;
     }
+    memset(aux, 0, sizeof(*aux));
+    ringbuf_init(aux, 256);
     lua_pushvalue(L, lua_upvalueindex(1));
     lua_setmetatable(L, -2);
     return 1;
@@ -92,7 +94,7 @@ luaopen_timesync_ringbuf(lua_State* L)
     luaL_checkversion(L);
     lua_newtable(L); // met
     luaL_Reg l[] = {
-        { "is_full", lis_full },
+        { "capacity", lcapacity },
         { "memcpy_buffer", lmemcpy_buffer },
         { "get_string", lget_string },
         { "get_line", lget_line },
