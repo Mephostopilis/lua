@@ -1,16 +1,15 @@
-﻿
-SET(MTRAND_C ./mt_rand.c)
+﻿SET(MTRAND_C ./mt_rand.c)
 
 include_directories(.)
 include_directories(../lua/src)
 
-ADD_DEFINITIONS(-DLUA_BUILD_AS_DLL)
-IF(MSVC)
-#ADD_DEFINITIONS(-DNOUSE_JEMALLOC -DHAVE_STRUCT_TIMESPEC -DUSE_PTHREAD_LOCK)
-ENDIF()
-
 add_library(mtrand SHARED  ${MTRAND_C})
 set_target_properties(mtrand PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 set_target_properties(mtrand PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
+
+if (MSVC)
+target_compile_definitions(mtrand PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(mtrand PRIVATE LUA_BUILD_AS_DLL)
+endif()
+
 target_link_libraries(mtrand ../../liblua)
-ADD_DEPENDENCIES(mtrand liblua)
