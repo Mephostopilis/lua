@@ -5,15 +5,15 @@ package.cpath = ".\\luaclib\\?.dll;.\\luaclib\\?.so;" .. package.cpath
 -- 只是测试下方法能不能通过
 local timesync = require "timesync"
 local unpack = require "timesync.ringbuf"
-local rb = unpack()
-local hello = timesync.pack("pg", "hello")
-local world = timesync.pack("pg", "world")
-timesync.send(hello)
-timesync.send(world)
-print(rb:memcpy_buffer(hello))
-print(rb:memcpy_buffer(world))
-print(rb:get_string())
-print(rb:get_string())
+-- local rb = unpack()
+-- local hello = timesync.pack("pg", "hello")
+-- local world = timesync.pack("pg", "world")
+-- timesync.send(hello)
+-- timesync.send(world)
+-- print(rb:memcpy_buffer(hello))
+-- print(rb:memcpy_buffer(world))
+-- print(rb:get_string())
+-- print(rb:get_string())
 
 local function log(fmt, ...)
     local s = string.format(fmt, ...) .. "\n"
@@ -25,23 +25,32 @@ end
 local xluasocket = require "xluasocket"
 local function testline(...)
     local map = {}
+    local ic
     local cc
     local times = 1000
 
     local handle = function(t, id, ud, ...)
         if t == xluasocket.SOCKET_DATA then
-            log("data: [id = %d][%s]", id, ...)
-            if id == ic then
-                local rb = map[ic]
-                rb:memcpy_buffer(ud)
-                local line = rb:get_line()
-                print("accept", line)
-                xluasocket.send(id, timesync.pack("line", line))
-            elseif id == cc then
+            if id == ic.id then
+                local so = map[id]
+                if so then
+                    local err = so.unpack:memcpy_buffer(ud)
+                    if err == 0 then
+                        local err, line = so.unpack:get_line()
+                        if err == 0 then
+                            print("accept", line)
+                        end
+                    elseif err == 4 then
+                    end
+                    print("err", err)
+                -- xluasocket.send(id, timesync.pack("line", line))
+                end
+            elseif id == cc.id then
                 print("respone", line)
             end
         elseif t == xluasocket.SOCKET_OPEN then
             local subcmd = tostring(...)
+            print("subcmd =>", subcmd)
             if subcmd == "transfer" then
                 -- connect start
                 local so = map[id]
@@ -54,23 +63,24 @@ local function testline(...)
                 local so = map[id]
                 so.ok = true
             else
-                print("server", id, "start")
                 xluasocket.start(id)
+                log("sokcet [id = %d][%d] connected [%s]", id, ud, subcmd)
             end
         elseif t == xluasocket.SOCKET_ACCEPT then
-            log("sokcet accept [id = %d][acc = %d]", id, ud)
             local s = {}
-            s.id = id
+            s.id = ud
             s.ok = false
             s.unpack = unpack()
-            map[id] = s
+            map[ud] = s
+            ic = s
             xluasocket.start(ud)
+            log("sokcet accept [id = %d][acc = %d]", id, ud)
         elseif t == xluasocket.SOCKET_ERROR then
             log("socket error [id = %d][msg = %s]", id, tostring(...))
             map[id] = nil
         end
     end
-    local err = xluasocket.new(handle)
+    local err = xluasocket.init(handle)
     if err ~= 0 then
         error("new err = ", err)
     end
@@ -78,19 +88,20 @@ local function testline(...)
     -- server
     local err = xluasocket.listen("127.0.0.1", 3300)
     if err < 0 then
-        error(string.format("id = %d listen failture.", s))
+        error(string.format("id = %d listen failture.", err))
     else
         local s = {}
         s.id = err
         s.ok = false
-        s.unpack = unpack()
         map[err] = s
+        log("sokcet server [id = %d] do listen", err)
+        xluasocket.start(err)
     end
 
     -- client
     local err = xluasocket.connect("127.0.0.1", 3300)
     if err < 0 then
-        error(string.format("id = %d connect failture.", c))
+        error(string.format("id = %d connect failture.", err))
     else
         local s = {}
         s.id = err
@@ -98,16 +109,25 @@ local function testline(...)
         s.unpack = unpack()
         map[err] = s
         cc = s
+        log(string.format("id = %d do connecting.", err))
     end
 
     while true do
-        xluasocket.poll()
+        xluasocket.poll(1)
         if times > 0 then
             times = times - 1
             if cc and cc.ok then
-                local err = xluasocket.send(cc.id, "hello world")
+                local err = xluasocket.send(cc.id, timesync.pack("line", "hello"))
                 if err == -1 then
                     error(string.format("id = %d send failtrue.", cc.id))
+                else
+                    print("send hello", times)
+                end
+                local err = xluasocket.send(cc.id, timesync.pack("line", "world"))
+                if err == -1 then
+                    error(string.format("id = %d send failtrue.", cc.id))
+                else
+                    print("send world", times)
                 end
             end
         end
@@ -118,3 +138,9 @@ local ok, err = xpcall(testline, debug.traceback)
 if not ok then
     log(err)
 end
+
+xluasocket.exit()
+while xluasocket.poll() == 0 do
+end
+xluasocket.free()
+print("over")

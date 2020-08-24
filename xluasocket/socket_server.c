@@ -317,7 +317,11 @@ reserve_id(struct socket_server* ss)
     for (i = 0; i < MAX_SOCKET; i++) {
         int id = ATOM_INC(&(ss->alloc_id));
         if (id < 0) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
             id = ATOM_AND(&(ss->alloc_id), 0x7fffffff);
+#else
+            return -1;
+#endif
         }
         struct socket* s = &ss->slot[HASH_ID(id)];
         if (s->type == SOCKET_TYPE_INVALID) {
@@ -1106,15 +1110,15 @@ block_readpipe(int pipefd, void* buffer, int sz)
     for (;;) {
         int n = read(pipefd, buffer, sz);
         if (n < 0) {
-#ifdef _MSC_VER
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+            if (errno == EINTR)
+                continue;
+            fprintf(stderr, "socket-server : read pipe error %s.\n", strerror(errno));
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
             int err = WSAGetLastError();
             if (err == WSAEINTR)
                 continue;
             fprintf(stderr, "socket-server : read pipe error %s.\n", wsa_strerror(err));
-#else
-            if (errno == EINTR)
-                continue;
-            fprintf(stderr, "socket-server : read pipe error %s.\n", strerror(errno));
 #endif // _MSC_VER
             return;
         }

@@ -22,10 +22,12 @@ ENDIF()
 
 
 add_executable(hexmap ${hexmap_core} )
-target_compile_definitions(hexmap PRIVATE _XKEYCHECK_H XXH_INLINE_ALL REDIS_TEST)
-target_include_directories(hexmap PRIVATE ../googletest/include)
 set_target_properties(hexmap PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ../..)
 set_target_properties(hexmap PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ../..)
 set_target_properties(hexmap PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../..)
 set_target_properties(hexmap PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../..)
-target_link_libraries(hexmap ../../googletest/Debug/gtestd ../../googletest/Debug/gtest_maind)
+
+target_compile_definitions(hexmap PRIVATE _XKEYCHECK_H XXH_INLINE_ALL REDIS_TEST)
+target_include_directories(hexmap PRIVATE googletest/include)
+
+target_link_libraries(hexmap ../../hexmap/googletest/Debug/gtestd ../../hexmap/googletest/Debug/gtest_maind)

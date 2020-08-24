@@ -26,7 +26,13 @@ lmemcpy_buffer(lua_State* L)
     ringbuf_t* aux = (ringbuf_t*)lua_touserdata(L, 1);
     size_t sz = 0;
     const char* buf = luaL_checklstring(L, 2, &sz);
+    size_t fbytes = ringbuf_bytes_free(aux);
     int err = ringbuf_memcpy_buffer(aux, buf, sz);
+    if (err == RINGBUF_OK) {
+        assert(fbytes - sz == ringbuf_bytes_free(aux));
+    } else {
+        assert(false);
+    }
     lua_pushinteger(L, err);
     return 1;
 }

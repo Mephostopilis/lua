@@ -71,35 +71,33 @@ rwlock_init(struct rwlock* lock)
 static inline void
 rwlock_rlock(struct rwlock* lock)
 {
-    /*for (;;) {
+    for (;;) {
         while (lock->write) {
-            atom_sync();
+            MemoryBarrier();
         }
-        atom_inc(&lock->read);
+        InterlockedIncrement(&lock->read);
         if (lock->write) {
             InterlockedDecrement(&lock->read);
         } else {
             break;
         }
-    }*/
+    }
 }
 
 static inline void
 rwlock_wlock(struct rwlock* lock)
 {
-    /*atom_spinlock(&lock->write);
+    while (InterlockedCompareExchange(&lock->write, 1, 0)) {
+    }
     while (lock->read) {
-        InterlockedDecrement(&lock->read);
-    }*/
+        MemoryBarrier();
+    }
 }
 
 static inline void
 rwlock_wunlock(struct rwlock* lock)
 {
-    /*for (;;) {
-
-    }
-    atom_spinunlock(&lock->write);*/
+    InterlockedExchange(&lock->write, 0);
 }
 
 static inline void

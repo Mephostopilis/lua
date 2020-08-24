@@ -15,8 +15,9 @@
 #define ATOM_AND(ptr, n) __sync_and_and_fetch(ptr, n)
 #define ATOM_SYNC() __sync_synchronize()
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-#define ATOM_CAS(ptr, oval, nval) (oval == InterlockedCompareExchange((LONG volatile*)ptr, nval, oval))
-#define ATOM_CAS_POINTER(ptr, oval, nval) (oval = InterlockedCompareExchangePointer((PVOID volatile*)ptr, nval, oval))
+#define ATOM_CAS(ptr, oval, nval) (InterlockedCompareExchange((LONG volatile*)ptr, nval, oval), (*ptr == nval)) // 成功就占据spin
+#define ATOM_CAS_POINTER(ptr, oval, nval) (InterlockedCompareExchangePointer((PVOID volatile*)ptr, nval, oval), (*ptr == nval))
+#define ATOM_SWAP(ptr, nval) _InterlockedExchange(ptr, nval) // 释放
 #define ATOM_INC(ptr) InterlockedIncrement((LONG volatile*)ptr)
 #define ATOM_INC16(ptr) InterlockedIncrement16(ptr)
 #define ATOM_FINC(ptr) InterlockedExchangeAdd(ptr, 1)
@@ -25,7 +26,7 @@
 #define ATOM_FDEC(ptr) InterlockedExchangeAdd(ptr, -1)
 #define ATOM_ADD(ptr, n) InterlockedAdd(ptr, n)
 #define ATOM_SUB(ptr, n) InterlockedAdd(ptr, -n)
-#define ATOM_AND(ptr, n) InterlockedAnd(ptr, n)
+#define ATOM_FAND(ptr, n) InterlockedAnd(ptr, n)
 #define ATOM_SYNC() MemoryBarrier()
 #endif // _MSC_VER
 

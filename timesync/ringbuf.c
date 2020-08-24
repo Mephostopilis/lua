@@ -424,12 +424,12 @@ int ringbuf_get_line(char** out, size_t* size, ringbuf_t* rb)
     if (bytes_used > 0) {
         //
         int ofs = ringbuf_findchr(rb, '\n', 0);
-        if (ofs < bytes_used) {
-            *size = ofs;
+        if (ofs <= bytes_used) {
+            *size = (ofs - 1);
             if (rb->head >= rb->tail) {
                 *out = rb->tail;
-                rb->tail[ofs] = '\0';
-                rb->tail += ofs + 1;
+                rb->tail += ofs;
+                assert(rb->head >= rb->tail);
                 return RINGBUF_OK;
             } else {
                 int n = (rb->tail - rb->buf + ofs) % rb->size;

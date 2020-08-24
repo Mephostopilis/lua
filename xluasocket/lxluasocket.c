@@ -34,8 +34,8 @@
 
 #define THREADS 1
 static bool inited = false;
-static struct socket_server* ss;
-static struct message_queue* q;
+static struct socket_server* ss = NULL;
+static struct message_queue* q = NULL;
 struct args {
     int n;
     struct thread_event* wait;
@@ -59,42 +59,6 @@ soi_size(void* ptr)
 
 static void
 soi_free(void* ptr) {}
-
-static void
-on_handle_msg(lua_State* L, struct xluasocket_message* msg)
-{
-    lua_getglobal(L, "xluasocket");
-    luaL_checktype(L, -1, LUA_TFUNCTION);
-    switch (msg->type) {
-    case XLUASOCKET_TYPE_DATA: {
-        lua_pushinteger(L, msg->type);
-        lua_pushinteger(L, msg->id);
-        lua_pushlstring(L, msg->buffer, msg->ud);
-        if (lua_pcall(L, 3, 0, 0) == 0) {
-        }
-        FREE(msg->buffer);
-        break;
-    }
-    case XLUASOCKET_TYPE_ERROR:
-    case XLUASOCKET_TYPE_CONNECT:
-    case XLUASOCKET_TYPE_ACCEPT: {
-        lua_pushinteger(L, msg->type);
-        lua_pushinteger(L, msg->id);
-        lua_pushinteger(L, msg->ud);
-        lua_pushlstring(L, msg + 1, msg->sz - sizeof(*msg));
-        lua_pcall(L, 4, 0, 0);
-        break;
-    }
-    case XLUASOCKET_TYPE_CLOSE:
-        lua_pushinteger(L, msg->type);
-        lua_pushinteger(L, msg->id);
-        lua_pushinteger(L, msg->ud);
-        lua_pcall(L, 3, 0, 0);
-        break;
-    default:
-        luaL_error(L, "not support type.");
-    }
-}
 
 // socket thread
 static void
@@ -199,7 +163,7 @@ static int
 lnew(lua_State* L)
 {
     if (inited) {
-        luaL_error(L, "inited succsss.");
+        luaL_error(L, "had inited, not call init function.");
         return 0;
     }
     luaL_checktype(L, 1, LUA_TFUNCTION);
@@ -252,16 +216,58 @@ lfree(lua_State* L)
 static int
 lpoll(lua_State* L)
 {
-    for (size_t i = 0; i < MAX_RECVPACK_NUM; i++) {
-        struct xluasocket_message* msg = mq_pop(q);
-        if (msg != NULL) {
-            on_handle_msg(L, msg);
-            FREE(msg);
-        } else {
-            lua_pushinteger(L, 1);
-            return 1;
-        }
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
     }
+    struct xluasocket_message* msg = mq_pop(q);
+    if (msg == NULL) {
+        // 已经没有多余的数据了
+        lua_pushinteger(L, 1);
+        return 1;
+    }
+    lua_settop(L, 0); // 清除参数
+    lua_getglobal(L, "xluasocket");
+    luaL_checktype(L, -1, LUA_TFUNCTION);
+    assert(lua_gettop(L) == 1);
+    switch (msg->type) {
+    case XLUASOCKET_TYPE_DATA: {
+        lua_pushinteger(L, msg->type);
+        lua_pushinteger(L, msg->id);
+        lua_pushlstring(L, msg->buffer, msg->ud);
+        if (lua_pcall(L, 3, 0, 0) == LUA_ERRRUN) {
+            const char* msg = luaL_checkstring(L, -1);
+            fprintf(stderr, "%s\n", msg);
+        }
+        FREE(msg->buffer);
+        break;
+    }
+    case XLUASOCKET_TYPE_ERROR:
+    case XLUASOCKET_TYPE_CONNECT:
+    case XLUASOCKET_TYPE_ACCEPT: {
+        lua_pushinteger(L, msg->type);
+        lua_pushinteger(L, msg->id);
+        lua_pushinteger(L, msg->ud);
+        lua_pushlstring(L, msg + 1, msg->sz - sizeof(*msg));
+        if (lua_pcall(L, 4, 0, 0) == LUA_ERRRUN) {
+            const char* msg = luaL_checkstring(L, -1);
+            fprintf(stderr, "%s\n", msg);
+        }
+        break;
+    }
+    case XLUASOCKET_TYPE_CLOSE:
+        lua_pushinteger(L, msg->type);
+        lua_pushinteger(L, msg->id);
+        lua_pushinteger(L, msg->ud);
+        if (lua_pcall(L, 3, 0, 0) == LUA_ERRRUN) {
+            const char* msg = luaL_checkstring(L, -1);
+            fprintf(stderr, "%s\n", msg);
+        }
+        break;
+    default:
+        luaL_error(L, "not support type.");
+    }
+    FREE(msg);
     lua_pushinteger(L, 0);
     return 1;
 }
@@ -269,6 +275,11 @@ lpoll(lua_State* L)
 static int
 lexit(lua_State* L)
 {
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
+
     socket_server_exit(ss);
     // 等待完成
     thread_join(t, THREADS);
@@ -282,6 +293,10 @@ lexit(lua_State* L)
 static int
 llisten(lua_State* L)
 {
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
     size_t sz;
     const char* addr = luaL_checklstring(L, 1, &sz);
     lua_Integer port = luaL_checkinteger(L, 2);
@@ -297,6 +312,10 @@ llisten(lua_State* L)
 static int
 lconnect(lua_State* L)
 {
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
     size_t sz;
     const char* addr = luaL_checklstring(L, 1, &sz);
     uint16_t port = luaL_checkinteger(L, 2);
@@ -308,6 +327,10 @@ lconnect(lua_State* L)
 static int
 lbind(lua_State* L)
 {
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
     lua_Integer fd = luaL_checkinteger(L, 1);
     int id = socket_server_bind(ss, L, fd);
     lua_pushinteger(L, id);
@@ -315,45 +338,15 @@ lbind(lua_State* L)
 }
 
 static int
-lclosesocket(lua_State* L)
-{
-    lua_Integer id = luaL_checkinteger(L, 1);
-    socket_server_close(ss, L, id);
-    return 0;
-}
-
-static int
-lshutdown(lua_State* L)
-{
-    lua_Integer id = luaL_checkinteger(L, 1);
-    socket_server_shutdown(ss, L, id);
-    return 0;
-}
-
-static int
 lstart(lua_State* L)
 {
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
     lua_Integer id = luaL_checkinteger(L, 1);
     socket_server_start(ss, L, id);
     return 0;
-}
-
-/*
-** @return [1] 0    success
-**		      -1    failture
-*/
-static int
-lsend(lua_State* L)
-{
-    int err = -1;
-    lua_Integer id = luaL_checkinteger(L, 1);
-    size_t sz;
-    const char* buffer = luaL_checklstring(L, 2, &sz);
-    char* pack = MALLOC(sz);
-    memcpy(pack, buffer, sz);
-    err = socket_server_send(ss, id, pack, sz);
-    lua_pushinteger(L, err);
-    return 1;
 }
 
 static int
@@ -367,26 +360,95 @@ lkeepalive(lua_State* L)
     return 0;
 }
 
+/*
+** @return [1] 0    success
+**		      -1    failture
+*/
+static int
+lsend(lua_State* L)
+{
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
+    lua_Integer id = luaL_checkinteger(L, 1);
+    size_t sz;
+    const char* buffer = luaL_checklstring(L, 2, &sz);
+    char* pack = MALLOC(sz);
+    memcpy(pack, buffer, sz);
+    int err = socket_server_send(ss, id, pack, sz);
+    lua_pushinteger(L, err);
+    return 1;
+}
+
+static int
+lsendto(lua_State* L)
+{
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
+    lua_Integer id = luaL_checkinteger(L, 1);
+    size_t addrl;
+    const char* addr = luaL_checklstring(L, 2, &addrl);
+    size_t sz;
+    const char* buffer = luaL_checklstring(L, 2, &sz);
+    char* pack = MALLOC(sz);
+    memcpy(pack, buffer, sz);
+    struct socket_message msg;
+    msg.id = id;
+    msg.opaque = L;
+    msg.data = addr;
+    msg.ud = 0;
+    struct socket_udp_address* uaddr = socket_server_udp_address(ss, &msg, &addrl);
+    int err = socket_server_udp_send(ss, id, uaddr, pack, sz);
+    lua_pushinteger(L, err);
+    return 1;
+}
+
+static int
+lshutdown(lua_State* L)
+{
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
+    lua_Integer id = luaL_checkinteger(L, 1);
+    socket_server_shutdown(ss, L, id);
+    return 0;
+}
+
+static int
+lclosesocket(lua_State* L)
+{
+    if (!inited) {
+        luaL_error(L, "not inited.");
+        return 0;
+    }
+    lua_Integer id = luaL_checkinteger(L, 1);
+    socket_server_close(ss, L, id);
+    return 0;
+}
+
 LUAMOD_API int
 luaopen_xluasocket(lua_State* L)
 {
     luaL_checkversion(L);
     luaL_Reg l[] = {
-        { "new", lnew },
-        { "close", lfree },
+        { "init", lnew },
+        { "free", lfree },
         { "poll", lpoll },
         { "exit", lexit },
 
         { "listen", llisten },
         { "connect", lconnect },
         { "bind", lbind },
-
         { "start", lstart },
+        { "keepalive", lkeepalive },
+        { "send", lsend },
+        { "sendto", lsendto },
         { "shutdown", lshutdown },
         { "closesocket", lclosesocket },
-        { "keepalive", lkeepalive },
-
-        { "send", lsend },
 
         { NULL, NULL },
     };
