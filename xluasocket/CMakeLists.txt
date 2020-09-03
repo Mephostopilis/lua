@@ -12,6 +12,7 @@ SET(XLUASOCKET_H
 	spinlock.h
 	xluaconf.h
 	platform.h
+	protoc.h
 )
 
 SET(XLUASOCKET_C
@@ -19,6 +20,7 @@ SET(XLUASOCKET_C
 	message_queue.c
 	skynet_timer.c
 	socket_server.c
+	lua-timesync.c
 )
 
 IF(UNIX)
@@ -71,4 +73,3 @@ if (WIN32)
 endif ()
 #target_compile_definitions(xluasocket PRIVATE XLUA)
 target_link_libraries(xluasocket ../../liblua)
-ADD_DEPENDENCIES(xluasocket liblua)

@@ -30,8 +30,6 @@
 #define XLUASOCKET_TYPE_UDP 6
 #define XLUASOCKET_TYPE_WARNING 7
 
-#define MAX_RECVPACK_NUM 10
-
 #define THREADS 1
 static bool inited = false;
 static struct socket_server* ss = NULL;
@@ -58,7 +56,9 @@ soi_size(void* ptr)
 }
 
 static void
-soi_free(void* ptr) {}
+soi_free(void* ptr) {
+    FREE(ptr);
+}
 
 // socket thread
 static void
@@ -375,6 +375,7 @@ lsend(lua_State* L)
     size_t sz;
     const char* buffer = luaL_checklstring(L, 2, &sz);
     char* pack = MALLOC(sz);
+    memset(pack, 0, sz);
     memcpy(pack, buffer, sz);
     int err = socket_server_send(ss, id, pack, sz);
     lua_pushinteger(L, err);

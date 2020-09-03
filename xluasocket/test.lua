@@ -17,7 +17,8 @@ local function run1(...)
 	local handle = function(t, id, ud, ...)
 		if t == xluasocket.SOCKET_DATA then
 			if ic == id then
-				xluasocket.send(ic, ud)
+				-- xluasocket.send(ic, ud)
+				log("data: [id = %d][%s]", id, ud)
 			else
 				log("data: [id = %d][%s]", id, ud)
 			end
@@ -28,6 +29,7 @@ local function run1(...)
 				-- client
 				log("sokcet transfer [id = %d][%d][%s]", id, ud, subcmd)
 				xc = id
+				xluasocket.send(xc, "hello")
 			elseif subcmd == "start" then
 				-- listen accept start
 				log("sokcet start [id = %d][%d][%s]", id, ud, subcmd)
@@ -74,7 +76,7 @@ local function run1(...)
 		end
 	end
 
-	while ti < 10000 do
+	while ti < 60000 do
 		xluasocket.poll()
 
 		if xc then

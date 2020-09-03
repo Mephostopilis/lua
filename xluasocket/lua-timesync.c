@@ -139,18 +139,19 @@ lpack(lua_State* L)
 {
     const char* cmd = luaL_checkstring(L, 1);
     size_t sz = 0;
-    const char* buf = luaL_checklstring(L, 2, &sz);
+    const char* str = luaL_checklstring(L, 2, &sz);
     if (strcmp(cmd, "line") == 0) {
-        ARRAY(char, str, sz + 1);
-        strncpy(str, buf, sz);
-        str[sz] = "\n";
-        lua_pushlstring(L, str, sz + 1);
+        ARRAY(char, buf, sz + 2);
+        memset(buf, 0, sz + 2);
+        memcpy(buf, str, sz);
+        buf[sz] = '\n';
+        lua_pushlstring(L, buf, sz + 1);
         return 1;
     } else if (strcmp(cmd, "pg") == 0) {
-        ARRAY(char, str, sz + 2);
-        WriteInt16(str, 0, sz);
-        memcpy(str + 2, buf, sz);
-        lua_pushlstring(L, str, sz + 2);
+        ARRAY(char, buf, sz + 2);
+        WriteInt16(buf, 0, sz);
+        memcpy(buf + 2, str, sz);
+        lua_pushlstring(L, buf, sz + 2);
         return 1;
     } else {
         luaL_error(L, "not supoort other pack");
@@ -158,16 +159,45 @@ lpack(lua_State* L)
     return 0;
 }
 
-static int
-lsend(lua_State* L)
+lunpack(lua_State* L)
 {
+    const char* cmd = luaL_checkstring(L, 1);
     size_t sz = 0;
-    const char* buf = luaL_checklstring(L, 1, &sz);
+    const char* buf = luaL_checklstring(L, 2, &sz);
+    if (strcmp(cmd, "line") == 0) {
+        const char* found = memchr(buf, '\n', sz);
+        if (found) {
+            size_t offset = found - buf;
+            assert(offset <= sz);
+            lua_pushlstring(L, buf, offset);
+            lua_pushlstring(L, buf + offset + 1, sz - offset - 1);
+            return 2;
+        } else {
+            lua_pushstring(L, "");
+            lua_pushlstring(L, buf, sz);
+            return 2;
+        }
+    } else if (strcmp(cmd, "pg") == 0) {
+        assert(sz > 2);
+        uint16_t count = 0;
+        int ofs = ReadInt16(buf, 0, &count);
+        if ((sz - ofs) >= count) {
+            lua_pushlstring(L, buf + ofs, count);
+            lua_pushlstring(L, buf + ofs + count, sz - ofs - count);
+            return 2;
+        } else {
+            lua_pushstring(L, "");
+            lua_pushlstring(L, buf, sz);
+            return 2;
+        }
+    } else {
+        luaL_error(L, "not supoort other pack");
+    }
     return 0;
 }
 
 LUAMOD_API
-int luaopen_timesync(lua_State* L)
+int luaopen_xluasocket_timesync(lua_State* L)
 {
     luaL_checkversion(L);
     luaL_Reg l[] = {
@@ -176,7 +206,7 @@ int luaopen_timesync(lua_State* L)
         { "globaltime", lglobaltime },
         { "sleep", lsleep },
         { "pack", lpack },
-        { "send", lsend },
+        { "unpack", lunpack },
         { NULL, NULL },
     };
     luaL_newlibtable(L, l);

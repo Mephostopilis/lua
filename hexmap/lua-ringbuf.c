@@ -95,7 +95,7 @@ lalloc(lua_State* L)
 }
 
 LUAMOD_API int
-luaopen_timesync_ringbuf(lua_State* L)
+luaopen_xluasocket_ringbuf(lua_State* L)
 {
     luaL_checkversion(L);
     lua_newtable(L); // met
