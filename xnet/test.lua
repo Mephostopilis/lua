@@ -1,4 +1,6 @@
-local network = require "xnet.NetworkMgr"
+package.path = "./lualib/?.lua;./sproto/?.lua;" .. package.path
+package.cpath = "./luaclib/?.dll;" .. package.cpath
+local network = require "xnet.manager"
 local timer = require "timer.timer"
 local table_dump = require "luaTableDump"
 local function log(fmt, ...)
@@ -15,53 +17,6 @@ local function run()
 	local count = 0
 	local l = 0 -- login so
 	local c = 0 -- client so
-
-	local req = {
-		handshake = function(requestObj)
-			-- log.error("requestObj ===>")
-		end,
-		base_info = function(requestObj)
-			log.error("[base_info] => %s", table_dump(requestObj))
-		end,
-		room_info = function(requestObj)
-			log.error("[room_info] => %s", table_dump(requestObj))
-		end,
-		player_funcs = function(requestObj)
-			log.error("[player_funcs] => %s", table_dump(requestObj))
-		end,
-		player_heros = function(requestObj)
-			log.error("[player_heros] => %s", table_dump(requestObj))
-		end,
-		inbox = function(requestObj)
-			log.error("[inbox] => %s", table_dump(requestObj))
-		end,
-		new_name = function(requestObj)
-			log.error("[new_name] => %s", table_dump(requestObj))
-		end
-	}
-	local resp = {
-		handshake = function(responseObj)
-			-- log.error("[handshake] ===> %s", table_dump(responseObj))
-		end,
-		enter = function(responseObj)
-			log.error("[enter] ===> %s", table_dump(responseObj))
-		end,
-		modify_name = function(responseObj)
-			log.error("[modify_name] ===> %s", table_dump(responseObj))
-		end,
-		user_info = function(responseObj)
-			log.error("[user_info] ===> %s", table_dump(responseObj))
-		end,
-		fetch_rank_power = function(responseObj)
-			log.error("[fetch_rank_power] ===> %s", table_dump(responseObj))
-		end,
-		fetch_store_items = function(responseObj)
-			log.error("[fetch_store_items] ===> %s", table_dump(responseObj))
-		end,
-		fetch_dailytasks = function(responseObj)
-			log.error("[fetch_dailytasks] ===> %s", table_dump(responseObj))
-		end
-	}
 	local t = {
 		OnLoginAuthed = function(self, id, code, uid, subid, secret)
 			-- body
@@ -101,10 +56,52 @@ local function run()
 		end,
 		OnGateDisconnected = function(self, id, ...)
 			log.info("OnGateDisconnected ---------------------")
+		end,
+		handshake = function(requestObj)
+			-- log.error("requestObj ===>")
+		end,
+		base_info = function(requestObj)
+			log.error("[base_info] => %s", table_dump(requestObj))
+		end,
+		room_info = function(requestObj)
+			log.error("[room_info] => %s", table_dump(requestObj))
+		end,
+		player_funcs = function(requestObj)
+			log.error("[player_funcs] => %s", table_dump(requestObj))
+		end,
+		player_heros = function(requestObj)
+			log.error("[player_heros] => %s", table_dump(requestObj))
+		end,
+		inbox = function(requestObj)
+			log.error("[inbox] => %s", table_dump(requestObj))
+		end,
+		new_name = function(requestObj)
+			log.error("[new_name] => %s", table_dump(requestObj))
+		end,
+		handshake = function(responseObj)
+			-- log.error("[handshake] ===> %s", table_dump(responseObj))
+		end,
+		enter = function(responseObj)
+			log.error("[enter] ===> %s", table_dump(responseObj))
+		end,
+		modify_name = function(responseObj)
+			log.error("[modify_name] ===> %s", table_dump(responseObj))
+		end,
+		user_info = function(responseObj)
+			log.error("[user_info] ===> %s", table_dump(responseObj))
+		end,
+		fetch_rank_power = function(responseObj)
+			log.error("[fetch_rank_power] ===> %s", table_dump(responseObj))
+		end,
+		fetch_store_items = function(responseObj)
+			log.error("[fetch_store_items] ===> %s", table_dump(responseObj))
+		end,
+		fetch_dailytasks = function(responseObj)
+			log.error("[fetch_dailytasks] ===> %s", table_dump(responseObj))
 		end
 	}
 
-	network.RegNetwork(t)
+	network.RegNetwork("test", t)
 	network.LoginAuth("127.0.0.1", "3002", server, username, password)
 
 	local function execute(obj, message, arg)
@@ -145,7 +142,7 @@ local function run()
 	end
 	while true do
 		network:Update()
-		timer.update(10, execute)
+		-- timer.update(10, execute)
 	end
 	network:Cleanup()
 end

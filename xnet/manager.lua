@@ -1,7 +1,6 @@
 local ps = require "xluasocket"
-local log = require "lib.log"
-local clientlogin = require "lib.network.clientlogin"
-local clientsock = require "lib.network.clientsock"
+local clientlogin = require "xnet.clientlogin"
+local clientsock = require "xnet.clientsock"
 local assert = assert
 local sockets = {}
 local delegets = {}
@@ -10,21 +9,20 @@ local _M = {}
 local handler = function(t, id, ud, ...)
 	if t == ps.SOCKET_DATA then
 		local so = assert(sockets[id])
-		local line = tostring(...)
-		local ok, err = pcall(so.data, so, line)
+		local ok, err = pcall(so.data, so, ud)
 		if not ok then
-			log.error(err)
+			print(err)
 		end
 	elseif t == ps.SOCKET_OPEN then
 		local subcmd = tostring(...)
-		log.info("socket open subcmd = [%s]", subcmd)
+		print("socket open subcmd", subcmd)
 		if subcmd == "transfor" then
-		else
+			-- so:open()
 			local so = assert(sockets[id])
-			local ok, err = pcall(so.connected, so)
-			if not ok then
-				log.error(err)
-			end
+		elseif subcmd == "start" then
+		else
+			-- local so = assert(sockets[id])
+			-- so:connected()
 		end
 	elseif t == ps.SOCKET_CLOSE then
 		local so = assert(sockets[id])
@@ -37,9 +35,9 @@ local handler = function(t, id, ud, ...)
 end
 
 function _M.Startup()
-	log.info("------------------------------------------------------")
-	log.info("-----------------network manager startup")
-	ps.new(handler)
+	print("------------------------------------------------------")
+	print("-----------------network manager startup")
+	ps.init(handler)
 end
 
 function _M.Cleanup()
@@ -47,13 +45,19 @@ function _M.Cleanup()
 	-- 	so:close()
 	-- end
 	ps.exit()
-	ps.close()
-	log.info("------------------------------------------------------")
-	log.info("-----------------network manager cleanup")
+	while ps.poll() == 0 do
+	end
+	ps.free()
+	print("------------------------------------------------------")
+	print("-----------------network manager cleanup")
 end
 
 function _M.Update()
-	ps.poll()
+	for i = 10, 1, -1 do
+		if ps.poll() == 0 then
+			break
+		end
+	end
 end
 
 function _M.RegNetwork(module, t)
@@ -78,6 +82,21 @@ function _M.Send(id, name, args)
 	end
 end
 
+function _M.OnDisconnected(id)
+	local so = assert(sockets[id])
+	local cb = delegets["OnLoginDisconnected"]
+	if cb then
+		for module, t in pairs(cb) do
+			local func = t.OnLoginDisconnected
+			pcall(func, so)
+		end
+	end
+	sockets[id] = nil
+end
+
+function _M.OnError(id)
+end
+
 -- login
 function _M.LoginAuth(ip, port, server, u, p)
 	assert(ip and port and server and u and p)
@@ -97,21 +116,6 @@ function _M.OnLoginAuthed(id, code, uid, subid, secret)
 	end
 end
 
-function _M.OnLoginDisconnected(id)
-	local so = assert(sockets[id])
-	local cb = delegets["OnLoginDisconnected"]
-	if cb then
-		for module, t in pairs(cb) do
-			local func = t.OnLoginDisconnected
-			pcall(func, so)
-		end
-	end
-	sockets[id] = nil
-end
-
-function _M.OnLoginError(id)
-end
-
 -- gate
 function _M.GateAuth(ip, port, server, uid, subid, secret)
 	local so = clientsock(_M, ip, port, server, uid, subid, secret)
@@ -125,7 +129,8 @@ function _M.OnGateAuthed(id, code)
 	local cb = delegets["OnGateAuthed"]
 	if cb then
 		for module, t in pairs(cb) do
-			t.OnGateAuthed(id, code)
+			local f = assert(t.OnGateAuthed)
+			pcall(f, id, code)
 		end
 	end
 end
@@ -134,22 +139,10 @@ function _M.OnGateData(id, type, name, args)
 	local cb = delegets[name]
 	if cb then
 		for module, t in pairs(cb) do
-			t[name](id, type, args)
+			local f = assert(t[name])
+			pcall(f, id, type, args)
 		end
 	end
-end
-
-function _M.OnGateDisconnected(id)
-	local cb = delegets["OnGateDisconnected"]
-	if cb then
-		for module, t in pairs(cb) do
-			t.OnGateDisconnected(id)
-		end
-	end
-	sockets[id] = nil
-end
-
-function _M.OnGateError()
 end
 
 return _M

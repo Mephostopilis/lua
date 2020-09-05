@@ -1291,7 +1291,14 @@ forward_message_tcp(struct socket_server* ss, struct socket* s, struct socket_lo
     int n = (int)read(s->fd, buffer, sz);
     if (n < 0) {
         FREE(buffer);
-#ifdef _MSC_VER
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+        switch (errno) {
+        case EINTR:
+            break;
+        case AGAIN_WOULDBLOCK:
+            fprintf(stderr, "socket-server: EAGAIN capture.\n");
+            break;
+#else
         int err = WSAGetLastError();
         switch (err) {
         case WSAEINTR:
@@ -1299,14 +1306,7 @@ forward_message_tcp(struct socket_server* ss, struct socket* s, struct socket_lo
         case WSAEWOULDBLOCK:
             fprintf(stderr, "socket-server: EAGAIN capture.\n");
             break;
-#else
-        switch (errno) {
-        case EINTR:
-            break;
-        case AGAIN_WOULDBLOCK:
-            fprintf(stderr, "socket-server: EAGAIN capture.\n");
-            break;
-#endif // _MSC_VER
+#endif
         default:
             // close when error
             force_close(ss, s, l, result);
@@ -1657,14 +1657,15 @@ send_request(struct socket_server* ss, struct request_package* request, char typ
     for (;;) {
         ssize_t n = write(ss->sendctrl_fd, &request->header[6], len + 2);
         if (n < 0) {
-#ifdef _MSC_VER
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX) || (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+            if (errno != EINTR) {
+                fprintf(stderr, "socket-server : send ctrl command error %s.\n", strerror(errno));
+            }
+
+#else
             int err = WSAGetLastError();
             if (err != WSAEINTR) {
                 fprintf(stderr, "socket-server : send ctrl command error %s.\n", wsa_strerror(err));
-            }
-#else
-            if (errno != EINTR) {
-                fprintf(stderr, "socket-server : send ctrl command error %s.\n", strerror(errno));
             }
 #endif // DEBUG
             continue;
