@@ -56,7 +56,8 @@ soi_size(void* ptr)
 }
 
 static void
-soi_free(void* ptr) {
+soi_free(void* ptr)
+{
     FREE(ptr);
 }
 
@@ -349,17 +350,6 @@ lstart(lua_State* L)
     return 0;
 }
 
-static int
-lkeepalive(lua_State* L)
-{
-    luaL_error(L, "error, not support.");
-    lua_Integer id = luaL_checkinteger(L, 1);
-    // struct lua_gate *g = (struct lua_gate *)lua_touserdata(L, 1);
-    // struct lua_socket * so = (struct lua_socket*)lua_touserdata(L, 2);
-    //setsockopt(so->so)
-    return 0;
-}
-
 /*
 ** @return [1] 0    success
 **		      -1    failture
@@ -445,7 +435,6 @@ luaopen_xluasocket(lua_State* L)
         { "connect", lconnect },
         { "bind", lbind },
         { "start", lstart },
-        { "keepalive", lkeepalive },
         { "send", lsend },
         { "sendto", lsendto },
         { "shutdown", lshutdown },

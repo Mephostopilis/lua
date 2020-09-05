@@ -5,7 +5,6 @@ set_target_properties(skynet PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../../lua
 set_target_properties(skynet PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../../luaclib)
 target_include_directories(skynet PRIVATE ../lua/src)
 target_link_libraries(skynet ../../liblua)
-add_dependencies(skynet liblua)
 
 IF(MSVC)
 target_compile_definitions(skynet PRIVATE LUA_BUILD_AS_DLL)

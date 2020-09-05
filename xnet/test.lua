@@ -4,8 +4,7 @@ local network = require "xnet.manager"
 local timer = require "timer.timer"
 local table_dump = require "luaTableDump"
 local function log(fmt, ...)
-	local x = string.format(fmt, ...)
-	print(x)
+	print(string.format(fmt, ...))
 end
 
 local function run()
@@ -15,13 +14,14 @@ local function run()
 	local server = "sample1"
 	local TI = 10000
 	local count = 0
-	local l = 0 -- login so
 	local c = 0 -- client so
 	local t = {
+		OnDisconnected = function(self, id)
+			print("------------")
+			log("Disconnected ---------------------")
+		end,
 		OnLoginAuthed = function(self, id, code, uid, subid, secret)
-			-- body
 			assert(self)
-			l = id
 			if code == 200 then
 				log.info("OnLoginAuthed ---------------------")
 				log.info("uid = %d", uid)
@@ -33,9 +33,7 @@ local function run()
 					log.error(err)
 				end
 			end
-		end,
-		OnLoginDisconnected = function(self, id)
-			log.info("OnLoginDisconnected ---------------------")
+			print("test onLoginaud")
 		end,
 		OnGateAuthed = function(self, id)
 			assert(self)
@@ -53,9 +51,6 @@ local function run()
 			end
 			timer.timeout(network, "timeout", TI)
 			so:send_request("enter", {sid = 0})
-		end,
-		OnGateDisconnected = function(self, id, ...)
-			log.info("OnGateDisconnected ---------------------")
 		end,
 		handshake = function(requestObj)
 			-- log.error("requestObj ===>")

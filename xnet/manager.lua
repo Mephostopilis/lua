@@ -15,20 +15,18 @@ local handler = function(t, id, ud, ...)
 		end
 	elseif t == ps.SOCKET_OPEN then
 		local subcmd = tostring(...)
-		print("socket open subcmd", subcmd)
 		if subcmd == "transfor" then
-			-- so:open()
-			local so = assert(sockets[id])
 		elseif subcmd == "start" then
 		else
-			-- local so = assert(sockets[id])
-			-- so:connected()
+			print("socket open :", subcmd)
+			local so = assert(sockets[id])
+			so:connected()
 		end
 	elseif t == ps.SOCKET_CLOSE then
 		local so = assert(sockets[id])
 		local ok, err = pcall(so.disconnected, so)
 		if not ok then
-			log.error(err)
+			print(err)
 		end
 	elseif t == ps.SOCKET_ERROR then
 	end
@@ -60,19 +58,16 @@ function _M.Update()
 	end
 end
 
-function _M.RegNetwork(module, t)
-	assert(type(t) == "table")
-	for k, v in pairs(t) do
-		local cb = delegets[k]
-		if not cb then
-			cb = {}
-			delegets[k] = cb
+function _M.RegNetwork(name, module)
+	assert(type(module) == "table")
+	for k, _ in pairs(module) do
+		local modules = delegets[k]
+		if not modules then
+			modules = {}
+			delegets[k] = modules
 		end
-		cb[module] = t
+		modules[name] = module
 	end
-end
-
-function _M.UnrNetwork(module)
 end
 
 function _M.Send(id, name, args)
@@ -84,10 +79,10 @@ end
 
 function _M.OnDisconnected(id)
 	local so = assert(sockets[id])
-	local cb = delegets["OnLoginDisconnected"]
-	if cb then
-		for module, t in pairs(cb) do
-			local func = t.OnLoginDisconnected
+	local modules = delegets["OnDisconnected"]
+	if modules then
+		for _, module in pairs(modules) do
+			local func = assert(module.OnDisconnected)
 			pcall(func, so)
 		end
 	end
@@ -95,6 +90,8 @@ function _M.OnDisconnected(id)
 end
 
 function _M.OnError(id)
+	local so = assert(sockets[id])
+	so:close()
 end
 
 -- login
@@ -107,6 +104,7 @@ function _M.LoginAuth(ip, port, server, u, p)
 end
 
 function _M.OnLoginAuthed(id, code, uid, subid, secret)
+	print("------------------------", id, code)
 	local so = assert(sockets[id])
 	local cb = delegets["OnLoginAuthed"]
 	if cb then
