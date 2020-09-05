@@ -70,10 +70,13 @@ function _M.RegNetwork(name, module)
 	end
 end
 
-function _M.Send(id, name, args)
+function _M.Request(id, name, args)
 	local so = sockets[id]
-	if so then
+	if so and so.ty == "client" then
 		so:send_request(name, args)
+		return true
+	else
+		return false
 	end
 end
 
@@ -104,12 +107,12 @@ function _M.LoginAuth(ip, port, server, u, p)
 end
 
 function _M.OnLoginAuthed(id, code, uid, subid, secret)
-	print("------------------------", id, code)
+	print("------------------------OnLoginAuthed", id, code)
 	local so = assert(sockets[id])
 	local cb = delegets["OnLoginAuthed"]
 	if cb then
 		for module, t in pairs(cb) do
-			t.OnLoginAuthed(so, code, uid, subid, secret)
+			t.OnLoginAuthed(id, code, uid, subid, secret)
 		end
 	end
 end
@@ -123,11 +126,11 @@ function _M.GateAuth(ip, port, server, uid, subid, secret)
 end
 
 function _M.OnGateAuthed(id, code)
-	print(id)
+	print("------------------------OnGateAuthed", id, code)
 	local cb = delegets["OnGateAuthed"]
 	if cb then
-		for module, t in pairs(cb) do
-			local f = assert(t.OnGateAuthed)
+		for name, module in pairs(cb) do
+			local f = assert(module.OnGateAuthed)
 			pcall(f, id, code)
 		end
 	end

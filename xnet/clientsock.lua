@@ -1,4 +1,5 @@
 local ps = require "xluasocket"
+local timesync = require "xluasocket.timesync"
 local crypt = require "skynet.crypt"
 local core = require "sproto.core"
 local sproto = require "sproto"
@@ -37,9 +38,11 @@ function cls:_dispatch(type, ...)
 		local ok, result = xpcall(cls._request, traceback, self, ...)
 		if ok then
 			if result then
-				local err = ps.send(self.fd, result)
+				local err = ps.send(self.fd, timesync.pack("pg", result))
 				if err == -1 then
-					print("send result error.")
+					print("err: send result error.")
+					local f = assert(self.OnError)
+					f(self.fd)
 				end
 			end
 		end
@@ -48,30 +51,39 @@ function cls:_dispatch(type, ...)
 	end
 end
 
-function cls:connected(...)
+function cls:connected()
 	self.index = 1
 	local handshake =
 		string.format(
 		"%s@%s#%s:%d",
-		crypt.base64encode(self._uid),
-		crypt.base64encode(self._server),
-		crypt.base64encode(self._subid),
+		crypt.base64encode(self.uid),
+		crypt.base64encode(self.server),
+		crypt.base64encode(self.subid),
 		self.index
 	)
-	local hmac = crypt.hmac64(crypt.hashkey(handshake), self._secret)
+	local hmac = crypt.hmac64(crypt.hashkey(handshake), self.secret)
 
 	-- send handshake
-	local err = ps.send(self.fd, handshake .. ":" .. crypt.base64encode(hmac))
+	local err = ps.send(self.fd, timesync.pack("pg", handshake .. ":" .. crypt.base64encode(hmac)))
 	if err == -1 then
-		self._loginstep = 0
-		log.error("clientsock send error.")
+		self.step = 0
+		local f = assert(self.OnError)
+		f(self.fd)
 		return
 	end
 	self.step = 1
 end
 
-function cls:data(package, ...)
+function cls:data(d)
+	print("data:", d)
+	self.buf = self.buf .. d
+	local package, left = timesync.unpack("pg", self.buf)
+	self.buf = left
+	if #package <= 0 then
+		return
+	end
 	if self.step == 1 then
+		print("step 1")
 		local code = tonumber(string.sub(package, 1, 3))
 		if code == 200 then
 			self.step = 2
@@ -80,13 +92,14 @@ function cls:data(package, ...)
 		end
 		self.network.OnGateAuthed(self.fd, code)
 	elseif self.step == 2 then
+		print("step 2")
 		self:_dispatch(self._host:dispatch(package))
 	end
 end
 
 function cls:disconnected()
 	self.step = 0
-	self._network.OnGateDisconnected(self.fd)
+	self.network.OnDisconnected(self.fd)
 end
 
 function cls:close()
@@ -104,18 +117,29 @@ function auth(mgr, ip, port, server, uid, subid, secret)
 		so.subid = subid
 		so.secret = secret
 
-		so.fd = 0
+		so.fd = err
 		so.index = 0
 		so.version = 0
 		so.step = 0
+		so.buf = ""
+		so.ty = "client"
 
-		self._RESPONSE_SESSION_NAME = {}
-		self._response_session = 0
+		so._RESPONSE_SESSION_NAME = {}
+		so._response_session = 0
 
 		-- sproto
 		local proto = {}
-		proto.c2s = res.LoadTextAsset("Assets/Art/proto/c2s.sproto")
-		proto.s2c = res.LoadTextAsset("Assets/Art/proto/s2c.sproto")
+		if res then
+			proto.c2s = res.LoadTextAsset("Assets/Art/proto/c2s.sproto")
+			proto.s2c = res.LoadTextAsset("Assets/Art/proto/s2c.sproto")
+		else
+			local fd = io.open("./proto/c2s.sproto")
+			proto.c2s = fd:read("*a")
+			fd:close()
+			local fd = io.open("./proto/s2c.sproto")
+			proto.s2c = fd:read("*a")
+			fd:close()
+		end
 
 		assert(type(proto.s2c) == "string")
 		assert(type(proto.c2s) == "string")
@@ -124,12 +148,13 @@ function auth(mgr, ip, port, server, uid, subid, secret)
 		local c2s_sp = core.newproto(parser.parse(proto.c2s))
 		local send_request = host:attach(sproto.sharenew(c2s_sp))
 
-		self._host = host
-		self._send_request = send_request
+		so._host = host
+		so._send_request = send_request
 
-		local so = cls.new(mgr, server, uid, subid, secret)
-		so.fd = err
+		setmetatable(so, {__index = cls})
 		return so
+	else
+		return nil
 	end
 end
 

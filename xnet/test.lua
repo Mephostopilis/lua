@@ -20,79 +20,67 @@ local function run()
 			print("------------")
 			log("Disconnected ---------------------")
 		end,
-		OnLoginAuthed = function(self, id, code, uid, subid, secret)
-			assert(self)
+		OnLoginAuthed = function(id, code, uid, subid, secret)
 			if code == 200 then
-				log.info("OnLoginAuthed ---------------------")
-				log.info("uid = %d", uid)
-				log.info("subid = %d", subid)
-				log.info("secrete = %s", secret)
-				log.info("gate Auth ---------------------")
+				log("OnLoginAuthed ---------------------")
+				log("uid = %d", uid)
+				log("subid = %d", subid)
+				log("secrete = %s", secret)
+				log("gate Auth ---------------------")
 				local ok, err = pcall(network.GateAuth, "127.0.0.1", 3301, server, uid, subid, secret)
 				if not ok then
-					log.error(err)
+					log(err)
 				end
 			end
 			print("test onLoginaud")
 		end,
-		OnGateAuthed = function(self, id)
-			assert(self)
-			-- 删除login so
-			network.CloseSo(l)
-			--
+		OnGateAuthed = function(id) --
 			c = id
-			log.info("OnGateAuthed")
-			local so = network.GetSo(c)
-			for k, v in pairs(resp) do
-				so:register_response(k, v, resp)
-			end
-			for k, v in pairs(req) do
-				so:regiseter_request(k, v, req)
-			end
+			log("**OnGateAuthed**")
 			timer.timeout(network, "timeout", TI)
-			so:send_request("enter", {sid = 0})
+			network.Request(id, "enter", {sid = 0})
 		end,
 		handshake = function(requestObj)
 			-- log.error("requestObj ===>")
 		end,
 		base_info = function(requestObj)
-			log.error("[base_info] => %s", table_dump(requestObj))
+			log("[base_info] => %s", table_dump(requestObj))
 		end,
 		room_info = function(requestObj)
-			log.error("[room_info] => %s", table_dump(requestObj))
+			log("[room_info] => %s", table_dump(requestObj))
 		end,
 		player_funcs = function(requestObj)
-			log.error("[player_funcs] => %s", table_dump(requestObj))
+			log("[player_funcs] => %s", table_dump(requestObj))
 		end,
 		player_heros = function(requestObj)
-			log.error("[player_heros] => %s", table_dump(requestObj))
+			log("[player_heros] => %s", table_dump(requestObj))
 		end,
 		inbox = function(requestObj)
-			log.error("[inbox] => %s", table_dump(requestObj))
+			log("[inbox] => %s", table_dump(requestObj))
 		end,
 		new_name = function(requestObj)
-			log.error("[new_name] => %s", table_dump(requestObj))
+			log("[new_name] => %s", table_dump(requestObj))
 		end,
 		handshake = function(responseObj)
 			-- log.error("[handshake] ===> %s", table_dump(responseObj))
 		end,
 		enter = function(responseObj)
-			log.error("[enter] ===> %s", table_dump(responseObj))
+			log("[enter] ===> %s", table_dump(responseObj))
 		end,
 		modify_name = function(responseObj)
-			log.error("[modify_name] ===> %s", table_dump(responseObj))
+			log("[modify_name] ===> %s", table_dump(responseObj))
 		end,
 		user_info = function(responseObj)
-			log.error("[user_info] ===> %s", table_dump(responseObj))
+			log("[user_info] ===> %s", table_dump(responseObj))
 		end,
 		fetch_rank_power = function(responseObj)
-			log.error("[fetch_rank_power] ===> %s", table_dump(responseObj))
+			log("[fetch_rank_power] ===> %s", table_dump(responseObj))
 		end,
 		fetch_store_items = function(responseObj)
-			log.error("[fetch_store_items] ===> %s", table_dump(responseObj))
+			log("[fetch_store_items] ===> %s", table_dump(responseObj))
 		end,
 		fetch_dailytasks = function(responseObj)
-			log.error("[fetch_dailytasks] ===> %s", table_dump(responseObj))
+			log("[fetch_dailytasks] ===> %s", table_dump(responseObj))
 		end
 	}
 
