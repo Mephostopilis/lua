@@ -25,14 +25,14 @@ CheckEnd()
 }
 
 static int
-WriteUInt8(char* ptr, int ofs, uint8_t val)
+WriteUInt8(uint8_t* ptr, int ofs, uint8_t val)
 {
     ptr[ofs] = val;
     return (ofs + 1);
 }
 
 static int
-WriteInt16(char* ptr, int ofs, int16_t val)
+WriteInt16(uint8_t* ptr, int ofs, int16_t val)
 {
     if (CheckEnd()) { // bd
         ptr[ofs] = val & 0xff;
@@ -49,7 +49,7 @@ WriteInt16(char* ptr, int ofs, int16_t val)
 }
 
 static int
-WriteInt32(char* ptr, int ofs, int32_t val)
+WriteInt32(uint8_t* ptr, int ofs, int32_t val)
 {
     if (CheckEnd()) {
         ptr[ofs] = val & 0xff;
@@ -66,7 +66,7 @@ WriteInt32(char* ptr, int ofs, int32_t val)
 }
 
 static int
-WriteInt64(char* ptr, int ofs, int64_t val)
+WriteInt64(uint8_t* ptr, int ofs, int64_t val)
 {
     if (CheckEnd()) {
         ptr[ofs] = val & 0xff;
@@ -87,7 +87,7 @@ WriteInt64(char* ptr, int ofs, int64_t val)
 }
 
 static int
-WriteFnt32(char* ptr, int ofs, float val)
+WriteFnt32(uint8_t* ptr, int ofs, float val)
 {
     union if32 x;
     x.f = val;
@@ -95,7 +95,7 @@ WriteFnt32(char* ptr, int ofs, float val)
 }
 
 static int
-WriteFnt64(char* ptr, int ofs, double val)
+WriteFnt64(uint8_t* ptr, int ofs, double val)
 {
     union if64 x;
     x.f = val;
@@ -103,7 +103,7 @@ WriteFnt64(char* ptr, int ofs, double val)
 }
 
 static int
-WriteString(char* ptr, int ofs, const char* src, int len)
+WriteString(uint8_t* ptr, int ofs, const char* src, int len)
 {
     ofs = WriteInt32(ptr, ofs, len);
     memcpy(ptr + ofs, src, len);

@@ -33,7 +33,9 @@ end
 function cls:_request(name, args, response, ...)
 	local f = assert(self.network.OnGateData)
 	local r = f(self.fd, "request", name, args)
-	return response(r)
+	if r then
+		return response(r)
+	end
 end
 
 function cls:_dispatch(type, ...)

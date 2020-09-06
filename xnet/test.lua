@@ -59,23 +59,31 @@ local function run()
 				log("[player_funcs] => %s", table_dump(requestObj))
 			end
 		end,
-		room_info = function(requestObj)
-			log("[room_info] => %s", table_dump(requestObj))
+		room_info = function(id, ty, requestObj)
+			if ty == "request" then
+				log("[room_info] => %s", table_dump(requestObj))
+			end
 		end,
-		player_heros = function(requestObj)
+		player_heros = function(id, ty, requestObj)
 			log("[player_heros] => %s", table_dump(requestObj))
 		end,
-		inbox = function(requestObj)
+		inbox = function(id, ty, requestObj)
 			log("[inbox] => %s", table_dump(requestObj))
 		end,
-		new_name = function(requestObj)
+		new_name = function(id, ty, requestObj)
 			log("[new_name] => %s", table_dump(requestObj))
 		end,
-		handshake = function(responseObj)
+		handshake = function(id, ty, responseObj)
 			-- log.error("[handshake] ===> %s", table_dump(responseObj))
 		end,
-		enter = function(responseObj)
-			log("[enter] ===> %s", table_dump(responseObj))
+		enter = function(id, ty, responseObj)
+			if ty == "response" then
+				log("[enter] ===> %s", table_dump(responseObj))
+				local ok = network.Request(id, "fetch_items", {sid = 0})
+				if ok < 0 then
+					print("err:  not send", ok)
+				end
+			end
 		end,
 		modify_name = function(responseObj)
 			log("[modify_name] ===> %s", table_dump(responseObj))
@@ -91,6 +99,9 @@ local function run()
 		end,
 		fetch_dailytasks = function(responseObj)
 			log("[fetch_dailytasks] ===> %s", table_dump(responseObj))
+		end,
+		fetch_items = function(id, ty, responseObj)
+			log("[fetch_items] ===> %s", table_dump(responseObj))
 		end
 	}
 
