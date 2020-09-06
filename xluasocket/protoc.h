@@ -111,7 +111,7 @@ WriteString(char* ptr, int ofs, const char* src, int len)
 }
 
 static int
-ReadUInt8(char* ptr, int ofs, uint8_t* val)
+ReadUInt8(const uint8_t* ptr, int ofs, uint8_t* val)
 {
     if (CheckEnd()) {
         *val = ptr[ofs];
@@ -128,7 +128,7 @@ ReadUInt8(char* ptr, int ofs, uint8_t* val)
 }
 
 static int
-ReadInt16(char* ptr, int ofs, int16_t* val)
+ReadInt16(const uint8_t* ptr, int ofs, int16_t* val)
 {
     if (CheckEnd()) {
         *val = 0;
@@ -139,7 +139,7 @@ ReadInt16(char* ptr, int ofs, int16_t* val)
         size_t len = 2;
         int16_t res = 0;
         for (size_t i = 0; i < len; i++) {
-            const char* p = ptr + ofs + i;
+            const uint8_t* p = ptr + ofs + i;
             int16_t t = *p;
             t = (t << ((len - i - 1) * 8)) & 0xffffffff;
             res |= t;
@@ -150,7 +150,7 @@ ReadInt16(char* ptr, int ofs, int16_t* val)
 }
 
 static int
-ReadInt32(char* ptr, int ofs, int32_t* val, int n)
+ReadInt32(const uint8_t* ptr, int ofs, int32_t* val, int n)
 {
     if (CheckEnd()) {
         *val = 0;
@@ -171,7 +171,7 @@ ReadInt32(char* ptr, int ofs, int32_t* val, int n)
 }
 
 static int
-ReadInt64(char* ptr, int ofs, int64_t* val, int n)
+ReadInt64(const uint8_t* ptr, int ofs, int64_t* val, int n)
 {
 #if defined(_DEBUG)
     assert((ofs + 8) < n);
@@ -190,7 +190,7 @@ ReadInt64(char* ptr, int ofs, int64_t* val, int n)
 }
 
 static int
-ReadFnt32(char* ptr, int ofs, float* val, int n)
+ReadFnt32(const uint8_t* ptr, int ofs, float* val, int n)
 {
 #if defined(_DEBUG)
     assert((ofs + 8) < n);
@@ -208,7 +208,7 @@ ReadFnt32(char* ptr, int ofs, float* val, int n)
 }
 
 static int
-ReadFnt64(char* ptr, int ofs, double* val, int n)
+ReadFnt64(const uint8_t* ptr, int ofs, double* val, int n)
 {
     size_t len = 8;
     int64_t res = 0;

@@ -180,7 +180,7 @@ lunpack(lua_State* L)
     } else if (strcmp(cmd, "pg") == 0) {
         assert(sz > 2);
         uint16_t count = 0;
-        int ofs = ReadInt16(buf, 0, &count);
+        int ofs = ReadInt16((const uint8_t*)buf, 0, &count);
         if ((sz - ofs) >= count) {
             lua_pushlstring(L, buf + ofs, count);
             lua_pushlstring(L, buf + ofs + count, sz - ofs - count);

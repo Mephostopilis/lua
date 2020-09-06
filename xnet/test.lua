@@ -7,6 +7,9 @@ local function log(fmt, ...)
 	print(string.format(fmt, ...))
 end
 
+local host = "127.0.0.1"
+-- local host = "119.27.191.44"
+
 local function run()
 	network.Startup()
 	local username = "12311"
@@ -27,7 +30,7 @@ local function run()
 				log("subid = %d", subid)
 				log("secrete = %s", secret)
 				log("gate Auth ---------------------")
-				local ok, err = pcall(network.GateAuth, "127.0.0.1", 3301, server, uid, subid, secret)
+				local ok, err = pcall(network.GateAuth, host, 3301, server, uid, subid, secret)
 				if not ok then
 					log(err)
 				end
@@ -37,20 +40,27 @@ local function run()
 		OnGateAuthed = function(id) --
 			c = id
 			log("**OnGateAuthed**")
-			timer.timeout(network, "timeout", TI)
-			network.Request(id, "enter", {sid = 0})
+			-- timer.timeout(network, "timeout", TI)
+			local ok = network.Request(id, "enter", {sid = 0})
+			if ok < 0 then
+				print("err:  not send", ok)
+			end
 		end,
 		handshake = function(requestObj)
 			-- log.error("requestObj ===>")
 		end,
-		base_info = function(requestObj)
-			log("[base_info] => %s", table_dump(requestObj))
+		base_info = function(id, ty, requestObj)
+			if ty == "request" then
+				log("[base_info] => %s", table_dump(requestObj))
+			end
+		end,
+		player_funcs = function(id, ty, requestObj)
+			if ty == "request" then
+				log("[player_funcs] => %s", table_dump(requestObj))
+			end
 		end,
 		room_info = function(requestObj)
 			log("[room_info] => %s", table_dump(requestObj))
-		end,
-		player_funcs = function(requestObj)
-			log("[player_funcs] => %s", table_dump(requestObj))
 		end,
 		player_heros = function(requestObj)
 			log("[player_heros] => %s", table_dump(requestObj))
@@ -85,7 +95,7 @@ local function run()
 	}
 
 	network.RegNetwork("test", t)
-	network.LoginAuth("127.0.0.1", "3002", server, username, password)
+	network.LoginAuth(host, "3002", server, username, password)
 
 	local function execute(obj, message, arg)
 		-- print(timer.now())

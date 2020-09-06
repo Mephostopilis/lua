@@ -4,7 +4,9 @@ local crypt = require "skynet.crypt"
 local core = require "sproto.core"
 local sproto = require "sproto"
 local parser = require "sprotoparser"
-local traceback = debug.stacktrace
+local traceback = debug.traceback
+local string_pack = timesync.pack
+local string_unpack = timesync.unpack
 local assert = assert
 local max = 1000000
 local cls = {}
@@ -15,14 +17,15 @@ function cls:send_request(name, args)
 		self._response_session = (self._response_session + 1) % max
 		self._RESPONSE_SESSION_NAME[self._response_session] = name
 		local v = self._send_request(name, args, self._response_session)
-		local err = ps.send(self.fd, v)
+		local err = ps.send(self.fd, string_pack("pg", v))
+		return err
 	else
 		print("clientsock not authed, you cann't send request")
 	end
 end
 
 function cls:_response(session, args, ...)
-	local name = self.RESPONSE_SESSION_NAME[session]
+	local name = self._RESPONSE_SESSION_NAME[session]
 	local f = assert(self.network.OnGateData)
 	f(self.fd, "response", name, args, ...)
 end
@@ -38,7 +41,7 @@ function cls:_dispatch(type, ...)
 		local ok, result = xpcall(cls._request, traceback, self, ...)
 		if ok then
 			if result then
-				local err = ps.send(self.fd, timesync.pack("pg", result))
+				local err = ps.send(self.fd, string_pack("pg", result))
 				if err == -1 then
 					print("err: send result error.")
 					local f = assert(self.OnError)
@@ -75,15 +78,13 @@ function cls:connected()
 end
 
 function cls:data(d)
-	print("data:", d)
 	self.buf = self.buf .. d
-	local package, left = timesync.unpack("pg", self.buf)
-	self.buf = left
-	if #package <= 0 then
-		return
-	end
 	if self.step == 1 then
-		print("step 1")
+		local package, left = timesync.unpack("pg", self.buf)
+		self.buf = left
+		if #package <= 0 then
+			return
+		end
 		local code = tonumber(string.sub(package, 1, 3))
 		if code == 200 then
 			self.step = 2
@@ -92,8 +93,14 @@ function cls:data(d)
 		end
 		self.network.OnGateAuthed(self.fd, code)
 	elseif self.step == 2 then
-		print("step 2")
-		self:_dispatch(self._host:dispatch(package))
+		while #self.buf > 0 do
+			local package, left = timesync.unpack("pg", self.buf)
+			self.buf = left
+			if #package <= 0 then
+				return
+			end
+			self:_dispatch(self._host:dispatch(package))
+		end
 	end
 end
 

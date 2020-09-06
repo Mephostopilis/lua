@@ -52,7 +52,8 @@ end
 
 function _M.Update()
 	for i = 10, 1, -1 do
-		if ps.poll() == 0 then
+		-- ps.poll()
+		if ps.poll() == 1 then
 			break
 		end
 	end
@@ -71,12 +72,11 @@ function _M.RegNetwork(name, module)
 end
 
 function _M.Request(id, name, args)
-	local so = sockets[id]
+	local so = assert(sockets[id])
 	if so and so.ty == "client" then
-		so:send_request(name, args)
-		return true
+		return so:send_request(name, args)
 	else
-		return false
+		return -2
 	end
 end
 
@@ -137,6 +137,7 @@ function _M.OnGateAuthed(id, code)
 end
 
 function _M.OnGateData(id, type, name, args)
+	-- print(id, type, name, args)
 	local cb = delegets[name]
 	if cb then
 		for module, t in pairs(cb) do
