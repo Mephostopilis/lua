@@ -65,9 +65,10 @@
 .base_info {
     num      0 : integer
     nickname 1 : string
-    nameid 2 : string
-    rcard 3 : integer
-    level 4 : integer
+    nameid   2 : string
+    rcard    3 : integer
+    level    4 : integer
+    subid    5 : integer
 }
 
 .team {
@@ -94,7 +95,7 @@ handshake 1 {
         sid 0 : integer
     }
     response {
-    	errorcode 0 : integer
+    	code 0 : integer
     }
 }
 
@@ -103,7 +104,7 @@ logout 2 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -112,7 +113,7 @@ enter 3 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -126,7 +127,7 @@ modify_name 100 {
         nickname  1 : string
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -146,7 +147,7 @@ fetch_items 150 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -154,23 +155,23 @@ fetch_items 150 {
 # 聊天模块 [200, 250)
 say 200 {
     request {
-        sid 0 : integer
-        t 1 : string
+        sid     0 : integer
+        session 1 : string
+        p       2 : string
     }
     response {
-        errorcode 0 : integer
-        r         1 : string
+        code 0 : integer
     }
 }
 
 create_chat_session 201 {
     request {
         sid 0 : integer
-        t 1 : string
+        to 1 : integer
     }
     response {
-        errorcode 0 : integer
-        r         1 : string
+        code 0 : integer
+        session_id 1 : integer
     }
 }
 
@@ -181,7 +182,7 @@ fetch_room_info 250 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         isCreated 1 : boolean
         joined    2 : boolean
         roomid    3 : integer
@@ -198,7 +199,7 @@ fetchinbox 300 {
         fromdate  1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         list      1 : *mail
     }
 }
@@ -209,7 +210,7 @@ viewedmail 302 {
         mailid 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -219,7 +220,7 @@ viewedmail_all 303 {
         mailid 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -230,7 +231,7 @@ fetch_checkins 350 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -243,7 +244,7 @@ fetch_records 400 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         r         1 : string
     }
 }
@@ -262,7 +263,7 @@ fetch_achievements 451 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -273,7 +274,7 @@ fetch_funcs 500 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -284,7 +285,7 @@ fetch_heros 550 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         list 1 : *hero
     }
 }
@@ -295,7 +296,7 @@ fetch_hero 551 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         hero 1 : hero
     }
 }
@@ -306,7 +307,7 @@ unlock_hero 552 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -318,7 +319,7 @@ fetch_friend 600 {
         friend_uid 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -328,7 +329,7 @@ rm_friend 601 {
         friend_uid 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -338,7 +339,7 @@ add_friend_req 602 {
         friend_uid 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -347,7 +348,7 @@ fetch_friends 604 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -356,7 +357,7 @@ fetch_friend_reqs 605 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -366,7 +367,7 @@ acc_friend_req 606 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -376,7 +377,7 @@ rej_friend_req 607 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -385,7 +386,7 @@ acc_friend_req_all 608 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -394,7 +395,7 @@ rej_friend_req_all 609 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -405,7 +406,7 @@ fetch_rank_power 650 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         list 1 : *rank_power_item
     }
 }
@@ -415,7 +416,7 @@ fetch_rank_team 651 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -426,7 +427,7 @@ fetch_dailytasks 700 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         tasks 1 : *taskdaily
     }
 }
@@ -437,7 +438,7 @@ draw_dailytask_reward 701 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -449,7 +450,7 @@ fetch_teams 750 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         teams 1 : *team
     }
 }
@@ -460,7 +461,7 @@ fetch_team 751 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         team 1 : team
     }
 }
@@ -471,7 +472,7 @@ create_team 752 {
         fake 1 : team
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         id 1 : integer
     }
 }
@@ -482,7 +483,7 @@ join_team 753 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -492,7 +493,7 @@ fetch_myteams 754 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         teams 1 : *team
     }
 }
@@ -503,7 +504,7 @@ quit_team 755 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -515,7 +516,7 @@ fetch_store_items 800 {
         sid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         items 1 : *store_item
     }
 }
@@ -526,7 +527,7 @@ fetch_store_item 801 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
         item 1 : store_item
     }
 }
@@ -537,7 +538,7 @@ buy_store_item 802 {
         id 1 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -548,6 +549,56 @@ opcode 10000 {
         opcode 0 : op
     }
     response {
-    	errorcode 0 : integer
+    	code 0 : integer
+    }
+}
+
+create 10001 {
+    request {
+        provice    0 : integer
+        ju         1 : integer
+        overtype   2 : integer
+    }
+    response {
+        code      0 : integer
+        roomid    1 : integer
+        room_max  2 : integer
+    }
+}
+
+join 10002 {
+    request {
+        roomid 0 : integer
+    }
+    response {
+        code 0 : integer
+        roomid    1 : integer
+        room_max  2 : integer
+    }
+}
+
+rejoin 10013 {
+    response {
+        code 0 : integer
+        roomid    1 : integer
+        room_max  2 : integer
+    }
+}
+
+leave 10014 {
+    request {
+        idx 0 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
+
+match 10015 {
+    request {
+        sid       0 : integer
+    }
+    response {
+        code      0 : integer
     }
 }

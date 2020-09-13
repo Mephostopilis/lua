@@ -65,9 +65,10 @@
 .base_info {
     num      0 : integer
     nickname 1 : string
-    nameid 2 : string
-    rcard 3 : integer
-    level 4 : integer
+    nameid   2 : string
+    rcard    3 : integer
+    level    4 : integer
+    subid    5 : integer
 }
 
 .team {
@@ -90,8 +91,11 @@
 ####################################### 
 # 一般模块 [1, 100)
 handshake 1 {
+    request {
+        idx 0 : integer
+    }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -100,7 +104,7 @@ logout 2 {
         subid 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -109,7 +113,7 @@ online 3 {
         idx 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -118,7 +122,7 @@ offline 4 {
         idx 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -131,7 +135,7 @@ base_info 101 {
         info 0 : base_info
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -141,13 +145,15 @@ radio 102 {
         adver     1 : string
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
 new_name 103 {
     request {
-        nickname  0 : string
+        code 0 : integer
+        uid       1 : integer
+        nickname  2 : string
     }
     response {
         errorcode 0 : integer
@@ -161,7 +167,7 @@ package_info 150 {
         common 0 : *item
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -170,7 +176,7 @@ add_item 151 {
         i 0 : item
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -179,7 +185,7 @@ sub_item 152 {
         i 0 : item
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -203,6 +209,28 @@ rchat 200 {
     }
 }
 
+create_chat_session 201 {
+    request {
+        errorcode 0 : integer
+        session   1 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
+
+say 202 {
+    request {
+        errorcode 0 : integer
+        session   1 : integer
+        sid       2 : integer
+        p       3 : string
+    }
+    response {
+        code 0 : integer
+    }
+}
+
 ####################################### 
 # 房间模块 [250, 300)
 room_info 250 {
@@ -215,15 +243,6 @@ room_info 250 {
     }
 }
 
-match 251 {
-    request {
-        id 0 : integer
-    }
-    response {
-        errorcode 0 : integer
-    }
-}
-
 ####################################### 
 # 邮件模块 [300, 350)
 inbox 300 {
@@ -231,7 +250,7 @@ inbox 300 {
         list      0 : *mail
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -239,10 +258,10 @@ inbox 300 {
 # 每日签到模块 [350, 400)
 checkins 350 {
     request {
-        
+        id 0 : integer
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -253,7 +272,7 @@ records 400 {
         list      0 : *record
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -264,7 +283,7 @@ player_achievement 450 {
         item 0: achievement
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -273,7 +292,7 @@ player_achievements 451 {
         list 0: *achievement
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -284,7 +303,7 @@ player_funcs 500 {
         list 0 : *func
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -295,7 +314,7 @@ player_heros 550 {
         list 0 : *hero
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -304,7 +323,7 @@ add_hero 551 {
         hero 0 : hero
     }
     response {
-        errorcode 0 : integer
+        code 0 : integer
     }
 }
 
@@ -312,6 +331,7 @@ add_hero 551 {
 # 好友模块 [600, 650)
 player_friends 600 {
     request {
+        id 0 : integer
     }
 }
 
@@ -332,5 +352,15 @@ opcode 10000 {
     }
     response {
         errorcode 0 : integer
+    }
+}
+
+match 10001 {
+    request {
+        sid       0 : integer
+        roomid    1 : integer
+    }
+    response {
+        code      0 : integer
     }
 }
