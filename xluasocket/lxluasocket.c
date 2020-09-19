@@ -426,21 +426,21 @@ luaopen_xluasocket(lua_State* L)
 {
     luaL_checkversion(L);
     luaL_Reg l[] = {
-        { "init", lnew },
-        { "free", lfree },
-        { "poll", lpoll },
-        { "exit", lexit },
+        {"init", lnew},
+        {"free", lfree},
+        {"poll", lpoll},
+        {"exit", lexit},
 
-        { "listen", llisten },
-        { "connect", lconnect },
-        { "bind", lbind },
-        { "start", lstart },
-        { "send", lsend },
-        { "sendto", lsendto },
-        { "shutdown", lshutdown },
-        { "closesocket", lclosesocket },
+        {"listen", llisten},
+        {"connect", lconnect},
+        {"bind", lbind},
+        {"start", lstart},
+        {"send", lsend},
+        {"sendto", lsendto},
+        {"shutdown", lshutdown},
+        {"closesocket", lclosesocket},
 
-        { NULL, NULL },
+        {NULL, NULL},
     };
 #if LUA_VERSION_NUM < 503
     luaL_openlib(L, "xluasocket", l, 0);

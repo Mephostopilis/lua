@@ -201,13 +201,13 @@ int luaopen_xluasocket_timesync(lua_State* L)
 {
     luaL_checkversion(L);
     luaL_Reg l[] = {
-        { "localtime", llocaltime },
-        { "sync", lsync },
-        { "globaltime", lglobaltime },
-        { "sleep", lsleep },
-        { "pack", lpack },
-        { "unpack", lunpack },
-        { NULL, NULL },
+        {"localtime", llocaltime},
+        {"sync", lsync},
+        {"globaltime", lglobaltime},
+        {"sleep", lsleep},
+        {"pack", lpack},
+        {"unpack", lunpack},
+        {NULL, NULL},
     };
     luaL_newlibtable(L, l);
     struct time* t = lua_newuserdata(L, sizeof(*t));

@@ -7,6 +7,9 @@ local function log(fmt, ...)
 	print(string.format(fmt, ...))
 end
 
+io.stdout:write("请输入:")
+print(io.stdin:lines())
+
 local host = "127.0.0.1"
 -- local host = "119.27.191.44"
 
