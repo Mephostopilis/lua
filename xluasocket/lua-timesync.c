@@ -149,7 +149,7 @@ lpack(lua_State* L)
         return 1;
     } else if (strcmp(cmd, "pg") == 0) {
         ARRAY(char, buf, sz + 2);
-        WriteInt16(buf, 0, sz);
+        WriteInt16((uint8_t*)buf, 0, sz);
         memcpy(buf + 2, str, sz);
         lua_pushlstring(L, buf, sz + 2);
         return 1;

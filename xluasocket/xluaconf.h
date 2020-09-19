@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <sys/timeb.h>
 #include <sys/types.h>
-#include <unistd.h>
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 #include "Win32_Interop/Win32_Extras.h"
 
@@ -32,6 +31,8 @@
 
 #endif
 
+#include <stddef.h>
+#include <stdlib.h>
 #define MALLOC malloc
 #define FREE free
 #define REALLOC realloc

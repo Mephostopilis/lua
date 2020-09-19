@@ -41,7 +41,7 @@
 #endif
 
 // linux
-#if defined(LINUX) && !defined(__APPLE__)
+#if defined(LINUX) || defined(__GNUC__) && !defined(__APPLE__)
 #undef CC_TARGET_PLATFORM
 #define CC_TARGET_PLATFORM CC_PLATFORM_LINUX
 #endif
