@@ -17,11 +17,7 @@
 */
 
 #include "b3r32.h"
-#if defined(GNUFIXMATH)
-#include <fixmath.h>
-#else
 #include <fix16.h>
-#endif
 #include <assert.h>
 
 b3R32::b3R32()
