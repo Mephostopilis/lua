@@ -88,6 +88,18 @@
     opcode 1 : integer
 }
 
+.player {
+    subid 0 : integer
+    idx 1 : integer
+}
+
+.move_info {
+    subid 0 : integer
+    idx 1 : integer
+    x 2 : integer
+    y 3 : integer
+    z 4 : integer
+}
 ####################################### 
 # 一般模块 [1, 100)
 handshake 1 {
@@ -116,7 +128,6 @@ enter 3 {
         code 0 : integer
     }
 }
-
 
 ####################################### 
 # 系统模块 [100, 150)
@@ -148,6 +159,17 @@ fetch_items 150 {
     }
     response {
         code 0 : integer
+    }
+}
+
+get_item 151 {
+    request {
+        sid 0 : integer
+        id 1 : integer
+    }
+    response {
+        code 0 : integer
+        item 1 : item
     }
 }
 
@@ -235,6 +257,14 @@ fetch_checkins 350 {
     }
 }
 
+checkin 351 {
+    request {
+        sid 0 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
 
 ####################################### 
 # 记录模块 [400, 450)
@@ -595,6 +625,15 @@ leave 10014 {
 }
 
 match 10015 {
+    request {
+        sid       0 : integer
+    }
+    response {
+        code      0 : integer
+    }
+}
+
+ready 10016 {
     request {
         sid       0 : integer
     }

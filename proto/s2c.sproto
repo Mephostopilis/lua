@@ -88,6 +88,18 @@
     opcode 1 : integer
 }
 
+.player {
+    subid 0 : integer
+    idx 1 : integer
+}
+
+.move_info {
+    subid 0 : integer
+    idx 1 : integer
+    x 2 : integer
+    y 3 : integer
+    z 4 : integer
+}
 ####################################### 
 # 一般模块 [1, 100)
 handshake 1 {
@@ -125,8 +137,6 @@ offline 4 {
         code 0 : integer
     }
 }
-
-
 
 ####################################### 
 # 系统模块 [100, 500)
@@ -265,6 +275,15 @@ checkins 350 {
     }
 }
 
+checkin 351 {
+    request {
+        id 0 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
+
 ####################################### 
 # 记录模块 [400, 450)
 records 400 {
@@ -362,5 +381,76 @@ match 10001 {
     }
     response {
         code      0 : integer
+    }
+}
+
+join 10002 {
+    request {
+        roomid 0 : integer
+        player 1 : player
+    }
+    response {
+        code 0 : integer
+        roomid    1 : integer
+        room_max  2 : integer
+    }
+}
+
+leave 10003 {
+    request {
+        roomid 0 : integer
+        player 1 : player
+    }
+    response {
+        code 0 : integer
+        roomid    1 : integer
+        room_max  2 : integer
+    }
+}
+
+wait_ready 10004 {
+    request {
+        roomid 0 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
+
+move 10005 {
+    request {
+        roomid 0 : integer
+        info 1 : *move_info
+    }
+    response {
+        code 0 : integer
+    }
+}
+
+born 10006 {
+    request {
+        roomid 0 : integer
+        idx 1 : integer
+        x 2 : integer
+        y 3 : integer
+        z 4 : integer
+        hero_id 5 : integer
+    }
+    response {
+        code 0 : integer
+    }
+}
+
+go 10007 {
+    request {
+        roomid 0 : integer
+        idx 1 : integer
+        x 2 : integer
+        y 3 : integer
+        z 4 : integer
+        hero_id 5 : integer
+    }
+    response {
+        code 0 : integer
     }
 }

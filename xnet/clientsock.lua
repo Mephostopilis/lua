@@ -26,12 +26,12 @@ end
 
 function cls:_response(session, args, ...)
 	local name = self._RESPONSE_SESSION_NAME[session]
-	local f = assert(self.network.OnGateData)
+	local f = assert(self.network.OnData)
 	f(self.fd, "response", name, args, ...)
 end
 
 function cls:_request(name, args, response, ...)
-	local f = assert(self.network.OnGateData)
+	local f = assert(self.network.OnData)
 	local r = f(self.fd, "request", name, args)
 	if r then
 		return response(r)

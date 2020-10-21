@@ -1,6 +1,7 @@
 local ps = require "xluasocket"
 local clientlogin = require "xnet.clientlogin"
 local clientsock = require "xnet.clientsock"
+local server = require "xnet.server"
 local assert = assert
 local sockets = {}
 local delegets = {}
@@ -8,6 +9,7 @@ local _M = {}
 
 local handler = function(t, id, ud, ...)
 	if t == ps.SOCKET_DATA then
+		print("-=---------------------------")
 		local so = assert(sockets[id])
 		local ok, err = pcall(so.data, so, ud)
 		if not ok then
@@ -22,6 +24,10 @@ local handler = function(t, id, ud, ...)
 			local so = assert(sockets[id])
 			so:connected()
 		end
+	elseif t == ps.SOCKET_ACCEPT then
+		print("sokcet accept [id = %d][acc = %d]", id, ud)
+		sockets[ud] = server(_M, ud)
+		ps.start(ud)
 	elseif t == ps.SOCKET_CLOSE then
 		local so = assert(sockets[id])
 		local ok, err = pcall(so.disconnected, so)
@@ -80,6 +86,35 @@ function _M.Request(id, name, args)
 	end
 end
 
+-- server
+function _M.Listen(addr, port)
+	addr = addr or "0.0.0.0"
+	port = port or 3300
+	local s = ps.listen(addr, 3300)
+	if s < 0 then
+		error(string.format("id = %d listen failture.", s))
+	else
+		ps.start(s)
+		print(string.format("id = %d listen", s))
+	end
+	return s
+end
+
+function _M.OnData(id, type, name, args)
+	local cb = delegets[name]
+	if cb then
+		for module, t in pairs(cb) do
+			local f = assert(t[name])
+			local ok, err = pcall(f, id, type, args)
+			if not ok then
+				print(err)
+			end
+		end
+	else
+		print(name, "------------")
+	end
+end
+
 function _M.OnDisconnected(id)
 	local so = assert(sockets[id])
 	local modules = delegets["OnDisconnected"]
@@ -132,17 +167,6 @@ function _M.OnGateAuthed(id, code)
 		for name, module in pairs(cb) do
 			local f = assert(module.OnGateAuthed)
 			pcall(f, id, code)
-		end
-	end
-end
-
-function _M.OnGateData(id, type, name, args)
-	-- print(id, type, name, args)
-	local cb = delegets[name]
-	if cb then
-		for module, t in pairs(cb) do
-			local f = assert(t[name])
-			pcall(f, id, type, args)
 		end
 	end
 end
