@@ -1,9 +1,8 @@
-﻿#ifndef ANDROID
 #define LUA_LIB
-#endif // !ANDROID
 
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "msvcint.h"
 
 #include "lua.h"
@@ -46,21 +45,39 @@ LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
 #if LUA_VERSION_NUM < 503
 
 #if LUA_VERSION_NUM < 502
-static lua_Integer lua_tointegerx(lua_State *L, int idx, int *isnum) {
+static int64_t lua_tointegerx(lua_State *L, int idx, int *isnum) {
 	if (lua_isnumber(L, idx)) {
 		if (isnum) *isnum = 1;
-		return lua_tointeger(L, idx);
+		return (int64_t)lua_tointeger(L, idx);
 	}
 	else {
 		if (isnum) *isnum = 0;
 		return 0;
 	}
 }
+
+static int lua_absindex (lua_State *L, int idx) {
+	if (idx > 0 || idx <= LUA_REGISTRYINDEX)
+		return idx;
+	return lua_gettop(L) + idx + 1;
+}
+
 #endif
 
-// work around , use push & lua_gettable may be better
-#define lua_geti lua_rawgeti
-#define lua_seti lua_rawseti
+static void
+lua_geti(lua_State *L, int index, lua_Integer i) {
+	index = lua_absindex(L, index);
+	lua_pushinteger(L, i);
+	lua_gettable(L, index);
+}
+
+static void
+lua_seti(lua_State *L, int index, lua_Integer n) {
+	index = lua_absindex(L, index);
+	lua_pushinteger(L, n);
+	lua_insert(L, -2);
+	lua_settable(L, index);
+}
 
 #endif
 
@@ -111,16 +128,37 @@ struct encode_ud {
 	const char * array_tag;
 	int array_index;
 	int deep;
-	int iter_index;
+	int map_entry;
+	int iter_func;
+	int iter_table;
+	int iter_key;
 };
 
 static int
-encode(const struct sproto_arg *args) {
+next_list(lua_State *L, struct encode_ud * self) {
+	// todo: check the key is equal to mainindex value
+	if (self->iter_func) {
+		lua_pushvalue(L, self->iter_func);
+		lua_pushvalue(L, self->iter_table);
+		lua_pushvalue(L, self->iter_key);
+		lua_call(L, 2, 2);
+		if (lua_isnil(L, -2)) {
+			lua_pop(L, 2);
+			return 0;
+		}
+		return 1;
+	} else {
+		lua_pushvalue(L,self->iter_key);
+		return lua_next(L, self->array_index);
+	}
+}
+
+static int
+get_encodefield(const struct sproto_arg *args) {
 	struct encode_ud *self = args->ud;
 	lua_State *L = self->L;
-	if (self->deep >= ENCODE_DEEPLEVEL)
-		return luaL_error(L, "The table is too deep");
 	if (args->index > 0) {
+		int map = args->ktagname != NULL;
 		if (args->tagname != self->array_tag) {
 			// a new array
 			self->array_tag = args->tagname;
@@ -132,48 +170,84 @@ encode(const struct sproto_arg *args) {
 				self->array_index = 0;
 				return SPROTO_CB_NOARRAY;
 			}
-			if (!lua_istable(L, -1)) {
-				return luaL_error(L, ".*%s(%d) should be a table (Is a %s)",
-					args->tagname, args->index, lua_typename(L, lua_type(L, -1)));
-			}
 			if (self->array_index) {
 				lua_replace(L, self->array_index);
 			} else {
 				self->array_index = lua_gettop(L);
 			}
-		}
-		if (args->mainindex >= 0) {
-			// use lua_next to iterate the table
-			// todo: check the key is equal to mainindex value
 
-			lua_pushvalue(L,self->iter_index);
-			if (!lua_next(L, self->array_index)) {
+			if (map) {
+				if (!self->map_entry) {
+					lua_createtable(L, 0, 2); // key/value entry
+					self->map_entry = lua_gettop(L);
+				}
+			}
+
+			if (luaL_getmetafield(L, self->array_index, "__pairs")) {
+				lua_pushvalue(L, self->array_index);
+				lua_call(L,	1, 3);
+				int top = lua_gettop(L);
+				self->iter_func = top - 2;
+				self->iter_table = top - 1;
+				self->iter_key = top;
+			} else if (!lua_istable(L,self->array_index)) {
+				return luaL_error(L, ".*%s(%d) should be a table or an userdata with metamethods (Is a %s)",
+					args->tagname, args->index, lua_typename(L, lua_type(L, -1)));
+			} else {
+				lua_pushnil(L);
+				self->iter_func = 0;
+				self->iter_table = 0;
+				self->iter_key = lua_gettop(L);
+			}
+		}
+		if (args->mainindex >= 0) { // *type(mainindex)
+			if (!next_list(L, self)) {
 				// iterate end
 				lua_pushnil(L);
-				lua_replace(L, self->iter_index);
+				lua_replace(L, self->iter_key);
 				return SPROTO_CB_NIL;
 			}
-			lua_insert(L, -2);
-			lua_replace(L, self->iter_index);
+			if (map) {
+				lua_pushvalue(L, -2);
+				lua_replace(L, self->iter_key);
+				lua_setfield(L, self->map_entry, args->vtagname);
+				lua_setfield(L, self->map_entry, args->ktagname);
+				lua_pushvalue(L, self->map_entry);
+			} else {
+				lua_insert(L, -2);
+				lua_replace(L, self->iter_key);
+			}
 		} else {
 			lua_geti(L, self->array_index, args->index);
 		}
 	} else {
 		lua_getfield(L, self->tbl_index, args->tagname);
 	}
-	if (lua_isnil(L, -1)) {
-		lua_pop(L,1);
-		return SPROTO_CB_NIL;
-	}
-	switch (args->type) {
+	return 0;
+}
+
+static int encode(const struct sproto_arg *args);
+
+static int
+encode_one(const struct sproto_arg *args, struct encode_ud *self) {
+	lua_State *L = self->L;
+	int type = args->type;
+	switch (type) {
 	case SPROTO_TINTEGER: {
-		lua_Integer v;
+		int64_t v;
 		lua_Integer vh;
 		int isnum;
-		v = lua_tointegerx(L, -1, &isnum);
-		if(!isnum) {
-			return luaL_error(L, ".%s[%d] is not an integer (Is a %s)", 
-				args->tagname, args->index, lua_typename(L, lua_type(L, -1)));
+		if (args->extra) {
+			// It's decimal.
+			lua_Number vn = lua_tonumber(L, -1);
+			// use 64bit integer for 32bit architecture.
+			v = (int64_t)(round(vn * args->extra));
+		} else {
+			v = lua_tointegerx(L, -1, &isnum);
+			if(!isnum) {
+				return luaL_error(L, ".%s[%d] is not an integer (Is a %s)", 
+					args->tagname, args->index, lua_typename(L, lua_type(L, -1)));
+			}
 		}
 		lua_pop(L,1);
 		// notice: in lua 5.2, lua_Integer maybe 52bit
@@ -186,6 +260,11 @@ encode(const struct sproto_arg *args) {
 			*(uint64_t *)args->value = (uint64_t)v;
 			return 8;
 		}
+	}
+	case SPROTO_TDOUBLE: {
+		lua_Number v = lua_tonumber(L, -1);
+		*(double*)args->value = (double)v;
+		return 8;
 	}
 	case SPROTO_TBOOLEAN: {
 		int v = lua_toboolean(L, -1);
@@ -216,18 +295,16 @@ encode(const struct sproto_arg *args) {
 		struct encode_ud sub;
 		int r;
 		int top = lua_gettop(L);
-		if (!lua_istable(L, top)) {
-			return luaL_error(L, ".%s[%d] is not a table (Is a %s)", 
-				args->tagname, args->index, lua_typename(L, lua_type(L, -1)));
-		}
 		sub.L = L;
 		sub.st = args->subtype;
 		sub.tbl_index = top;
 		sub.array_tag = NULL;
 		sub.array_index = 0;
 		sub.deep = self->deep + 1;
-		lua_pushnil(L);	// prepare an iterator slot
-		sub.iter_index = sub.tbl_index + 1;
+		sub.map_entry = 0;
+		sub.iter_func = 0;
+		sub.iter_table = 0;
+		sub.iter_key = 0;
 		r = sproto_encode(args->subtype, args->value, args->length, encode, &sub);
 		lua_settop(L, top-1);	// pop the value
 		if (r < 0) 
@@ -237,6 +314,25 @@ encode(const struct sproto_arg *args) {
 	default:
 		return luaL_error(L, "Invalid field type %d", args->type);
 	}
+}
+
+static int
+encode(const struct sproto_arg *args) {
+	struct encode_ud *self = args->ud;
+	lua_State *L = self->L;
+	int code;
+	luaL_checkstack(L, 12, NULL);
+	if (self->deep >= ENCODE_DEEPLEVEL)
+		return luaL_error(L, "The table is too deep");
+	code = get_encodefield(args);
+	if (code < 0) {
+		return code;
+	}
+	if (lua_isnil(L, -1)) {
+		lua_pop(L,1);
+		return SPROTO_CB_NIL;
+	}
+	return encode_one(args, self);
 }
 
 static void *
@@ -271,10 +367,10 @@ lencode(lua_State *L) {
 	int tbl_index = 2;
 	struct sproto_type * st = lua_touserdata(L, 1);
 	if (st == NULL) {
-		return luaL_argerror(L, 1, "Need a sproto_type object");
+		luaL_checktype(L, tbl_index, LUA_TNIL);
+		lua_pushstring(L, "");
+		return 1;	// response nil
 	}
-	luaL_checktype(L, tbl_index, LUA_TTABLE);
-	luaL_checkstack(L, ENCODE_DEEPLEVEL*2 + 8, NULL);
 	self.L = L;
 	self.st = st;
 	self.tbl_index = tbl_index;
@@ -285,8 +381,10 @@ lencode(lua_State *L) {
 		self.deep = 0;
 
 		lua_settop(L, tbl_index);
-		lua_pushnil(L);	// for iterator (stack slot 3)
-		self.iter_index = tbl_index+1;
+		self.map_entry = 0;
+		self.iter_func = 0;
+		self.iter_table = 0;
+		self.iter_key = 0;
 
 		r = sproto_encode(st, buffer, sz, encode, &self);
 		if (r<0) {
@@ -307,6 +405,7 @@ struct decode_ud {
 	int deep;
 	int mainindex_tag;
 	int key_index;
+	int map_entry;
 };
 
 static int
@@ -315,6 +414,7 @@ decode(const struct sproto_arg *args) {
 	lua_State *L = self->L;
 	if (self->deep >= ENCODE_DEEPLEVEL)
 		return luaL_error(L, "The table is too deep");
+	luaL_checkstack(L, 12, NULL);
 	if (args->index != 0) {
 		// It's array
 		if (args->tagname != self->array_tag) {
@@ -336,8 +436,21 @@ decode(const struct sproto_arg *args) {
 	switch (args->type) {
 	case SPROTO_TINTEGER: {
 		// notice: in lua 5.2, 52bit integer support (not 64)
-		lua_Integer v = *(uint64_t*)args->value;
-		lua_pushinteger(L, v);
+		if (args->extra) {
+			// lua_Integer is 32bit in small lua.
+			int64_t v = *(int64_t*)args->value;
+			lua_Number vn = (lua_Number)v;
+			vn /= args->extra;
+			lua_pushnumber(L, vn);
+		} else {
+			int64_t v = *(int64_t*)args->value;
+			lua_pushinteger(L, v);
+		}
+		break;
+	}
+	case SPROTO_TDOUBLE: {
+		double v = *(double*)args->value;
+		lua_pushnumber(L, v);
 		break;
 	}
 	case SPROTO_TBOOLEAN: {
@@ -350,14 +463,24 @@ decode(const struct sproto_arg *args) {
 		break;
 	}
 	case SPROTO_TSTRUCT: {
+		int map = args->ktagname != NULL;
 		struct decode_ud sub;
 		int r;
-		lua_newtable(L);
 		sub.L = L;
-		sub.result_index = lua_gettop(L);
+		if (map) {
+			if (!self->map_entry) {
+				lua_newtable(L);
+				self->map_entry = lua_gettop(L);
+			}
+			sub.result_index = self->map_entry;
+		} else {
+			lua_newtable(L);
+			sub.result_index = lua_gettop(L);
+		}
 		sub.deep = self->deep + 1;
 		sub.array_index = 0;
 		sub.array_tag = NULL;
+		sub.map_entry = 0;
 		if (args->mainindex >= 0) {
 			// This struct will set into a map, so mark the main index tag.
 			sub.mainindex_tag = args->mainindex;
@@ -369,13 +492,26 @@ decode(const struct sproto_arg *args) {
 				return SPROTO_CB_ERROR;
 			if (r != args->length)
 				return r;
-			lua_pushvalue(L, sub.key_index);
-			if (lua_isnil(L, -1)) {
-				luaL_error(L, "Can't find main index (tag=%d) in [%s]", args->mainindex, args->tagname);
+			if (map) {
+				lua_getfield(L, sub.result_index, args->ktagname);
+				if (lua_isnil(L, -1)) {
+					luaL_error(L, "Can't find key field in [%s]", args->tagname);
+				}
+				lua_getfield(L, sub.result_index, args->vtagname);
+				if (lua_isnil(L, -1)) {
+					luaL_error(L, "Can't find value field in [%s]", args->tagname);
+				}
+				lua_settable(L, self->array_index);
+				lua_settop(L, sub.result_index);
+			} else {
+				lua_pushvalue(L, sub.key_index);
+				if (lua_isnil(L, -1)) {
+					luaL_error(L, "Can't find main index (tag=%d) in [%s]", args->mainindex, args->tagname);
+				}
+				lua_pushvalue(L, sub.result_index);
+				lua_settable(L, self->array_index);
+				lua_settop(L, sub.result_index-1);
 			}
-			lua_pushvalue(L, sub.result_index);
-			lua_settable(L, self->array_index);
-			lua_settop(L, sub.result_index-1);
 			return 0;
 		} else {
 			sub.mainindex_tag = -1;
@@ -437,14 +573,14 @@ ldecode(lua_State *L) {
 	size_t sz;
 	int r;
 	if (st == NULL) {
-		return luaL_argerror(L, 1, "Need a sproto_type object");
+		// return nil
+		return 0;
 	}
 	sz = 0;
 	buffer = getbuffer(L, 2, &sz);
 	if (!lua_istable(L, -1)) {
 		lua_newtable(L);
 	}
-	luaL_checkstack(L, ENCODE_DEEPLEVEL*3 + 8, NULL);
 	self.L = L;
 	self.result_index = lua_gettop(L);
 	self.array_index = 0;
@@ -452,6 +588,7 @@ ldecode(lua_State *L) {
 	self.deep = 0;
 	self.mainindex_tag = -1;
 	self.key_index = 0;
+	self.map_entry = 0;
 	r = sproto_decode(st, buffer, (int)sz, decode, &self);
 	if (r < 0) {
 		return luaL_error(L, "decode error");
@@ -561,7 +698,11 @@ lprotocol(lua_State *L) {
 	}
 	response = sproto_protoquery(sp, tag, SPROTO_RESPONSE);
 	if (response == NULL) {
-		lua_pushnil(L);
+		if (sproto_protoresponse(sp, tag)) {
+			lua_pushlightuserdata(L, NULL);	// response nil
+		} else {
+			lua_pushnil(L);
+		}
 	} else {
 		lua_pushlightuserdata(L, response);
 	}
@@ -602,31 +743,52 @@ lloadproto(lua_State *L) {
 	return 1;
 }
 
+static void
+push_default(const struct sproto_arg *args, int table) {
+	lua_State *L = args->ud;
+	switch(args->type) {
+	case SPROTO_TINTEGER:
+		if (args->extra)
+			lua_pushnumber(L, 0.0);
+		else
+			lua_pushinteger(L, 0);
+		break;
+	case SPROTO_TDOUBLE:
+		lua_pushnumber(L, 0.0);
+		break;
+	case SPROTO_TBOOLEAN:
+		lua_pushboolean(L, 0);
+		break;
+	case SPROTO_TSTRING:
+		lua_pushliteral(L, "");
+		break;
+	case SPROTO_TSTRUCT:
+		if (table) {
+			lua_pushstring(L, sproto_name(args->subtype));
+		} else {
+			lua_createtable(L, 0, 1);
+			lua_pushstring(L, sproto_name(args->subtype));
+			lua_setfield(L, -2, "__type");
+		}
+		break;
+	default:
+		luaL_error(L, "Invalid type %d", args->type);
+		break;
+	}
+}
+
 static int
 encode_default(const struct sproto_arg *args) {
 	lua_State *L = args->ud;
 	lua_pushstring(L, args->tagname);
 	if (args->index > 0) {
 		lua_newtable(L);
+		push_default(args, 1);
+		lua_setfield(L, -2, "__array");
 		lua_rawset(L, -3);
 		return SPROTO_CB_NOARRAY;
 	} else {
-		switch(args->type) {
-		case SPROTO_TINTEGER:
-			lua_pushinteger(L, 0);
-			break;
-		case SPROTO_TBOOLEAN:
-			lua_pushboolean(L, 0);
-			break;
-		case SPROTO_TSTRING:
-			lua_pushliteral(L, "");
-			break;
-		case SPROTO_TSTRUCT:
-			lua_createtable(L, 0, 1);
-			lua_pushstring(L, sproto_name(args->subtype));
-			lua_setfield(L, -2, "__type");
-			break;
-		}
+		push_default(args, 0);
 		lua_rawset(L, -3);
 		return SPROTO_CB_NIL;
 	}

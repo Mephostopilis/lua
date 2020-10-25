@@ -1,3 +1,6 @@
 [submodule "reactphysics3d"]
 	path = reactphysics3d
 	url = https://github.com/ChestnutGames/reactphysics3d
+[submodule "lua-yaml"]
+	path = lua-yaml
+	url = https://github.com/ChestnutGames/lua-yaml
