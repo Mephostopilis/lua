@@ -5,6 +5,7 @@
 #include <lua.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <math.h>
 
 union float_number {
     double d;
@@ -44,12 +45,22 @@ lua_decode_float(lua_State* L)
     return 1;
 }
 
+static int
+lua_encode_tointeger(lua_State* L)
+{
+    lua_Number f = luaL_checknumber(L, 1);
+    long long i = floor(f);
+    lua_pushinteger(L, i);
+    return 1;
+}
+
 LUAMOD_API int
 luaopen_chestnut_float(lua_State* L)
 {
     luaL_checkversion(L);
     luaL_Reg l[] = {
         {"encode", lua_encode_float},
+        {"tointeger", lua_encode_tointeger},
         {"decode", lua_decode_float},
         {NULL, NULL},
     };
