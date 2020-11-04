@@ -21,6 +21,7 @@ LUAMOD_API int luaopen_physx(lua_State* L);
 #include <foundation/PxVec2.h>
 #include <foundation/PxVec3.h>
 
+#include <atlimage.h>
 #include <extensions/PxExtensionsAPI.h>
 #include <extensions/PxSimpleFactory.h>
 #include <mutex>
@@ -397,13 +398,13 @@ public:
 
         bool recordMemoryAllocations = true;
 
-        gFoundation = PxCreateFoundation(PX_FOUNDATION_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
+        gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
         if (!gFoundation) {
             throw std::exception("create foundation failture.");
         }
 
 #if defined(PX_SUPPORT_PVD)
-        gPvdTransport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5435, 10000);
+        gPvdTransport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10000);
         if (gPvdTransport == NULL)
             return;
 
@@ -442,6 +443,10 @@ public:
         //_physics->registerDeletionListener(*this, PxDeletionEventFlag::eUSER_RELEASE);
         initialized = true;
         mtx.unlock();
+    }
+
+    static void cleanup()
+    {
     }
 
     static physx::PxPhysics* getPxPhysics()
