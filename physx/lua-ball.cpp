@@ -5,6 +5,8 @@ extern "C" {
 #endif
 #include <lauxlib.h>
 #include <lua.h>
+#include <linalg.h>
+#include <math3dfunc.h>
 
 LUAMOD_API int luaopen_physx(lua_State* L);
 
@@ -26,19 +28,41 @@ LUAMOD_API int luaopen_physx(lua_State* L);
 #include <extensions/PxSimpleFactory.h>
 #include <mutex>
 
+/**
+\brief default implementation of the allocator interface required by the SDK
+功能区
+*/
+class JemallocAllocator : public physx::PxAllocatorCallback {
+public:
+    void* allocate(size_t size, const char*, const char*, int)
+    {
+        //void* ptr = platformAlignedAlloc(size);
+        /*PX_ASSERT((reinterpret_cast<size_t>(ptr) & 15) == 0);
+        return ptr;*/
+        return nullptr;
+    }
+
+    void deallocate(void* ptr)
+    {
+        //platformAlignedFree(ptr);
+    }
+};
+
 static std::mutex mtx;
 static bool initialized = false;
 static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 static physx::PxDefaultErrorCallback gDefaultErrorCallback;
-static physx::PxFoundation* gFoundation;
+static physx::PxFoundation* gFoundation = NULL;
 //physx::PxProfileZoneManager    *_profileZoneManager;
-static physx::PxPhysics* gPhysics;
-static physx::PxCooking* gCooking;
+static physx::PxPhysics* gPhysics = NULL;
+static physx::PxCooking* gCooking = NULL;
+static physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
+static physx::PxScene* gScenes[255] = {0};
 
 #if defined(PX_SUPPORT_PVD)
-physx::PxPvd* gPvd;
-physx::PxPvdTransport* gPvdTransport;
-physx::PxPvdInstrumentationFlags gPvdFlags;
+static physx::PxPvd* gPvd = NULL;
+static physx::PxPvdTransport* gPvdTransport = NULL;
+static physx::PxPvdInstrumentationFlags gPvdFlags;
 #endif
 
 namespace luabridge {
@@ -90,6 +114,7 @@ struct Stack<physx::PxVec3> {
         lua_setfield(L, -2, "z");
 
         // create meta bable
+		
     }
 
     static physx::PxVec3 get(lua_State* L, int index)
@@ -114,6 +139,48 @@ struct Stack<physx::PxVec3> {
 
 template <>
 struct Stack<physx::PxVec3 const&> : Stack<physx::PxVec3> {
+};
+
+template <>
+struct Stack<physx::PxVec4> {
+    static void push(lua_State* L, physx::PxVec4 const& vec4)
+    {
+        lua_createtable(L, 0, 4);
+        Stack<float>::push(L, vec4.x);
+        lua_setfield(L, -2, "x");
+        Stack<float>::push(L, vec4.y);
+        lua_setfield(L, -2, "y");
+        Stack<float>::push(L, vec4.z);
+        lua_setfield(L, -2, "z");
+        Stack<float>::push(L, vec4.w);
+        lua_setfield(L, -2, "w");
+        // create meta bable
+    }
+
+    static physx::PxVec4 get(lua_State* L, int index)
+    {
+        if (!lua_istable(L, index)) {
+            luaL_error(L, "#%d argments must be table", index);
+        }
+        physx::PxVec4 vec4;
+        lua_pushvalue(L, index);
+        lua_getfield(L, -1, "x");
+        vec4.x = Stack<float>::get(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "y");
+        vec4.y = Stack<float>::get(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "z");
+        vec4.z = Stack<float>::get(L, -1);
+        lua_getfield(L, -1, "w");
+        vec4.z = Stack<float>::get(L, -1);
+        lua_pop(L, 2);
+        return vec4;
+    }
+};
+
+template <>
+struct Stack<physx::PxVec4 const&> : Stack<physx::PxVec4> {
 };
 
 template <>
@@ -263,12 +330,16 @@ struct Stack<physx::PxTransform> {
         physx::PxTransform trans;
         lua_pushvalue(L, index);
         lua_getfield(L, -1, "p");
-        physx::PxVec3 position = Stack<physx::PxVec3>::get(L, -1);
-        trans.p = (position);
+        if (lua_istable(L, -1)) {
+            physx::PxVec3 position = Stack<physx::PxVec3>::get(L, -1);
+            trans.p = (position);
+        }
         lua_pop(L, 1);
         lua_getfield(L, -1, "q");
-        physx::PxQuat quat = Stack<physx::PxQuat>::get(L, -1);
-        trans.q = (quat);
+        if (lua_istable(L, -1)) {
+            physx::PxQuat quat = Stack<physx::PxQuat>::get(L, -1);
+            trans.q = (quat);
+        }
         lua_pop(L, 2);
         return trans;
     }
@@ -344,9 +415,15 @@ template <>
 struct Stack<physx::PxPlane> {
     static void push(lua_State* L, physx::PxPlane const& plane)
     {
-        physx::PxTransform trans = physx::PxTransformFromPlaneEquation(plane);
-        Stack<physx::PxTransform>::push(L, trans);
-
+        lua_createtable(L, 0, 4);
+        Stack<float>::push(L, plane.n.x);
+        lua_setfield(L, -2, "nx");
+        Stack<float>::push(L, plane.n.y);
+        lua_setfield(L, -2, "ny");
+        Stack<float>::push(L, plane.n.z);
+        lua_setfield(L, -2, "nz");
+        Stack<float>::push(L, plane.d);
+        lua_setfield(L, -2, "d");
         // create meta bable
     }
 
@@ -357,9 +434,20 @@ struct Stack<physx::PxPlane> {
         }
 
         lua_pushvalue(L, index);
-        physx::PxTransform trans = Stack<physx::PxTransform>::get(L, -1);
+        lua_getfield(L, -1, "nx");
+        float x = Stack<float>::get(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "ny");
+        float y = Stack<float>::get(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "nz");
+        float z = Stack<float>::get(L, -1);
+        lua_pop(L, 1);
+        lua_getfield(L, -1, "d");
+        float d = Stack<float>::get(L, -1);
+        lua_pop(L, 2);
 
-        return physx::PxPlaneEquationFromTransform(trans);
+        return physx::PxPlane(x, y, z, d);
     }
 };
 
@@ -368,31 +456,13 @@ struct Stack<physx::PxPlane const&> : Stack<physx::PxPlane> {
 };
 }
 
-/**
-\brief default implementation of the allocator interface required by the SDK
-*/
-class JemallocAllocator : public physx::PxAllocatorCallback {
-public:
-    void* allocate(size_t size, const char*, const char*, int)
-    {
-        //void* ptr = platformAlignedAlloc(size);
-        /*PX_ASSERT((reinterpret_cast<size_t>(ptr) & 15) == 0);
-        return ptr;*/
-        return nullptr;
-    }
-
-    void deallocate(void* ptr)
-    {
-        //platformAlignedFree(ptr);
-    }
-};
-
 class lCommon {
 public:
     static void initialize()
     {
         mtx.lock();
         if (initialized) {
+            mtx.unlock();
             return;
         }
 
@@ -440,6 +510,8 @@ public:
 
         gCooking = PxCreateCooking(PX_PHYSICS_VERSION, *gFoundation, params);
 
+        gDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
+
         //_physics->registerDeletionListener(*this, PxDeletionEventFlag::eUSER_RELEASE);
         initialized = true;
         mtx.unlock();
@@ -447,11 +519,90 @@ public:
 
     static void cleanup()
     {
+        mtx.lock();
+        if (!initialized) {
+            mtx.unlock();
+            return;
+        }
+        gDispatcher->release();
+
+        gCooking->release();
+
+        PxCloseExtensions();
+        gPhysics->release();
+        //physx::PxPvdTransport* transport = gPvd->getTransport();
+
+        gPvd->release();
+        //transport->release();
+        gPvdTransport->release();
+
+        gFoundation->release();
+
+        mtx.unlock();
+        printf("ball done.\n");
     }
 
-    static physx::PxPhysics* getPxPhysics()
+    static int createScene(const physx::PxVec3& gravity)
     {
-        return gPhysics;
+        size_t i = 0;
+        for (; i < 255; i++) {
+            physx::PxScene* scene = gScenes[i];
+            if (scene == NULL) {
+                break;
+            }
+        }
+        physx::PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
+        //sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
+        sceneDesc.gravity = gravity;
+        //gDispatcher =  PxDefaultCpuDispatcherCreate(2);
+        sceneDesc.cpuDispatcher = gDispatcher;
+        sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
+
+        gScenes[i] = gPhysics->createScene(sceneDesc);
+        return i;
+    }
+
+    static void releaseScene(int id)
+    {
+        physx::PxScene* scene = gScenes[id];
+        if (scene == NULL) {
+            return;
+        }
+        scene->release();
+    }
+
+    static physx::PxMaterial* createMaterial(
+        physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution)
+    {
+        return gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
+    }
+
+    static physx::PxShape* createShapeSphere(
+        const physx::PxSphereGeometry& geometry,
+        physx::PxMaterial* material)
+    {
+        return gPhysics->createShape(geometry, *material);
+    }
+
+    static physx::PxShape* createShapeBox(
+        const physx::PxBoxGeometry& geometry,
+        physx::PxMaterial* material)
+    {
+        return gPhysics->createShape(geometry, *material);
+    }
+
+    static physx::PxShape* createShapeCapsule(
+        const physx::PxCapsuleGeometry& geometry,
+        physx::PxMaterial* material)
+    {
+        return gPhysics->createShape(geometry, *material);
+    }
+
+    static physx::PxShape* createShapeConvex(
+        const physx::PxConvexMeshGeometry& geometry,
+        physx::PxMaterial* material)
+    {
+        return gPhysics->createShape(geometry, *material);
     }
 
     static physx::PxRigidDynamic* createDynamicSphere(
@@ -463,7 +614,7 @@ public:
         physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
         physx::PxRigidDynamic* sphere = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
         PX_ASSERT(sphere);
-
+        material->release();
         return sphere;
     }
 
@@ -476,7 +627,7 @@ public:
         physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
         physx::PxRigidDynamic* box = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
         PX_ASSERT(box);
-
+        material->release();
         return box;
     }
 
@@ -489,7 +640,7 @@ public:
         physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
         physx::PxRigidDynamic* capsule = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
         PX_ASSERT(capsule);
-
+        material->release();
         return capsule;
     }
 
@@ -501,21 +652,56 @@ public:
         physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
         physx::PxRigidDynamic* convex = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
         PX_ASSERT(convex);
-
+        material->release();
         return convex;
     }
 
-    static physx::PxRigidStatic* createPlane(
+    static physx::PxRigidDynamic* createDynamic(
         const physx::PxTransform& transform,
+        const physx::PxBoxGeometry& geometry,
+        physx::PxMaterial* material,
+        physx::PxReal density)
+    {
+        physx::PxRigidDynamic* box = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
+        PX_ASSERT(box);
+        return box;
+    }
+
+    static physx::PxRigidStatic* createPlane(
         const physx::PxPlane& plane,
         physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution)
     {
         physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
         physx::PxRigidStatic* body = physx::PxCreatePlane(*gPhysics, plane, *material);
         PX_ASSERT(body);
-
+        material->release();
         return body;
     }
+
+    static void stepPhysics(int id, bool interactive)
+    {
+        PX_UNUSED(interactive);
+        physx::PxScene* scene = gScenes[id];
+        scene->simulate(1.0f / 60.0f);
+        scene->fetchResults(true);
+    }
+
+    static void _PxScene_addPxRigidDynamic_(int id, physx::PxRigidDynamic* actor)
+    {
+        physx::PxScene* scene = gScenes[id];
+        scene->addActor(*actor);
+    }
+
+    static void _PxScene_addPxRigidStatic_(int id, physx::PxRigidStatic* actor)
+    {
+        physx::PxScene* scene = gScenes[id];
+        scene->addActor(*actor);
+    }
+
+    // body
+    /*static void updateMassAndInertia(physx::PxRigidDynamic* body, ) {
+            physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+	}*/
 };
 
 LUAMOD_API
@@ -525,37 +711,38 @@ int luaopen_physx(lua_State* L)
 
     luabridge::getGlobalNamespace(L)
         .beginNamespace("lphysx")
-        //.addFunction("PxCreateFoundation", &PxCreateFoundation)
-        //.addFunction("PxGetFoundation", &PxGetFoundation)
-        //.addFunction("PxCreatePhysics", &PxCreatePhysics)
         .beginClass<lCommon>("Common")
         .addStaticFunction("initialize", &lCommon::initialize)
-        .addStaticFunction("getPxPhysics", &lCommon::getPxPhysics)
+        .addStaticFunction("createScene", &lCommon::createScene)
+        .addStaticFunction("releaseScene", &lCommon::releaseScene)
+        .addStaticFunction("createMaterial", &lCommon::createMaterial)
+        .addStaticFunction("createShapeSphere", &lCommon::createShapeSphere)
+        .addStaticFunction("createShapeBox", &lCommon::createShapeBox)
+        .addStaticFunction("createShapeCapsule", &lCommon::createShapeCapsule)
+        .addStaticFunction("createShapeConvex", &lCommon::createShapeConvex)
+        .addStaticFunction("createShapeCapsule", &lCommon::createShapeCapsule)
         .addStaticFunction("createDynamicSphere", &lCommon::createDynamicSphere)
         .addStaticFunction("createDynamicBox", &lCommon::createDynamicBox)
         .addStaticFunction("createDynamicCapsule", &lCommon::createDynamicCapsule)
         .addStaticFunction("createDynamicConvex", &lCommon::createDynamicConvex)
+        .addStaticFunction("createDynamic", &lCommon::createDynamic)
         .addStaticFunction("createPlane", &lCommon::createPlane)
+        .addStaticFunction("addRigidDynamic", &lCommon::_PxScene_addPxRigidDynamic_)
+        .addStaticFunction("addRigidStatic", &lCommon::_PxScene_addPxRigidStatic_)
+        .addStaticFunction("cleanup", &lCommon::cleanup)
         .endClass()
-        .beginClass<physx::PxDefaultAllocator>("PxDefaultAllocator")
+        .beginClass<physx::PxMaterial>("PxMaterial")
+        .addFunction("release", &physx::PxMaterial::release)
         .endClass()
-        .beginClass<JemallocAllocator>("JemallocAllocator")
+        .beginClass<physx::PxShape>("PxShape")
+        .addFunction("release", &physx::PxShape::release)
         .endClass()
-        .beginClass<physx::PxPhysics>("PxPhysics")
-        //.addFunction("registerDeletionListener", &physx::PxPhysics::registerDeletionListener)
-        .addFunction("createScene", &physx::PxPhysics::createScene)
+        .beginClass<physx::PxRigidActor>("PxRigidActor")
+        .addFunction("release", &physx::PxRigidActor::release)
         .endClass()
-        .beginClass<physx::PxCooking>("PxCooking")
+        .deriveClass<physx::PxRigidStatic, physx::PxRigidActor>("PxRigidStatic")
         .endClass()
-        .beginClass<physx::PxPvd>("PxPvd")
-        .endClass()
-        .beginClass<physx::PxPvdTransport>("PxPvdTransport")
-        .endClass()
-        .beginClass<physx::PxScene>("PxScene")
-        .endClass()
-        .beginClass<physx::PxRigidStatic>("PxRigidStatic")
-        .endClass()
-        .beginClass<physx::PxRigidDynamic>("PxRigidDynamic")
+        .deriveClass<physx::PxRigidDynamic, physx::PxRigidActor>("PxRigidDynamic")
         .endClass()
         .endNamespace();
 
