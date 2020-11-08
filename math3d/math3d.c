@@ -5,11 +5,11 @@
 #include <math.h>
 #include <float.h>
 
-#ifndef _MSC_VER
+//#ifndef _MSC_VER
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
-#endif // !_MSC_VER
+//#endif // !_MSC_VER
 
 #ifndef lua_newuserdata
 // lua_newuserdata is a macro in Lua 5.4 

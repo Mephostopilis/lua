@@ -38,5 +38,5 @@ set_target_properties(redis PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG ../..)
 set_target_properties(redis PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ../..)
 
 target_include_directories(redis PRIVATE googletest/include)
-target_link_libraries(redis ../../redis/googletest/Debug/gtestd ../../redis/googletest/Debug/gtest_maind)
+#target_link_libraries(redis ../../redis/googletest/Debug/gtestd ../../redis/googletest/Debug/gtest_maind)
 
