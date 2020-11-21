@@ -1,7 +1,7 @@
 ﻿
-file(GLOB SRC_LIST *.c)
 
-SET(SRC_LIST 
+SET(SRC_LIST
+	./spinlock.h
 	./lua-snowflake.c
 )
 

@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 #include <lauxlib.h>
-#include <linalg.h>
 #include <lua.h>
 
 LUAMOD_API int luaopen_physx(lua_State* L);
@@ -12,8 +11,6 @@ LUAMOD_API int luaopen_physx(lua_State* L);
 #ifdef __cplusplus
 }
 #endif
-
-#include <LuaBridge/LuaBridge.h>
 
 #include <PxPhysicsAPI.h>
 #include <PxRigidDynamic.h>
@@ -23,7 +20,6 @@ LUAMOD_API int luaopen_physx(lua_State* L);
 #include <foundation/PxVec2.h>
 #include <foundation/PxVec3.h>
 
-#include <atlimage.h>
 #include <extensions/PxExtensionsAPI.h>
 #include <extensions/PxSimpleFactory.h>
 #include <mutex>
@@ -57,13 +53,10 @@ static physx::PxFoundation* gFoundation = NULL;
 static physx::PxPhysics* gPhysics = NULL;
 static physx::PxCooking* gCooking = NULL;
 static physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
-static physx::PxScene* gScenes[255] = {0};
 
-#if defined(PX_SUPPORT_PVD)
 static physx::PxPvd* gPvd = NULL;
 static physx::PxPvdTransport* gPvdTransport = NULL;
 static physx::PxPvdInstrumentationFlags gPvdFlags;
-#endif
 
 static int initialize(lua_State* L)
 {
@@ -77,11 +70,12 @@ static int initialize(lua_State* L)
 
     gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
     if (!gFoundation) {
-        throw std::exception("create foundation failture.");
+        luaL_error(L, "create foundation failture.");
+        return 0;
     }
 
 #if defined(PX_SUPPORT_PVD)
-    gPvdTransport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10000);
+    gPvdTransport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
     if (gPvdTransport == NULL)
         return 0;
 
@@ -103,11 +97,13 @@ static int initialize(lua_State* L)
     physx::PxTolerancesScale scale;
     gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, scale, recordMemoryAllocations, gPvd);
     if (!gPhysics) {
-        throw std::exception("PxCreatePhysics failed.");
+        luaL_error(L, "PxCreatePhysics failed.");
+        return 0;
     }
 
     if (!PxInitExtensions(*gPhysics, gPvd)) {
-        throw std::exception("PxInitExtensions failed.");
+        luaL_error(L, "PxInitExtensions failed.");
+        return 0;
     }
 
     physx::PxCookingParams params(scale);
@@ -120,6 +116,8 @@ static int initialize(lua_State* L)
     gDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
 
     //_physics->registerDeletionListener(*this, PxDeletionEventFlag::eUSER_RELEASE);
+    //PxArticulationJointReducedCoordinateGeneratedInfoC
+
     initialized = true;
     mtx.unlock();
     return 0;
@@ -140,46 +138,96 @@ static int cleanup(lua_State* L)
     gPhysics->release();
     //physx::PxPvdTransport* transport = gPvd->getTransport();
 
+#if defined(PX_SUPPORT_PVD)
     gPvd->release();
     //transport->release();
     gPvdTransport->release();
+#endif
 
     gFoundation->release();
 
     mtx.unlock();
     printf("ball done.\n");
+    return 0;
+}
+
+static int release(lua_State* L)
+{
+    if (lua_gettop(L) < 1) {
+        return 0;
+    }
+    physx::PxBase* scene = (physx::PxBase*)lua_touserdata(L, 1);
+    if (scene == NULL) {
+        return 0;
+    }
+    if (scene->isReleasable()) {
+        scene->release();
+    }
+
+    return 0;
+}
+
+static int isReleasable(lua_State* L)
+{
+    physx::PxBase* scene = (physx::PxBase*)lua_touserdata(L, 1);
+    bool b = scene->isReleasable();
+    lua_pushboolean(L, b);
+    return 1;
 }
 
 static int createScene(lua_State* L)
 {
     const float* vec = (float*)lua_touserdata(L, 1);
     physx::PxVec3 gravity(vec[0], vec[1], vec[2]);
-    size_t i = 0;
-    for (; i < 255; i++) {
-        physx::PxScene* scene = gScenes[i];
-        if (scene == NULL) {
-            break;
-        }
-    }
+
     physx::PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-    //sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
     sceneDesc.gravity = gravity;
     //gDispatcher =  PxDefaultCpuDispatcherCreate(2);
     sceneDesc.cpuDispatcher = gDispatcher;
     sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
 
     physx::PxScene* scene = gPhysics->createScene(sceneDesc);
+    PX_ASSERT(scene);
+    if (scene == NULL) {
+        return 0;
+    }
+
+#if defined(PX_SUPPORT_PVD)
+    physx::PxPvdSceneClient* pvdClient = scene->getScenePvdClient();
+    if (pvdClient) {
+        pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+        pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+        pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+    }
+#endif
+
     lua_pushlightuserdata(L, scene);
     return 1;
 }
 
-static int releaseScene(lua_State* L)
+static int addActor(lua_State* L)
 {
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
-    if (scene == NULL) {
-        return 0;
-    }
-    scene->release();
+    physx::PxActor* actor = (physx::PxActor*)lua_touserdata(L, 2);
+    scene->addActor(*actor);
+    return 0;
+}
+
+static int removeActor(lua_State* L)
+{
+    physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
+    physx::PxActor* actor = (physx::PxActor*)lua_touserdata(L, 2);
+    scene->removeActor(*actor);
+    return 0;
+}
+
+static int stepPhysics(lua_State* L)
+{
+    physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
+    bool interactive = lua_toboolean(L, 2);
+    PX_UNUSED(interactive);
+    scene->simulate(1.0f / 60.0f);
+    scene->fetchResults(true);
     return 0;
 }
 
@@ -208,7 +256,7 @@ static int createShapeBox(lua_State* L)
     physx::PxReal hy = lua_tonumber(L, 2);
     physx::PxReal hz = lua_tonumber(L, 3);
     const physx::PxBoxGeometry geometry(hx, hy, hz);
-    physx::PxMaterial* material = nullptr;
+    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 4);
     physx::PxShape* shape = gPhysics->createShape(geometry, *material);
     lua_pushlightuserdata(L, shape);
     return 1;
@@ -233,65 +281,23 @@ static int createShapeConvex(lua_State* L)
     return 1;
 }
 
-//static int createDynamicSphere(
-//    const physx::PxTransform& transform,
-//    const physx::PxSphereGeometry& geometry,
-//    physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution,
-//    physx::PxReal density)
-//{
-//    physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
-//    physx::PxRigidDynamic* sphere = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
-//    PX_ASSERT(sphere);
-//    material->release();
-//    return sphere;
-//}
-//
-//static physx::PxRigidDynamic* createDynamicBox(
-//    const physx::PxTransform& transform,
-//    const physx::PxBoxGeometry& geometry,
-//    physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution,
-//    physx::PxReal density)
-//{
-//    physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
-//    physx::PxRigidDynamic* box = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
-//    PX_ASSERT(box);
-//    material->release();
-//    return box;
-//}
-//
-//static physx::PxRigidDynamic* createDynamicCapsule(
-//    const physx::PxTransform& transform,
-//    const physx::PxCapsuleGeometry& geometry,
-//    physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution,
-//    physx::PxReal density)
-//{
-//    physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
-//    physx::PxRigidDynamic* capsule = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
-//    PX_ASSERT(capsule);
-//    material->release();
-//    return capsule;
-//}
-
-//static physx::PxRigidDynamic* createDynamicConvex(const physx::PxTransform& transform,
-//    const physx::PxConvexMeshGeometry& geometry,
-//    physx::PxReal staticFriction, physx::PxReal dynamicFriction, physx::PxReal restitution,
-//    physx::PxReal density)
-//{
-//    physx::PxMaterial* material = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
-//    physx::PxRigidDynamic* convex = PxCreateDynamic(*gPhysics, transform, geometry, *material, density);
-//    PX_ASSERT(convex);
-//    material->release();
-//
-//    return convex;
-//}
-
 static int createDynamic(lua_State* L)
 {
-    const float* vec = (float*)lua_touserdata(L, 1);
-    const physx::PxTransform transform;
-    physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
-    physx::PxReal density = lua_tonumber(L, 3);
-    physx::PxRigidDynamic* box = PxCreateDynamic(*gPhysics, transform, *shape, density);
+    float* vec = (float*)lua_touserdata(L, 1);
+    physx::PxMat44 mat(vec);
+    const physx::PxTransform transform(mat);
+    physx::PxRigidDynamic* box = gPhysics->createRigidDynamic(transform);
+    PX_ASSERT(box);
+    lua_pushlightuserdata(L, box);
+    return 1;
+}
+
+static int createStatic(lua_State* L)
+{
+    float* vec = (float*)lua_touserdata(L, 1);
+    physx::PxMat44 mat(vec);
+    const physx::PxTransform transform(mat);
+    physx::PxRigidStatic* box = gPhysics->createRigidStatic(transform);
     PX_ASSERT(box);
     lua_pushlightuserdata(L, box);
     return 1;
@@ -299,57 +305,64 @@ static int createDynamic(lua_State* L)
 
 static int createPlane(lua_State* L)
 {
-    const physx::PxPlane plane;
-    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 2);
+    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
+    float distance = lua_tonumber(L, 2);
+    const float* vec = (float*)lua_touserdata(L, 3);
+    const physx::PxPlane plane(vec[0], vec[1], vec[2], distance);
+
     physx::PxRigidStatic* body = physx::PxCreatePlane(*gPhysics, plane, *material);
     PX_ASSERT(body);
-    material->release();
+
     lua_pushlightuserdata(L, body);
     return 1;
 }
 
-static int releaseActor(lua_State* L)
+static int createConstraint(lua_State* L)
 {
-    physx::PxActor* body = (physx::PxActor*)lua_touserdata(L, 1);
-
-    const physx::PxTransform transform;
-    physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
-    physx::PxReal density = lua_tonumber(L, 3);
-    physx::PxRigidDynamic* box = PxCreateDynamic(*gPhysics, transform, *shape, density);
-    PX_ASSERT(box);
-    lua_pushlightuserdata(L, box);
-    return 1;
-}
-
-static int stepPhysics(int id, bool interactive)
-{
-    PX_UNUSED(interactive);
-    physx::PxScene* scene = gScenes[id];
-    scene->simulate(1.0f / 60.0f);
-    scene->fetchResults(true);
-    return 0;
-}
-
-static int _PxScene_addPxRigidDynamic_(lua_State* L)
-{
-    physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
-    physx::PxRigidDynamic* actor = (physx::PxRigidDynamic*)lua_touserdata(L, 2);
-    scene->addActor(*actor);
-    return 0;
-}
-
-static int _PxScene_addPxRigidStatic_(lua_State* L)
-{
-    physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
-    physx::PxRigidStatic* actor = (physx::PxRigidStatic*)lua_touserdata(L, 2);
-    scene->addActor(*actor);
     return 0;
 }
 
 // body
-/*static void updateMassAndInertia(physx::PxRigidDynamic* body, ) {
-            physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-	}*/
+static int updateMassAndInertia(lua_State* L)
+{
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+    return 0;
+}
+
+static int attachShape(lua_State* L)
+{
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
+    bool b = body->attachShape(*shape);
+    lua_pushboolean(L, b);
+    return 1;
+}
+
+static int detachShape(lua_State* L)
+{
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
+    body->detachShape(*shape);
+    return 0;
+}
+
+static int setAngularDamping(lua_State* L)
+{
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    lua_Number ang = lua_tonumber(L, 2);
+    body->setAngularDamping(ang);
+    return 0;
+}
+
+static int setLinearVelocity(lua_State* L)
+{
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    const float* vec = (float*)lua_touserdata(L, 2);
+    physx::PxVec3 vel(vec[0], vec[1], vec[2]);
+    body->setLinearVelocity(vel);
+    return 0;
+}
 
 LUAMOD_API
 int luaopen_physx(lua_State* L)
@@ -359,24 +372,28 @@ int luaopen_physx(lua_State* L)
     luaL_Reg l[] = {
         {"init", initialize},
         {"cleanup", cleanup},
+        {"release", release},
+        {"is_releasable", isReleasable},
+
         {"create_scene", createScene},
         {"create_material", createMaterial},
         {"create_shape_sphere", createShapeSphere},
-        {"createShapeBox", createShapeBox},
-        {"createShapeCapsule", createShapeCapsule},
-        {"createShapeConvex", createShapeConvex},
-        {"createShapeCapsule", createShapeCapsule},
-        {"createShapeCapsule", createShapeCapsule},
-        {"release_actor", releaseActor},
-        //addStaticFunction("createDynamicSphere", &lCommon::createDynamicSphere)
-        //.addStaticFunction("createDynamicBox", &lCommon::createDynamicBox)
-        //.addStaticFunction("createDynamicCapsule", &lCommon::createDynamicCapsule)
-        //.addStaticFunction("createDynamicConvex", &lCommon::createDynamicConvex)
-        {"createDynamic", createDynamic},
-        {"createPlane", createPlane},
-        {"addRigidDynamic", _PxScene_addPxRigidDynamic_},
-        {"addRigidStatic", _PxScene_addPxRigidStatic_},
-        {"cleanup", cleanup},
+        {"create_shape_box", createShapeBox},
+        {"create_shape_capsule", createShapeCapsule},
+        {"create_shape_convex", createShapeConvex},
+        {"create_dynamic", createDynamic},
+        {"create_static", createStatic},
+        {"create_plane", createPlane},
+
+        {"scene_add_actor", addActor},
+        {"scene_remove_actor", removeActor},
+        {"scene_step", stepPhysics},
+
+        {"body_updateMassAndInertia", updateMassAndInertia},
+        {"body_attachShape", attachShape},
+        {"body_detachShape", detachShape},
+        {"body_setAngularDamping", setAngularDamping},
+        {"body_setLinearVelocity", setLinearVelocity},
 
         {NULL, NULL},
     };
