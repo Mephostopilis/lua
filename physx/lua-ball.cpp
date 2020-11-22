@@ -208,7 +208,13 @@ static int createScene(lua_State* L)
 static int addActor(lua_State* L)
 {
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
+    if (scene == NULL) {
+        luaL_error(L, "scene is null.");
+    }
     physx::PxActor* actor = (physx::PxActor*)lua_touserdata(L, 2);
+    if (actor == NULL) {
+        luaL_error(L, "actor is null.");
+    }
     scene->addActor(*actor);
     return 0;
 }
@@ -216,14 +222,25 @@ static int addActor(lua_State* L)
 static int removeActor(lua_State* L)
 {
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
+    if (scene == NULL) {
+        luaL_error(L, "scene is null.");
+    }
     physx::PxActor* actor = (physx::PxActor*)lua_touserdata(L, 2);
+    if (actor == NULL) {
+        luaL_error(L, "actor is null.");
+    }
     scene->removeActor(*actor);
     return 0;
 }
 
 static int stepPhysics(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 2, LUA_TBOOLEAN);
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
+    if (scene == NULL) {
+        luaL_error(L, "scene is null.");
+    }
     bool interactive = lua_toboolean(L, 2);
     PX_UNUSED(interactive);
     scene->simulate(1.0f / 60.0f);
@@ -233,9 +250,9 @@ static int stepPhysics(lua_State* L)
 
 static int createMaterial(lua_State* L)
 {
-    physx::PxReal staticFriction = lua_tonumber(L, 1);
-    physx::PxReal dynamicFriction = lua_tonumber(L, 2);
-    physx::PxReal restitution = lua_tonumber(L, 3);
+    physx::PxReal staticFriction = luaL_checknumber(L, 1);
+    physx::PxReal dynamicFriction = luaL_checknumber(L, 2);
+    physx::PxReal restitution = luaL_checknumber(L, 3);
     physx::PxMaterial* mat = gPhysics->createMaterial(staticFriction, dynamicFriction, restitution);
     lua_pushlightuserdata(L, mat);
     return 1;
@@ -243,8 +260,13 @@ static int createMaterial(lua_State* L)
 
 static int createShapeSphere(lua_State* L)
 {
-    const physx::PxSphereGeometry geometry;
-    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 2);
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
+    if (material == NULL) {
+        luaL_error(L, "material is null.");
+    }
+    physx::PxReal r = luaL_checknumber(L, 2);
+    physx::PxSphereGeometry geometry(r);
     physx::PxShape* shape = gPhysics->createShape(geometry, *material);
     lua_pushlightuserdata(L, shape);
     return 1;
@@ -264,10 +286,14 @@ static int createShapeBox(lua_State* L)
 
 static int createShapeCapsule(lua_State* L)
 {
-    lua_Number radis = lua_tonumber(L, 1);
-    lua_Number halfHeight = lua_tonumber(L, 2);
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
+    if (material == NULL) {
+        luaL_error(L, "material is null.");
+    }
+    lua_Number radis = luaL_checknumber(L, 2);
+    lua_Number halfHeight = luaL_checknumber(L, 3);
     const physx::PxCapsuleGeometry geometry(radis, halfHeight);
-    physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 3);
     physx::PxShape* shape = gPhysics->createShape(geometry, *material);
     return 0;
 }
@@ -305,7 +331,11 @@ static int createStatic(lua_State* L)
 
 static int createPlane(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
     physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
+    if (material == NULL) {
+        luaL_error(L, "material is null.");
+    }
     float distance = lua_tonumber(L, 2);
     const float* vec = (float*)lua_touserdata(L, 3);
     const physx::PxPlane plane(vec[0], vec[1], vec[2], distance);
@@ -325,15 +355,28 @@ static int createConstraint(lua_State* L)
 // body
 static int updateMassAndInertia(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
-    physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxReal density = luaL_checknumber(L, 2);
+    physx::PxRigidBodyExt::updateMassAndInertia(*body, density);
     return 0;
 }
 
 static int attachShape(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 2, LUA_TUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
     physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
+    if (shape == NULL) {
+        luaL_error(L, "shape is null.");
+    }
     bool b = body->attachShape(*shape);
     lua_pushboolean(L, b);
     return 1;
@@ -341,26 +384,148 @@ static int attachShape(lua_State* L)
 
 static int detachShape(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 2, LUA_TUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
     physx::PxShape* shape = (physx::PxShape*)lua_touserdata(L, 2);
+    if (body == NULL) {
+        luaL_error(L, "shape is null.");
+    }
     body->detachShape(*shape);
     return 0;
 }
 
+static int getAngularDamping(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxReal ang = body->getAngularDamping();
+    lua_pushnumber(L, ang);
+    return 1;
+}
+
 static int setAngularDamping(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
     lua_Number ang = lua_tonumber(L, 2);
     body->setAngularDamping(ang);
     return 0;
 }
 
+static int getLinearVelocity(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxVec3 vec3 = body->getLinearVelocity();
+    lua_pushnumber(L, vec3.x);
+    lua_pushnumber(L, vec3.y);
+    lua_pushnumber(L, vec3.z);
+    return 3;
+}
+
 static int setLinearVelocity(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
     const float* vec = (float*)lua_touserdata(L, 2);
     physx::PxVec3 vel(vec[0], vec[1], vec[2]);
     body->setLinearVelocity(vel);
+    return 0;
+}
+
+static int getMass(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxReal mass = body->getMass();
+    lua_pushnumber(L, mass);
+    return 1;
+}
+
+static int setMass(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxReal mass = luaL_checknumber(L, 2);
+    body->setMass(mass);
+    return 0;
+}
+
+static int getP(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxTransform trans = body->getGlobalPose();
+    lua_pushnumber(L, trans.p.x);
+    lua_pushnumber(L, trans.p.y);
+    lua_pushnumber(L, trans.p.z);
+    return 3;
+}
+
+static int setP(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    const float* vec = (float*)lua_touserdata(L, 2);
+    physx::PxTransform trans = body->getGlobalPose();
+    trans.p = physx::PxVec3(vec[0], vec[1], vec[2]);
+    body->setGlobalPose(trans);
+    return 0;
+}
+
+static int getQ(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxTransform trans = body->getGlobalPose();
+    lua_pushnumber(L, trans.q.x);
+    lua_pushnumber(L, trans.q.y);
+    lua_pushnumber(L, trans.q.z);
+    lua_pushnumber(L, trans.q.w);
+    return 3;
+}
+
+static int setQ(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxTransform trans = body->getGlobalPose();
+    const float* vec = (float*)lua_touserdata(L, 2);
+    trans.q = physx::PxQuat(vec[0], vec[1], vec[2], vec[3]);
     return 0;
 }
 
@@ -392,8 +557,16 @@ int luaopen_physx(lua_State* L)
         {"body_updateMassAndInertia", updateMassAndInertia},
         {"body_attachShape", attachShape},
         {"body_detachShape", detachShape},
+        {"body_getAngularDamping", getAngularDamping},
         {"body_setAngularDamping", setAngularDamping},
+        {"body_getLinearVelocity", getLinearVelocity},
         {"body_setLinearVelocity", setLinearVelocity},
+        {"body_getMass", getMass},
+        {"body_setMass", setMass},
+        {"body_getP", getP},
+        {"body_setP", setP},
+        {"body_getQ", getQ},
+        {"body_setQ", setQ},
 
         {NULL, NULL},
     };
