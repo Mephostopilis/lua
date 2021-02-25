@@ -34,7 +34,7 @@
 # *.ilk
 # *.pdb
 
-# 
+#
 *.suo
 *.sdf
 !googletest/Debug/gtestd.lib
@@ -49,15 +49,6 @@ bin
 build
 build32
 build64
-xluatest/logs
-xluatest/*.exe
-xluatest/*.a
-xluatest/*.dll
-xluatest/*.exp
-xluatest/*.ilk
-xluatest/*.pdb
-xluatest/*.lib
 luaclib/*
 lua.*
 liblua.*
-
