@@ -207,6 +207,8 @@ static int createScene(lua_State* L)
 
 static int addActor(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
     if (scene == NULL) {
         luaL_error(L, "scene is null.");
@@ -221,6 +223,8 @@ static int addActor(lua_State* L)
 
 static int removeActor(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
     if (scene == NULL) {
         luaL_error(L, "scene is null.");
@@ -235,7 +239,7 @@ static int removeActor(lua_State* L)
 
 static int stepPhysics(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     luaL_checktype(L, 2, LUA_TBOOLEAN);
     physx::PxScene* scene = (physx::PxScene*)lua_touserdata(L, 1);
     if (scene == NULL) {
@@ -260,7 +264,7 @@ static int createMaterial(lua_State* L)
 
 static int createShapeSphere(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
     if (material == NULL) {
         luaL_error(L, "material is null.");
@@ -286,7 +290,7 @@ static int createShapeBox(lua_State* L)
 
 static int createShapeCapsule(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
     if (material == NULL) {
         luaL_error(L, "material is null.");
@@ -309,6 +313,7 @@ static int createShapeConvex(lua_State* L)
 
 static int createDynamic(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     float* vec = (float*)lua_touserdata(L, 1);
     physx::PxMat44 mat(vec);
     const physx::PxTransform transform(mat);
@@ -320,6 +325,7 @@ static int createDynamic(lua_State* L)
 
 static int createStatic(lua_State* L)
 {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     float* vec = (float*)lua_touserdata(L, 1);
     physx::PxMat44 mat(vec);
     const physx::PxTransform transform(mat);
@@ -331,7 +337,7 @@ static int createStatic(lua_State* L)
 
 static int createPlane(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxMaterial* material = (physx::PxMaterial*)lua_touserdata(L, 1);
     if (material == NULL) {
         luaL_error(L, "material is null.");
@@ -355,7 +361,7 @@ static int createConstraint(lua_State* L)
 // body
 static int updateMassAndInertia(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -367,8 +373,8 @@ static int updateMassAndInertia(lua_State* L)
 
 static int attachShape(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
-    luaL_checktype(L, 2, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -384,8 +390,8 @@ static int attachShape(lua_State* L)
 
 static int detachShape(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
-    luaL_checktype(L, 2, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -400,7 +406,7 @@ static int detachShape(lua_State* L)
 
 static int getAngularDamping(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -412,7 +418,7 @@ static int getAngularDamping(lua_State* L)
 
 static int setAngularDamping(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -424,7 +430,7 @@ static int setAngularDamping(lua_State* L)
 
 static int getLinearVelocity(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -438,7 +444,7 @@ static int getLinearVelocity(lua_State* L)
 
 static int setLinearVelocity(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -451,7 +457,7 @@ static int setLinearVelocity(lua_State* L)
 
 static int getMass(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -463,7 +469,7 @@ static int getMass(lua_State* L)
 
 static int setMass(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -475,7 +481,7 @@ static int setMass(lua_State* L)
 
 static int getP(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -489,7 +495,7 @@ static int getP(lua_State* L)
 
 static int setP(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -503,7 +509,7 @@ static int setP(lua_State* L)
 
 static int getQ(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -518,7 +524,7 @@ static int getQ(lua_State* L)
 
 static int setQ(lua_State* L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
     physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
     if (body == NULL) {
         luaL_error(L, "body is null.");
@@ -529,10 +535,37 @@ static int setQ(lua_State* L)
     return 0;
 }
 
+static int getRigidBodyFlags(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxRigidBodyFlags flags = body->getRigidBodyFlags();
+    uint32_t flag = (uint32_t)flags;
+    bool b = (bool)flags;
+    lua_pushinteger(L, flag);
+    lua_pushboolean(L, b);
+    return 2;
+}
+
+static int setRigidBodyFlag(lua_State* L)
+{
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    physx::PxRigidBody* body = (physx::PxRigidBody*)lua_touserdata(L, 1);
+    if (body == NULL) {
+        luaL_error(L, "body is null.");
+    }
+    physx::PxRigidBodyFlag::Enum flag = (physx::PxRigidBodyFlag::Enum)luaL_checkinteger(L, 2);
+    bool b = lua_toboolean(L, 3);
+    body->setRigidBodyFlag(flag, b);
+    return 0;
+}
+
 LUAMOD_API
 int luaopen_physx(lua_State* L)
 {
-    luaL_checkversion(L);
 
     luaL_Reg l[] = {
         {"init", initialize},
@@ -567,9 +600,12 @@ int luaopen_physx(lua_State* L)
         {"body_setP", setP},
         {"body_getQ", getQ},
         {"body_setQ", setQ},
+        {"body_getRigidBodyFlags", getRigidBodyFlags},
+        {"body_setRigidBodyFlag", setRigidBodyFlag},
 
         {NULL, NULL},
     };
     luaL_newlib(L, l);
+
     return 1;
 }
